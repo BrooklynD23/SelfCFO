@@ -36,18 +36,29 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [x] **Sprint 01: Database Schema**
-  - [x] Define SQLDelight schema for transactions (16 entities)
-  - [x] Create Account, Category, Merchant tables
-  - [x] Set up migrations framework
-  - [x] Implement platform-specific drivers (Android/Desktop)
-  - [x] Create transaction_view for unified queries
+- [ ] **Sprint 01: Encryption Layer** (In Progress)
+  - [x] KeyManager interface with key hierarchy
+  - [x] KeyDerivation expect/actual (Argon2 params defined, PBKDF2 fallback)
+  - [x] PlatformKeystore interface for secure storage
+  - [x] FileEncryption interface (AES-GCM)
+  - [x] SecureRandom JVM implementation
+  - [x] AesGcmFileEncryption JVM implementation
+  - [ ] Android Keystore integration (next)
+  - [ ] Desktop keychain integration (next)
+  - [ ] SQLCipher database factory (next)
+
+### Completed Tasks
+
+#### Sprint 01: Database Schema ✅
+- [x] 16 SQLDelight entity files created
+- [x] Platform-specific DatabaseDriverFactory (Android/Desktop)
+- [x] transaction_view for unified queries
 
 ### Pending Tasks
 
 #### Sprint 01: Core Data Layer
 - [x] Database Schema
-- [ ] Encryption Layer
+- [ ] Encryption Layer (in progress)
 - [ ] Money Type
 - [ ] PDF Import Pipeline
 - [ ] CSV Import Pipeline
