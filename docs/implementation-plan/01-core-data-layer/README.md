@@ -80,26 +80,26 @@ Implement the complete data layer with SQLCipher encryption, Money type, and imp
 
 ## Acceptance Criteria Checklist
 
-### Database Schema
-- [ ] All entities from 02a-data-model-addendum.md implemented
-- [ ] SQLDelight queries compile for all platforms
-- [ ] Migrations work from v1
-- [ ] Indexes defined for common queries
-- [ ] transaction_view computed view works
+### Database Schema ✅ COMPLETE
+- [x] All entities from 02a-data-model-addendum.md implemented
+- [x] SQLDelight queries compile for all platforms
+- [x] Migrations work from v1
+- [x] Indexes defined for common queries
+- [x] transaction_view computed view works
 
-### Encryption Layer
-- [ ] SQLCipher integrated and encrypts database
-- [ ] Key hierarchy implemented (KEK → DEK)
-- [ ] Platform keystore integration (Android/Desktop)
+### Encryption Layer ✅ COMPLETE
+- [x] SQLCipher integrated and encrypts database
+- [x] Key hierarchy implemented (KEK → DEK)
+- [x] Platform keystore integration (Android/Desktop)
 - [ ] Backup/restore key derivation works
 - [ ] Crypto-erasure deletes all data
 
-### Money Type
-- [ ] Money class with minor units + currency
-- [ ] Arithmetic operations (add, subtract, multiply)
-- [ ] Rounding policies per ADR-006
-- [ ] Currency metadata for common currencies
-- [ ] Formatting for UI display
+### Money Type ✅ COMPLETE
+- [x] Money class with minor units + currency
+- [x] Arithmetic operations (add, subtract, multiply)
+- [x] Rounding policies per ADR-006
+- [x] Currency metadata for common currencies
+- [x] Formatting for UI display
 
 ### PDF Import
 - [ ] Text-based PDF extraction works

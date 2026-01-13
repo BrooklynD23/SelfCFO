@@ -36,16 +36,7 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 01: Encryption Layer** (In Progress)
-  - [x] KeyManager interface with key hierarchy
-  - [x] KeyDerivation expect/actual (Argon2 params defined, PBKDF2 fallback)
-  - [x] PlatformKeystore interface for secure storage
-  - [x] FileEncryption interface (AES-GCM)
-  - [x] SecureRandom JVM implementation
-  - [x] AesGcmFileEncryption JVM implementation
-  - [ ] Android Keystore integration (next)
-  - [ ] Desktop keychain integration (next)
-  - [ ] SQLCipher database factory (next)
+- [ ] **Sprint 01: PDF/CSV Import Pipeline** (Next)
 
 ### Completed Tasks
 
@@ -54,12 +45,32 @@
 - [x] Platform-specific DatabaseDriverFactory (Android/Desktop)
 - [x] transaction_view for unified queries
 
+#### Sprint 01: Encryption Layer ✅
+- [x] KeyManager interface with key hierarchy
+- [x] KeyDerivation expect/actual (Argon2 params defined, PBKDF2 fallback)
+- [x] PlatformKeystore interface for secure storage
+- [x] FileEncryption interface (AES-GCM)
+- [x] SecureRandom JVM implementation
+- [x] AesGcmFileEncryption JVM implementation
+- [x] Android Keystore integration (EncryptedSharedPreferences + Android Keystore)
+- [x] Desktop keychain integration (File-based with AES-GCM + Java Preferences)
+- [x] SQLCipher database factory (Android + Desktop createEncryptedDriver)
+
+#### Sprint 01: Money Type ✅
+- [x] Money data class with integer minor units
+- [x] CurrencyMetadata for scale/symbols
+- [x] MoneyParser (no floating point)
+- [x] MoneyFormatter (canonical string output)
+- [x] MoneyAllocator (split with remainder handling)
+- [x] MoneyLocaleFormatter expect/actual (platform formatting)
+- [x] Unit tests for Money, Allocator, Parser
+
 ### Pending Tasks
 
 #### Sprint 01: Core Data Layer
 - [x] Database Schema
-- [ ] Encryption Layer (in progress)
-- [ ] Money Type
+- [x] Encryption Layer
+- [x] Money Type
 - [ ] PDF Import Pipeline
 - [ ] CSV Import Pipeline
 - [ ] Normalization & Deduplication
@@ -110,4 +121,4 @@
 
 ---
 
-*Last Updated: 2026-01-13*
+*Last Updated: 2026-01-13 (Session 2 - Encryption Layer + Money Type completed)*

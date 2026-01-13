@@ -76,6 +76,10 @@ kotlin {
                 implementation(libs.androidx.core.ktx)
                 // SQLDelight Android driver
                 implementation(libs.sqldelight.android.driver)
+                // SQLCipher for encrypted database
+                implementation(libs.sqlcipher.android)
+                // AndroidX Security for EncryptedSharedPreferences
+                implementation(libs.androidx.security.crypto)
             }
         }
 
@@ -93,6 +97,8 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 // SQLDelight JVM/Desktop driver
                 implementation(libs.sqldelight.sqlite.driver)
+                // SQLCipher for encrypted database
+                implementation(libs.sqlcipher.jdbc)
             }
         }
 

@@ -53,6 +53,7 @@ sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", versi
 
 # SQLCipher
 sqlcipher-android = { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlcipher" }
+sqlcipher-jdbc = { module = "io.github.nickolasgoodwin:sqlite-jdbc-sqlcipher", version = "3.42.0.1" }
 
 # AndroidX
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
