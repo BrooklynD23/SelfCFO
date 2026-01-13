@@ -94,3 +94,21 @@ sqldelight {
         }
     }
 }
+
+// Dokka documentation configuration
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    dokkaSourceSets {
+        named("commonMain") {
+            displayName.set("Common")
+            platform.set(org.jetbrains.dokka.Platform.common)
+        }
+        named("androidMain") {
+            displayName.set("Android")
+            platform.set(org.jetbrains.dokka.Platform.jvm)
+        }
+        named("desktopMain") {
+            displayName.set("Desktop")
+            platform.set(org.jetbrains.dokka.Platform.jvm)
+        }
+    }
+}

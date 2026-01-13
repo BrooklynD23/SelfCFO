@@ -1,0 +1,14 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="UnusedImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="UnusedSymbol" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="LOCAL_VARIABLE" value="true" />
+      <option name="PARAMETER" value="true" />
+    </inspection_tool>
+    <inspection_tool class="RedundantVisibilityModifier" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="MemberVisibilityCanBePrivate" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="RemoveRedundantQualifierName" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ConvertLambdaToReference" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+  </profile>
+</component>

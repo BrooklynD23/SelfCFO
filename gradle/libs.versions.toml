@@ -4,6 +4,12 @@ kotlin = "1.9.22"
 agp = "8.2.0"
 compose = "1.5.12"
 
+# Development Tooling
+ktlint = "12.1.0"
+ktlint-core = "1.1.1"
+detekt = "1.23.4"
+dokka = "1.9.10"
+
 # Kotlin Libraries
 coroutines = "1.7.3"
 serialization = "1.6.2"
@@ -79,3 +85,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
