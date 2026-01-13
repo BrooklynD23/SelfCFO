@@ -58,6 +58,12 @@
 - [x] PlatformKeystoreTest (round-trip, delete, overwrite tests)
 - [x] FileEncryptionTest (AES-GCM round-trip, tamper detection)
 - [x] DatabaseDriverFactoryTest (driver creation, encryption key validation)
+- [x] KeyManagerImpl - Full implementation per ADR-003
+- [x] MnemonicGenerator - BIP39 24-word recovery key generation
+- [x] Bip39WordList - 2048-word English word list
+- [x] KeyWrapper - AES-GCM key wrapping (JVM)
+- [x] Sha256 - Platform-specific SHA-256 hashing (JVM)
+- [x] KeyManagerTest - Unit tests for passphrase, mnemonic, backup
 
 #### Sprint 01: Money Type ✅
 - [x] Money data class with integer minor units
@@ -152,4 +158,4 @@
 - [x] Sha256 expect/actual (JVM implementation)
 - [x] Unit tests for MerchantNormalizer and DuplicateDetector
 
-*Last Updated: 2026-01-13 (Session 5 - Sprint 01 Integration Tests added)*
+*Last Updated: 2026-01-13 (Session 6 - KeyManager implementation complete)*

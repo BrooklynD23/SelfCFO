@@ -101,8 +101,11 @@ Implement the complete data layer with SQLCipher encryption, Money type, and imp
 - [x] SQLCipher integrated and encrypts database
 - [x] Key hierarchy implemented (KEK → DEK)
 - [x] Platform keystore integration (Android/Desktop)
-- [ ] Backup/restore key derivation works
-- [ ] Crypto-erasure deletes all data
+- [x] KeyManagerImpl with full key hierarchy (Passphrase → MasterKey → KEK → DEKs)
+- [x] MnemonicGenerator for BIP39 recovery keys (24-word phrases)
+- [x] KeyWrapper for AES-GCM key wrapping (JVM)
+- [x] Backup/restore key derivation works
+- [x] Crypto-erasure deletes all data
 
 ### Money Type ✅ COMPLETE
 - [x] Money class with minor units + currency
