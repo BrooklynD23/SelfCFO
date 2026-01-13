@@ -1,4 +1,4 @@
-# LedgerLens Android ProGuard Rules
+# LedgerLens Desktop ProGuard Rules
 # ===================================
 
 # Keep Kotlin metadata for reflection
@@ -29,13 +29,13 @@
 -keep class com.ledgerlens.db.** { *; }
 -keepclassmembers class com.ledgerlens.db.** { *; }
 
-# Keep SQLCipher
--keep class net.zetetic.** { *; }
--keepclassmembers class net.zetetic.** { *; }
-
-# Keep Compose classes
+# Keep Compose Desktop classes
 -keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
+
+# Keep Skiko (Compose Desktop rendering engine)
+-keep class org.jetbrains.skia.** { *; }
+-keep class org.jetbrains.skiko.** { *; }
 
 # Keep Coroutines
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
@@ -47,9 +47,9 @@
 # Keep Kotlin datetime
 -keep class kotlinx.datetime.** { *; }
 
-# Android-specific rules
--keepclassmembers class * implements android.os.Parcelable {
-    public static final ** CREATOR;
+# Keep main entry point
+-keep class com.ledgerlens.desktop.MainKt {
+    public static void main(java.lang.String[]);
 }
 
 # Enum classes
@@ -58,19 +58,19 @@
     public static ** valueOf(java.lang.String);
 }
 
-# Remove logging in release builds
--assumenosideeffects class android.util.Log {
-    public static int v(...);
-    public static int d(...);
-    public static int i(...);
-}
-
 # Keep native methods
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
-# Suppress warnings for missing classes that are okay to not have
+# Keep JDBC and SQL classes for SQLite
+-keep class java.sql.** { *; }
+-keep class javax.sql.** { *; }
+-keep class org.sqlite.** { *; }
+
+# Suppress warnings for missing classes
 -dontwarn org.slf4j.**
 -dontwarn org.jetbrains.annotations.**
 -dontwarn javax.annotation.**
+-dontwarn sun.misc.Unsafe
+-dontwarn java.awt.**
