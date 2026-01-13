@@ -40,6 +40,9 @@ jobs:
       - name: Build shared module
         run: ./gradlew :shared:build
 
+      # Desktop builds on all platforms for main branch, but only macOS/Windows for PRs
+      # Rationale: Linux desktop builds are faster but less commonly deployed; 
+      # main branch needs full coverage, PRs can skip Linux desktop for faster feedback
       - name: Build desktop app
         if: matrix.os != 'ubuntu-latest' || github.ref == 'refs/heads/main'
         run: ./gradlew :desktop:build
@@ -67,17 +70,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Build Android debug APK
-        run: ./gradlew :android:assembleDebug
+      # Using explicit dev flavor for deterministic debug builds
+      - name: Build Android debug APK (dev flavor)
+        run: ./gradlew :android:assembleDevDebug
 
-      - name: Run Android unit tests
-        run: ./gradlew :android:testDebugUnitTest
+      - name: Run Android unit tests (dev flavor)
+        run: ./gradlew :android:testDevDebugUnitTest
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
-          path: android/build/outputs/apk/debug/*.apk
+          name: android-dev-debug-apk
+          path: android/build/outputs/apk/dev/debug/*.apk
           retention-days: 7
 
   lint:

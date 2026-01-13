@@ -4,9 +4,9 @@
 
 ---
 
-## Current Sprint: 00 - Project Foundation
+## Current Sprint: 01 - Core Data Layer
 
-**Status:** In Progress
+**Status:** Starting
 **Started:** 2026-01-13
 
 ---
@@ -14,24 +14,35 @@
 ## Task Status
 
 ### Completed Tasks
-- [ ] *(None yet)*
+
+#### Sprint 00: Project Foundation ✅
+- [x] **Feature 1 - KMP Project Setup**
+  - [x] Initialize project structure
+  - [x] Configure root build file
+  - [x] Configure settings
+  - [x] Configure shared module
+  - [x] Configure Android app module
+  - [x] Configure Desktop app module
+  - [x] Create entry points
+- [x] **Feature 2 - Build Configuration**
+- [x] **Feature 3 - Development Tooling**
+- [x] **Feature 4 - CI/CD Pipeline**
+- [x] **Architecture Review Fixes**
+  - [x] Replace hardcoded versions with version catalog references
+  - [x] Add test dependencies to all source sets
+  - [x] Add package documentation for domain/data/services
+  - [x] Update CI workflow for explicit flavor variants
+  - [x] Document desktop upgrade UUID
+  - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 00: Feature 1 - KMP Project Setup**
-  - Initialize project structure
-  - Configure root build file
-  - Configure settings
-  - Configure shared module
-  - Configure Android app module
-  - Configure Desktop app module
-  - Create entry points
+- [ ] **Sprint 01: Database Schema**
+  - [ ] Define SQLDelight schema for transactions
+  - [ ] Create Account, Category, Merchant tables
+  - [ ] Set up migrations framework
+  - [ ] Implement platform-specific drivers
 
 ### Pending Tasks
-
-#### Sprint 00: Project Foundation
-- [ ] Feature 2 - Build Configuration
-- [ ] Feature 3 - Development Tooling
-- [ ] Feature 4 - CI/CD Pipeline
 
 #### Sprint 01: Core Data Layer
 - [ ] Database Schema

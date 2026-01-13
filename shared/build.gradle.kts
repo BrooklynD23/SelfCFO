@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization") version "1.9.22"
+    alias(libs.plugins.kotlin.serialization)
     id("app.cash.sqldelight")
 }
 
@@ -28,14 +28,14 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3)
 
-                // Coroutines
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                // Coroutines - using version catalog
+                implementation(libs.kotlinx.coroutines.core)
 
-                // Serialization
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+                // Serialization - using version catalog
+                implementation(libs.kotlinx.serialization.json)
 
-                // DateTime
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+                // DateTime - using version catalog
+                implementation(libs.kotlinx.datetime)
             }
         }
 
@@ -51,15 +51,33 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.turbine)
+            }
+        }
+
+        val jvmTest by creating {
+            dependsOn(commonTest)
+            dependencies {
+                implementation(libs.junit5.api)
+                runtimeOnly(libs.junit5.engine)
+                implementation(libs.mockk)
             }
         }
 
         val androidMain by getting {
             dependsOn(jvmMain)
             dependencies {
-                implementation("androidx.core:core-ktx:1.12.0")
+                implementation(libs.androidx.core.ktx)
+            }
+        }
+
+        val androidUnitTest by getting {
+            dependsOn(jvmTest)
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.kotlin.test.junit)
             }
         }
 
@@ -67,6 +85,13 @@ kotlin {
             dependsOn(jvmMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
+            }
+        }
+
+        val desktopTest by getting {
+            dependsOn(jvmTest)
+            dependencies {
+                implementation(libs.mockk)
             }
         }
     }

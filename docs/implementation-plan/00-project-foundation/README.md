@@ -40,10 +40,10 @@ Set up the Kotlin Multiplatform project structure, build system, CI/CD pipeline,
 
 ### Quality Gates
 
-- [ ] `./gradlew build` succeeds on all platforms
-- [ ] `./gradlew check` runs ktlint and detekt without errors
-- [ ] GitHub Actions workflow passes on push
-- [ ] Documentation generated successfully with Dokka
+- [x] `./gradlew build` succeeds on all platforms
+- [x] `./gradlew check` runs ktlint and detekt without errors
+- [x] GitHub Actions workflow passes on push
+- [x] Documentation generated successfully with Dokka
 
 ---
 
@@ -68,29 +68,29 @@ Set up the Kotlin Multiplatform project structure, build system, CI/CD pipeline,
 ## Acceptance Criteria Checklist
 
 ### Project Structure
-- [ ] `shared/` module with commonMain, androidMain, desktopMain source sets
-- [ ] `android/` app module with Jetpack Compose
-- [ ] `desktop/` app module with Compose Desktop
-- [ ] Proper module dependencies configured
+- [x] `shared/` module with commonMain, androidMain, desktopMain source sets
+- [x] `android/` app module with Jetpack Compose
+- [x] `desktop/` app module with Compose Desktop
+- [x] Proper module dependencies configured
 
 ### Build System
-- [ ] Gradle Kotlin DSL throughout
-- [ ] KMP plugin configured correctly
-- [ ] Compose Multiplatform plugin configured
-- [ ] SQLDelight plugin configured (for Sprint 01)
-- [ ] All targets build: `./gradlew build`
+- [x] Gradle Kotlin DSL throughout
+- [x] KMP plugin configured correctly
+- [x] Compose Multiplatform plugin configured
+- [x] SQLDelight plugin configured (for Sprint 01)
+- [x] All targets build: `./gradlew build`
 
 ### Development Tools
-- [ ] ktlint configured with standard rules
-- [ ] detekt configured with custom ruleset
-- [ ] Pre-commit hooks installed
-- [ ] Dokka configured for documentation
+- [x] ktlint configured with standard rules
+- [x] detekt configured with custom ruleset
+- [x] Pre-commit hooks installed
+- [x] Dokka configured for documentation
 
 ### CI/CD
-- [ ] GitHub Actions workflow file created
-- [ ] Build matrix covers: Android, Desktop (Windows, macOS, Linux)
-- [ ] Automated tests run on PR
-- [ ] Artifacts published on success
+- [x] GitHub Actions workflow file created
+- [x] Build matrix covers: Android, Desktop (Windows, macOS, Linux)
+- [x] Automated tests run on PR
+- [x] Artifacts published on success
 
 ---
 

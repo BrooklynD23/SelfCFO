@@ -374,13 +374,15 @@ fun App() {
 
 ## Acceptance Criteria
 
-- [ ] Project builds successfully: `./gradlew build`
-- [ ] Android app runs on emulator/device
-- [ ] Desktop app runs on development machine
-- [ ] Shared code compiles for both targets
-- [ ] Source sets properly isolated (commonMain, androidMain, desktopMain)
-- [ ] SQLDelight plugin configured (schema generation works)
-- [ ] Compose Multiplatform UI renders on both platforms
+- [x] Project builds successfully: `./gradlew build`
+- [x] Android app runs on emulator/device
+- [x] Desktop app runs on development machine
+- [x] Shared code compiles for both targets
+- [x] Source sets properly isolated (commonMain, androidMain, desktopMain)
+- [x] SQLDelight plugin configured (schema generation works)
+- [x] Compose Multiplatform UI renders on both platforms
+- [x] Version catalog used for all dependencies (post-review fix)
+- [x] Test source sets configured with proper dependencies
 
 ---
 

@@ -43,6 +43,10 @@ compose.desktop {
                 menuGroup = "LedgerLens"
                 perUserInstall = true
                 dirChooser = true
+                // Upgrade UUID: Unique identifier for Windows MSI installer upgrades.
+                // This UUID must remain constant across versions to enable in-place upgrades.
+                // Generated using UUID v4 for LedgerLens Windows distribution.
+                // WARNING: Changing this will cause Windows to treat new versions as separate apps.
                 upgradeUuid = "b8f7c9d2-1e4a-4f6b-9c3d-5a2e8f7b1c0d"
                 // Uncomment when icon is available
                 // iconFile.set(project.file("src/main/resources/icons/icon.ico"))
