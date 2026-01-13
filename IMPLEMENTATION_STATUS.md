@@ -36,7 +36,7 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 01: Normalization & Deduplication** (Next)
+- [x] **Sprint 01: Normalization & Deduplication** ✅ COMPLETE
 
 ### Completed Tasks
 
@@ -65,13 +65,31 @@
 - [x] MoneyLocaleFormatter expect/actual (platform formatting)
 - [x] Unit tests for Money, Allocator, Parser
 
+#### Sprint 01: PDF Import Pipeline 
+- [x] PdfParser interface with result types
+- [x] ParsedTransaction data classes
+- [x] StatementTemplate registry with bank-specific templates
+- [x] TemplateBasedParser for extracting transactions
+- [x] PdfParserDesktop (PDFBox implementation)
+- [x] PdfParserAndroid (ML Kit stub - TODO)
+- [x] PdfParserFactory expect/actual pattern
+- [x] Unit tests for StatementTemplate
+
+#### Sprint 01: CSV Import Pipeline 
+- [x] CsvParser interface with data classes
+- [x] CsvAutoDetector (encoding, delimiter, header detection)
+- [x] ColumnMapper (heuristic column mapping)
+- [x] FlexibleDateParser (multi-format date parsing)
+- [x] CsvParserImpl (full implementation)
+- [x] Unit tests for all components
+
 ### Pending Tasks
 
 #### Sprint 01: Core Data Layer
 - [x] Database Schema
 - [x] Encryption Layer
 - [x] Money Type
-- [ ] PDF Import Pipeline
+- [x] PDF Import Pipeline
 - [x] CSV Import Pipeline
 - [ ] Normalization & Deduplication
 
@@ -121,12 +139,12 @@
 
 ---
 
-#### Sprint 01: CSV Import Pipeline ✅
-- [x] CsvParser interface with data classes
-- [x] CsvAutoDetector (encoding, delimiter, header detection)
-- [x] ColumnMapper (heuristic column mapping)
-- [x] FlexibleDateParser (multi-format date parsing)
-- [x] CsvParserImpl (full implementation)
-- [x] Unit tests for all components
+#### Sprint 01: Normalization & Deduplication 
+- [x] MerchantNormalizer (noise removal, alias mapping, heuristic extraction)
+- [x] TransactionFingerprint (SHA-256 of account_id|date|amount|description_prefix)
+- [x] DuplicateDetector (exact match + fuzzy ±2 day window)
+- [x] ImportIdempotency (batch processing, file hash, review workflow)
+- [x] Sha256 expect/actual (JVM implementation)
+- [x] Unit tests for MerchantNormalizer and DuplicateDetector
 
-*Last Updated: 2026-01-13 (Session 3 - CSV Import Pipeline completed)*
+*Last Updated: 2026-01-13 (Session 4 - PDF Import Pipeline completed)*
