@@ -36,7 +36,7 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 01: PDF/CSV Import Pipeline** (Next)
+- [ ] **Sprint 01: Normalization & Deduplication** (Next)
 
 ### Completed Tasks
 
@@ -72,7 +72,7 @@
 - [x] Encryption Layer
 - [x] Money Type
 - [ ] PDF Import Pipeline
-- [ ] CSV Import Pipeline
+- [x] CSV Import Pipeline
 - [ ] Normalization & Deduplication
 
 #### Sprint 02: Categorization Engine
@@ -121,4 +121,12 @@
 
 ---
 
-*Last Updated: 2026-01-13 (Session 2 - Encryption Layer + Money Type completed)*
+#### Sprint 01: CSV Import Pipeline ✅
+- [x] CsvParser interface with data classes
+- [x] CsvAutoDetector (encoding, delimiter, header detection)
+- [x] ColumnMapper (heuristic column mapping)
+- [x] FlexibleDateParser (multi-format date parsing)
+- [x] CsvParserImpl (full implementation)
+- [x] Unit tests for all components
+
+*Last Updated: 2026-01-13 (Session 3 - CSV Import Pipeline completed)*
