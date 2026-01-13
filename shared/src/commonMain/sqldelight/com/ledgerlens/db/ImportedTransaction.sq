@@ -1,0 +1,54 @@
+CREATE TABLE imported_transaction (
+    id TEXT NOT NULL PRIMARY KEY,
+    import_job_id TEXT NOT NULL REFERENCES import_job(id),
+    source_file_id TEXT NOT NULL REFERENCES source_file(id),
+    source_row_ref TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    account_id TEXT REFERENCES account(id),
+    posted_date INTEGER NOT NULL,
+    transaction_date INTEGER,
+    description_raw TEXT NOT NULL,
+    merchant_normalized TEXT NOT NULL,
+    merchant_id TEXT REFERENCES merchant(id),
+    amount_minor_units INTEGER NOT NULL,
+    currency_code TEXT NOT NULL DEFAULT 'USD',
+    balance_after INTEGER,
+    category_id_auto TEXT REFERENCES category(id),
+    category_confidence REAL,
+    category_reason TEXT,
+    parse_warnings TEXT,
+    imported_at INTEGER NOT NULL,
+    UNIQUE(source_file_id, fingerprint)
+);
+
+CREATE INDEX idx_imported_txn_fingerprint ON imported_transaction(fingerprint);
+CREATE INDEX idx_imported_txn_account_date ON imported_transaction(account_id, posted_date);
+CREATE INDEX idx_imported_txn_merchant ON imported_transaction(merchant_id);
+CREATE INDEX idx_imported_txn_import_job ON imported_transaction(import_job_id);
+
+insert:
+INSERT INTO imported_transaction(id, import_job_id, source_file_id, source_row_ref, fingerprint, account_id, posted_date, transaction_date, description_raw, merchant_normalized, merchant_id, amount_minor_units, currency_code, balance_after, category_id_auto, category_confidence, category_reason, parse_warnings, imported_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectByFingerprint:
+SELECT * FROM imported_transaction WHERE fingerprint = ?;
+
+selectById:
+SELECT * FROM imported_transaction WHERE id = ?;
+
+selectByDateRange:
+SELECT * FROM imported_transaction
+WHERE account_id = ? AND posted_date BETWEEN ? AND ?
+ORDER BY posted_date DESC;
+
+selectByImportJob:
+SELECT * FROM imported_transaction WHERE import_job_id = ? ORDER BY posted_date;
+
+selectRecent:
+SELECT * FROM imported_transaction ORDER BY posted_date DESC LIMIT ?;
+
+countByAccount:
+SELECT COUNT(*) FROM imported_transaction WHERE account_id = ?;
+
+updateCategory:
+UPDATE imported_transaction SET category_id_auto = ?, category_confidence = ?, category_reason = ? WHERE id = ?;

@@ -36,16 +36,17 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 01: Database Schema**
-  - [ ] Define SQLDelight schema for transactions
-  - [ ] Create Account, Category, Merchant tables
-  - [ ] Set up migrations framework
-  - [ ] Implement platform-specific drivers
+- [x] **Sprint 01: Database Schema**
+  - [x] Define SQLDelight schema for transactions (16 entities)
+  - [x] Create Account, Category, Merchant tables
+  - [x] Set up migrations framework
+  - [x] Implement platform-specific drivers (Android/Desktop)
+  - [x] Create transaction_view for unified queries
 
 ### Pending Tasks
 
 #### Sprint 01: Core Data Layer
-- [ ] Database Schema
+- [x] Database Schema
 - [ ] Encryption Layer
 - [ ] Money Type
 - [ ] PDF Import Pipeline

@@ -1,0 +1,39 @@
+CREATE TABLE source_file (
+    id TEXT NOT NULL PRIMARY KEY,
+    content_hash TEXT NOT NULL UNIQUE,
+    original_filename TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    file_type TEXT NOT NULL,
+    imported_at INTEGER NOT NULL,
+    encryption_key_id TEXT NOT NULL,
+    storage_path TEXT NOT NULL,
+    page_count INTEGER,
+    parse_status TEXT NOT NULL DEFAULT 'pending',
+    parse_error TEXT,
+    retention_policy TEXT NOT NULL DEFAULT 'keep',
+    deleted_at INTEGER,
+    account_id TEXT REFERENCES account(id),
+    CHECK (file_type IN ('pdf_statement', 'csv_statement', 'receipt_image', 'receipt_pdf', 'email_pdf', 'other')),
+    CHECK (parse_status IN ('pending', 'parsing', 'complete', 'failed', 'needs_review'))
+);
+
+CREATE INDEX idx_source_file_hash ON source_file(content_hash);
+CREATE INDEX idx_source_file_type_status ON source_file(file_type, parse_status);
+CREATE INDEX idx_source_file_account ON source_file(account_id);
+
+selectByHash:
+SELECT * FROM source_file WHERE content_hash = ?;
+
+selectById:
+SELECT * FROM source_file WHERE id = ?;
+
+insert:
+INSERT INTO source_file(id, content_hash, original_filename, mime_type, size_bytes, file_type, imported_at, encryption_key_id, storage_path, page_count, parse_status, parse_error, retention_policy, account_id)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateParseStatus:
+UPDATE source_file SET parse_status = ?, parse_error = ? WHERE id = ?;
+
+selectPending:
+SELECT * FROM source_file WHERE parse_status = 'pending' ORDER BY imported_at;

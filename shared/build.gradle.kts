@@ -36,6 +36,10 @@ kotlin {
 
                 // DateTime - using version catalog
                 implementation(libs.kotlinx.datetime)
+
+                // SQLDelight runtime
+                implementation(libs.sqldelight.runtime)
+                implementation(libs.sqldelight.coroutines)
             }
         }
 
@@ -70,6 +74,8 @@ kotlin {
             dependsOn(jvmMain)
             dependencies {
                 implementation(libs.androidx.core.ktx)
+                // SQLDelight Android driver
+                implementation(libs.sqldelight.android.driver)
             }
         }
 
@@ -85,6 +91,8 @@ kotlin {
             dependsOn(jvmMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
+                // SQLDelight JVM/Desktop driver
+                implementation(libs.sqldelight.sqlite.driver)
             }
         }
 

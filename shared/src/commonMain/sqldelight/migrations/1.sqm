@@ -1,0 +1,8 @@
+-- Migration 1: Initial schema
+-- This file is a placeholder for future migrations.
+-- SQLDelight will use the .sq files to generate the initial schema.
+-- Future schema changes should be added here as incremental migrations.
+
+-- Example migration syntax:
+-- ALTER TABLE table_name ADD COLUMN new_column TEXT;
+-- CREATE INDEX idx_new ON table_name(new_column);

@@ -1,0 +1,48 @@
+CREATE TABLE transfer (
+    id TEXT NOT NULL PRIMARY KEY,
+    from_transaction_id TEXT REFERENCES imported_transaction(id),
+    to_transaction_id TEXT REFERENCES imported_transaction(id),
+    from_account_id TEXT NOT NULL REFERENCES account(id),
+    to_account_id TEXT NOT NULL REFERENCES account(id),
+    amount_minor_units INTEGER NOT NULL,
+    currency_code TEXT NOT NULL,
+    fx_rate REAL,
+    fx_amount_minor INTEGER,
+    status TEXT NOT NULL DEFAULT 'suspected',
+    match_confidence REAL NOT NULL,
+    matched_by TEXT NOT NULL DEFAULT 'auto',
+    created_at INTEGER NOT NULL,
+    confirmed_at INTEGER,
+    notes TEXT,
+    CHECK (from_transaction_id IS NOT NULL OR to_transaction_id IS NOT NULL),
+    CHECK (from_account_id != to_account_id),
+    CHECK (status IN ('suspected', 'confirmed', 'rejected')),
+    CHECK (matched_by IN ('auto', 'user', 'rule'))
+);
+
+CREATE INDEX idx_transfer_from_txn ON transfer(from_transaction_id);
+CREATE INDEX idx_transfer_to_txn ON transfer(to_transaction_id);
+CREATE INDEX idx_transfer_accounts ON transfer(from_account_id, to_account_id);
+CREATE INDEX idx_transfer_status ON transfer(status);
+
+insert:
+INSERT INTO transfer(id, from_transaction_id, to_transaction_id, from_account_id, to_account_id, amount_minor_units, currency_code, fx_rate, fx_amount_minor, status, match_confidence, matched_by, created_at, confirmed_at, notes)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectById:
+SELECT * FROM transfer WHERE id = ?;
+
+selectByTransaction:
+SELECT * FROM transfer WHERE from_transaction_id = ? OR to_transaction_id = ?;
+
+selectSuspected:
+SELECT * FROM transfer WHERE status = 'suspected' ORDER BY match_confidence DESC;
+
+confirm:
+UPDATE transfer SET status = 'confirmed', confirmed_at = ? WHERE id = ?;
+
+reject:
+UPDATE transfer SET status = 'rejected' WHERE id = ?;
+
+selectByAccounts:
+SELECT * FROM transfer WHERE from_account_id = ? OR to_account_id = ? ORDER BY created_at DESC;
