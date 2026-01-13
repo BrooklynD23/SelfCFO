@@ -347,7 +347,7 @@ class ReceiptParser(
                 issues.add(
                     ValidationIssue(
                         type = IssueType.SUBTOTAL_MISMATCH,
-                        message = "Items sum (${itemsSumMoney.formatUsd()}) doesn't match subtotal (${totals.subtotal.formatUsd()})"
+                        message = "Items sum (${itemsSumMoney.formatForDisplay()}) doesn't match subtotal (${totals.subtotal.formatForDisplay()})"
                     )
                 )
             }
@@ -593,4 +593,3 @@ class ItemExtractorTest {
 ## Estimated Complexity
 
 **High** - Complex pattern matching with many edge cases.
-

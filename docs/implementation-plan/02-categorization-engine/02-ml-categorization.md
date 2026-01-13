@@ -96,13 +96,24 @@ class FeatureExtractor {
     }
 
     private fun getAmountBucket(amount: Money): AmountBucket {
-        val dollars = amount.abs().toMajorUnits()
+        // Avoid floating point: compare in minor units using currency scale.
+        // For MVP (bank transactions), currency scales are typically 0-3.
+        val absMinorUnits = amount.abs().minorUnits
+        val scale = amount.scale
+        val unit = (1..scale).fold(1L) { acc, _ -> acc * 10L } // 1 major unit in minor units
+
+        val tiny = 5L * unit
+        val small = 20L * unit
+        val medium = 50L * unit
+        val large = 200L * unit
+        val veryLarge = 1000L * unit
+
         return when {
-            dollars < 5 -> AmountBucket.TINY
-            dollars < 20 -> AmountBucket.SMALL
-            dollars < 50 -> AmountBucket.MEDIUM
-            dollars < 200 -> AmountBucket.LARGE
-            dollars < 1000 -> AmountBucket.VERY_LARGE
+            absMinorUnits < tiny -> AmountBucket.TINY
+            absMinorUnits < small -> AmountBucket.SMALL
+            absMinorUnits < medium -> AmountBucket.MEDIUM
+            absMinorUnits < large -> AmountBucket.LARGE
+            absMinorUnits < veryLarge -> AmountBucket.VERY_LARGE
             else -> AmountBucket.HUGE
         }
     }
@@ -209,9 +220,10 @@ actual class TFLiteModel actual constructor(modelPath: String) : CategorizationM
 ### Step 4: Model Bundle Manager
 
 ```kotlin
-// shared/src/commonMain/kotlin/com/ledgerlens/ml/ModelBundleManager.kt
+// shared/src/jvmMain/kotlin/com/ledgerlens/ml/ModelBundleManager.kt
 package com.ledgerlens.ml
 
+import java.io.File
 import java.security.Signature
 import java.security.PublicKey
 
@@ -219,23 +231,46 @@ class ModelBundleManager(
     private val bundleDir: File,
     private val publicKey: PublicKey  // Embedded in app
 ) {
+    companion object {
+        // Hard limits to reduce DoS risk from malicious or corrupted bundles.
+        const val MAX_BUNDLE_SIZE_BYTES: Long = 50L * 1024 * 1024
+        const val MAX_SINGLE_FILE_BYTES: Long = 25L * 1024 * 1024
+    }
 
     /**
      * Load a model bundle with verification.
      */
     suspend fun loadBundle(bundleId: String): Result<ModelBundle> = runCatching {
         val bundlePath = File(bundleDir, bundleId)
+        require(bundlePath.isDirectory) { "Bundle directory not found: $bundleId" }
 
-        // 1. Read manifest
+        // 0. Size guard (best-effort; real hosting should also enforce limits)
+        val bundleSize = bundlePath.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+        require(bundleSize <= MAX_BUNDLE_SIZE_BYTES) { "Bundle too large" }
+
+        // 1. Read manifest (verify before trusting any file paths)
         val manifestFile = File(bundlePath, "manifest.json")
-        val manifest = Json.decodeFromString<BundleManifest>(manifestFile.readText())
+        val manifestBytes = manifestFile.readBytes()
+        val manifest = Json.decodeFromString<BundleManifest>(manifestBytes.decodeToString())
 
-        // 2. Verify signature
-        verifySignature(manifest)
+        // 2. Verify signature (canonical JSON, not object re-serialization)
+        verifySignature(manifest, manifestBytes)
 
-        // 3. Verify file hashes
+        // 3. Rollback protection (ADR-005): never accept a bundle version older than installed.
+        // if (manifest.bundleVersion < installedVersion) throw BundleRollbackException(...)
+
+        // 4. Verify file paths, sizes, and hashes
         for (fileEntry in manifest.files) {
-            val file = File(bundlePath, fileEntry.path)
+            require(isSafeRelativePath(fileEntry.path)) { "Unsafe bundle path: ${fileEntry.path}" }
+
+            val file = File(bundlePath, fileEntry.path).canonicalFile
+            require(file.path.startsWith(bundlePath.canonicalPath + File.separator)) {
+                "Path traversal attempt: ${fileEntry.path}"
+            }
+            require(file.isFile) { "Missing file: ${fileEntry.path}" }
+            require(fileEntry.sizeBytes in 0..MAX_SINGLE_FILE_BYTES) { "File too large: ${fileEntry.path}" }
+            require(file.length() == fileEntry.sizeBytes) { "Size mismatch: ${fileEntry.path}" }
+
             val actualHash = file.readBytes().sha256Hex()
             if (actualHash != fileEntry.sha256) {
                 throw BundleIntegrityException(
@@ -244,12 +279,14 @@ class ModelBundleManager(
             }
         }
 
-        // 4. Check version compatibility
+        // 5. Check version compatibility
         if (!isCompatible(manifest.minAppVersion)) {
             throw BundleIncompatibleException(
                 "Bundle requires app version ${manifest.minAppVersion}"
             )
         }
+
+        // 6. Quarantine/activation (ADR-005): validate in staging dir before switching "active".
 
         ModelBundle(
             id = manifest.bundleId,
@@ -260,18 +297,34 @@ class ModelBundleManager(
         )
     }
 
-    private fun verifySignature(manifest: BundleManifest) {
+    private fun verifySignature(manifest: BundleManifest, manifestBytes: ByteArray) {
         val signature = Signature.getInstance("Ed25519")
         signature.initVerify(publicKey)
 
-        // Sign the manifest content minus the signature field
-        val contentToVerify = manifest.copy(signature = "").toJson()
-        signature.update(contentToVerify.toByteArray())
+        // Verify signature over a deterministic serialization of the manifest with the signature field removed.
+        // Keep the JSON configuration stable (no pretty printing, stable field order via data class property order).
+        val canonicalJson = Json {
+            prettyPrint = false
+            encodeDefaults = true
+            explicitNulls = false
+        }
+        val canonicalBytes = canonicalJson
+            .encodeToString(BundleManifest.serializer(), manifest.copy(signature = ""))
+            .toByteArray()
+
+        signature.update(canonicalBytes)
 
         val signatureBytes = Base64.decode(manifest.signature)
         if (!signature.verify(signatureBytes)) {
             throw BundleSignatureException("Invalid bundle signature")
         }
+    }
+
+    private fun isSafeRelativePath(path: String): Boolean {
+        if (path.isBlank()) return false
+        if (path.startsWith("/") || path.startsWith("\\\\")) return false
+        if (path.contains("..")) return false
+        return true
     }
 }
 

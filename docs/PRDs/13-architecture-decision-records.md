@@ -497,17 +497,52 @@ data class Money(
     val scale: Int             // Decimal places (from currency metadata)
 ) {
     companion object {
-        fun fromMajorUnits(amount: Double, currencyCode: String): Money {
+        /**
+         * Parse a user-entered major-units string (e.g., "12.34") into minor units.
+         *
+         * NOTE: Avoid using floating point for construction/parsing; it is not deterministic
+         * and can introduce rounding drift when persisted and reloaded.
+         */
+        fun parseMajor(amount: String, currencyCode: String): Money {
             val scale = CurrencyMetadata.getScale(currencyCode)
-            val minorUnits = (amount * 10.0.pow(scale)).roundToLong()
+            val minorUnits = MoneyParser.parseToMinorUnits(amount, scale)
+            return Money(minorUnits, currencyCode, scale)
+        }
+
+        fun fromMinorUnits(minorUnits: Long, currencyCode: String): Money {
+            val scale = CurrencyMetadata.getScale(currencyCode)
             return Money(minorUnits, currencyCode, scale)
         }
     }
 
-    fun toMajorUnits(): Double = minorUnits / 10.0.pow(scale)
+    /**
+     * Convert to a major-units string for display/export (e.g., "12.34").
+     * Keep display formatting separate from calculation/storage.
+     */
+    fun toMajorString(): String = MoneyFormatter.toMajorString(minorUnits, scale)
 
-    fun format(locale: Locale): String {
-        // Platform-specific formatting
+    // Platform-specific formatting belongs in UI/utilities, not in canonical storage type.
+}
+
+object MoneyParser {
+    fun parseToMinorUnits(amount: String, scale: Int): Long {
+        // Implementation is platform-agnostic and uses integer math (no Double/Float).
+        // See Sprint 01 implementation plan for the concrete parser used across import/UI input.
+        error("Spec-level placeholder: implement per docs/implementation-plan/01-core-data-layer/03-money-type.md")
+    }
+}
+
+object MoneyFormatter {
+    fun toMajorString(minorUnits: Long, scale: Int): String {
+        // Canonical major-units string (no locale grouping / symbols).
+        val sign = if (minorUnits < 0) "-" else ""
+        val abs = kotlin.math.abs(minorUnits)
+        if (scale == 0) return sign + abs.toString()
+
+        val divisor = (1..scale).fold(1L) { acc, _ -> acc * 10L }
+        val whole = abs / divisor
+        val frac = abs % divisor
+        return sign + whole.toString() + "." + frac.toString().padStart(scale, '0')
     }
 }
 
@@ -577,7 +612,7 @@ CREATE INDEX idx_transactions_currency ON transactions(currency_code);
 
 **Negative:**
 - Requires currency metadata table
-- Conversion to/from Double for UI input
+- UI parsing/formatting requires dedicated utilities (avoid `Double`/`Float` at boundaries)
 - Multi-currency math requires explicit handling
 
 **Mitigations:**

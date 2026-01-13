@@ -414,7 +414,7 @@ class PaymentHelper {
         recipientEmail: String,
         amount: Money
     ): String {
-        return "Send ${amount.formatUsd()} to $recipientEmail via Zelle"
+        return "Send ${amount.formatForDisplay()} to $recipientEmail via Zelle"
     }
 
     /**
@@ -426,7 +426,7 @@ class PaymentHelper {
     ): String {
         return buildString {
             appendLine("${transaction.fromParticipantName} owes ${transaction.toParticipantName}")
-            appendLine("Amount: ${transaction.amount.formatUsd()}")
+            appendLine("Amount: ${transaction.amount.formatForDisplay()}")
 
             val paymentInfo = paymentMethods[transaction.toParticipantId]
             if (paymentInfo != null) {
@@ -535,4 +535,3 @@ class SettlementCalculatorTest {
 ## Estimated Complexity
 
 **Medium** - Balance calculation with transaction optimization.
-

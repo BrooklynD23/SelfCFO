@@ -457,7 +457,7 @@ private fun ReceiptItemCard(
                     )
                     if (item.quantity > 1) {
                         Text(
-                            text = "${item.quantity} × ${item.unitPrice.formatUsd()}",
+                            text = "${item.quantity} × ${item.unitPrice.formatForDisplay()}",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -574,4 +574,3 @@ private fun AllocationIndicator(allocations: List<AllocationDisplay>) {
 ## Estimated Complexity
 
 **High** - Complex allocation UI with multiple interaction modes.
-

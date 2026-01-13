@@ -77,13 +77,21 @@ class TaxAllocator {
             return allocateEqual(fee, participantSubtotals.keys.toList())
         }
 
-        // Calculate proportions
-        val proportions = participantSubtotals.mapValues { (_, subtotal) ->
-            subtotal.minorUnits.toDouble() / totalSubtotal.toDouble()
-        }
+        // Allocate deterministically with integer math (no Double/Float).
+        // Use stable ordering so results are consistent across platforms/runs.
+        val participantIds = participantSubtotals.keys.sorted()
+        val weights = participantIds.map { id -> participantSubtotals[id]?.minorUnits ?: 0L }
 
-        // Allocate with largest-remainder method
-        return allocateByProportions(fee, proportions)
+        val allocations = MoneyAllocator.splitByWeights(
+            total = fee,
+            weights = weights,
+            totalWeight = totalSubtotal,
+            remainderRecipient = MoneyAllocator.RemainderRecipient.LARGEST
+        )
+
+        return participantIds.mapIndexed { index, id ->
+            id to allocations[index]
+        }.toMap()
     }
 
     /**
@@ -137,42 +145,7 @@ class TaxAllocator {
         }
     }
 
-    private fun allocateByProportions(
-        total: Money,
-        proportions: Map<String, Double>
-    ): Map<String, Money> {
-        // Calculate raw amounts
-        val rawAmounts = proportions.mapValues { (_, proportion) ->
-            (total.minorUnits * proportion).toLong()
-        }
-
-        // Apply largest-remainder adjustment
-        val allocated = rawAmounts.values.sum()
-        val remainder = total.minorUnits - allocated
-
-        if (remainder == 0L) {
-            return rawAmounts.mapValues { Money(it.value, total.currencyCode) }
-        }
-
-        // Sort by decimal remainder (descending) to determine who gets extra cents
-        val withRemainders = proportions.mapValues { (_, proportion) ->
-            val exact = total.minorUnits * proportion
-            val truncated = exact.toLong()
-            exact - truncated
-        }
-
-        val sorted = withRemainders.entries.sortedByDescending { it.value }
-        val adjusted = rawAmounts.toMutableMap()
-
-        var remaining = remainder
-        for (entry in sorted) {
-            if (remaining <= 0) break
-            adjusted[entry.key] = adjusted[entry.key]!! + 1
-            remaining--
-        }
-
-        return adjusted.mapValues { Money(it.value, total.currencyCode) }
-    }
+    // Proportional allocation uses MoneyAllocator.splitByWeights (integer-only).
 }
 ```
 
@@ -372,10 +345,9 @@ class FeeInputService {
      */
     fun calculateTax(
         subtotal: Money,
-        taxRate: Float // e.g., 8.5 for 8.5%
+        taxRateBps: Int // e.g., 8.5% = 850 bps
     ): Money {
-        val taxAmount = (subtotal.minorUnits * taxRate / 100f).toLong()
-        return Money(taxAmount, subtotal.currencyCode)
+        return subtotal.multiplyByBasisPoints(taxRateBps, roundingMode = RoundingMode.HALF_UP)
     }
 
     /**
@@ -383,13 +355,13 @@ class FeeInputService {
      */
     fun getCommonTaxRates(): List<TaxRate> {
         return listOf(
-            TaxRate("No Tax", 0f),
-            TaxRate("6%", 6f),
-            TaxRate("7%", 7f),
-            TaxRate("8%", 8f),
-            TaxRate("8.5%", 8.5f),
-            TaxRate("9%", 9f),
-            TaxRate("10%", 10f)
+            TaxRate("No Tax", 0),
+            TaxRate("6%", 600),
+            TaxRate("7%", 700),
+            TaxRate("8%", 800),
+            TaxRate("8.5%", 850),
+            TaxRate("9%", 900),
+            TaxRate("10%", 1000)
         )
     }
 
@@ -409,7 +381,7 @@ class FeeInputService {
 
 data class TaxRate(
     val label: String,
-    val rate: Float
+    val rateBps: Int
 )
 ```
 
@@ -490,4 +462,3 @@ class FeeDistributionServiceTest {
 ## Estimated Complexity
 
 **Medium** - Proportional calculations with precise rounding.
-

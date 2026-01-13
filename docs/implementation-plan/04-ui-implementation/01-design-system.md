@@ -371,7 +371,7 @@ fun MoneyText(
     }
 
     Text(
-        text = "$prefix${money.formatUsd()}",
+        text = "$prefix${money.formatForDisplay()}",
         style = style,
         color = color,
         modifier = modifier
@@ -598,4 +598,3 @@ fun ErrorState(
 ## Estimated Complexity
 
 **Medium** - Foundational setup with many components.
-

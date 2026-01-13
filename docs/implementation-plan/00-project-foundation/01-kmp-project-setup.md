@@ -54,6 +54,10 @@ LedgerLens/
                 └── com/ledgerlens/desktop/
 ```
 
+**Add JVM shared source sets (recommended):**
+- `shared/src/jvmMain/kotlin/` for shared JVM-only implementations (`java.*`) used by both Android + Desktop
+- `shared/src/jvmTest/kotlin/` for shared JVM-only tests (if needed)
+
 ### Step 2: Configure Root Build File
 
 ```kotlin
@@ -149,6 +153,16 @@ kotlin {
             }
         }
 
+        /**
+         * JVM-only shared code used by both Android and Desktop.
+         *
+         * Use this for `java.*` APIs (file IO, crypto, formatting, etc).
+         * Keep `commonMain` free of `java.*` and `android.*` to preserve portability.
+         */
+        val jvmMain by creating {
+            dependsOn(commonMain)
+        }
+
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
@@ -157,12 +171,14 @@ kotlin {
         }
 
         val androidMain by getting {
+            dependsOn(jvmMain)
             dependencies {
                 implementation("androidx.core:core-ktx:1.12.0")
             }
         }
 
         val desktopMain by getting {
+            dependsOn(jvmMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
             }

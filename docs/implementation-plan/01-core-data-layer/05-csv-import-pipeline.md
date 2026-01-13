@@ -26,7 +26,8 @@ data class CsvParseOptions(
     val encoding: String? = null,  // null = auto-detect
     val hasHeader: Boolean? = null,  // null = auto-detect
     val dateFormat: String? = null,  // null = auto-detect
-    val amountFormat: AmountFormat? = null  // null = auto-detect
+    val amountFormat: AmountFormat? = null,  // null = auto-detect
+    val currencyCode: String? = null  // Prefer from Account/settings; never hardcode at parse sites
 )
 
 enum class AmountFormat {
@@ -183,6 +184,9 @@ class CsvParserImpl : CsvParser {
         csvData: ByteArray,
         options: CsvParseOptions
     ): CsvParseResult {
+        // Currency should be provided by the ImportOrchestrator based on the selected account.
+        val currencyCode = options.currencyCode ?: "USD"
+
         // Detect encoding
         val encoding = options.encoding ?: detector.detectEncoding(csvData)
         val text = csvData.toString(Charset.forName(encoding))
@@ -216,7 +220,7 @@ class CsvParserImpl : CsvParser {
 
         // Parse transactions
         val transactions = dataRows.mapIndexedNotNull { index, row ->
-            parseRow(row, mapping, index + 1)
+            parseRow(row, mapping, index + 1, currencyCode)
         }
 
         return CsvParseResult.Success(
@@ -252,7 +256,8 @@ class CsvParserImpl : CsvParser {
     private fun parseRow(
         row: List<String>,
         mapping: ColumnMapping,
-        rowNumber: Int
+        rowNumber: Int,
+        currencyCode: String
     ): ParsedTransaction? {
         try {
             val dateStr = mapping.dateColumn?.let { row.getOrNull(it) } ?: return null
@@ -260,11 +265,11 @@ class CsvParserImpl : CsvParser {
 
             val amount = when {
                 mapping.amountColumn != null -> {
-                    parseAmount(row[mapping.amountColumn])
+                    parseAmount(row[mapping.amountColumn], currencyCode)
                 }
                 mapping.debitColumn != null && mapping.creditColumn != null -> {
-                    val debit = parseAmount(row.getOrNull(mapping.debitColumn) ?: "0")
-                    val credit = parseAmount(row.getOrNull(mapping.creditColumn) ?: "0")
+                    val debit = parseAmount(row.getOrNull(mapping.debitColumn) ?: "0", currencyCode)
+                    val credit = parseAmount(row.getOrNull(mapping.creditColumn) ?: "0", currencyCode)
                     credit - debit
                 }
                 else -> return null
@@ -285,7 +290,8 @@ class CsvParserImpl : CsvParser {
                 transactionDate = null,
                 descriptionRaw = description,
                 amount = amount,
-                balance = mapping.balanceColumn?.let { row.getOrNull(it) }?.let { parseAmount(it) },
+                balance = mapping.balanceColumn?.let { row.getOrNull(it) }
+                    ?.let { parseAmount(it, currencyCode) },
                 confidence = 0.95f
             )
         } catch (e: Exception) {
@@ -293,15 +299,17 @@ class CsvParserImpl : CsvParser {
         }
     }
 
-    private fun parseAmount(value: String): Money {
-        val cleaned = value
-            .replace(Regex("[,$\\s]"), "")
-            .replace("(", "-")
-            .replace(")", "")
-            .trim()
+    private fun parseAmount(value: String, currencyCode: String): Money {
+        val cleaned = value.trim()
 
-        val amount = cleaned.toDoubleOrNull() ?: 0.0
-        return Money.fromMajorUnits(amount, "USD")  // Default currency
+        // Parse deterministically (no Double/Float).
+        val scale = CurrencyMetadata.getScale(currencyCode)
+        val minorUnits = MoneyParser.parseToMinorUnits(
+            amountString = cleaned,
+            scale = scale,
+            roundingMode = RoundingMode.HALF_UP
+        )
+        return Money.fromMinorUnits(minorUnits, currencyCode)
     }
 }
 ```

@@ -93,7 +93,7 @@ class TextExporter {
                         .joinToString(", ")
 
                     appendLine("${item.description}")
-                    appendLine("  ${item.totalPrice.formatUsd()} → $allocated")
+                    appendLine("  ${item.totalPrice.formatForDisplay()} → $allocated")
                 }
                 appendLine()
             }
@@ -105,13 +105,13 @@ class TextExporter {
                 appendLine("-".repeat(40))
 
                 val subtotal = split.items.sumOf { it.totalPrice.minorUnits }
-                appendLine("Subtotal: ${Money(subtotal, split.currency).formatUsd()}")
+                appendLine("Subtotal: ${Money(subtotal, split.currency).formatForDisplay()}")
 
-                split.fees?.tax?.let { appendLine("Tax: ${it.formatUsd()}") }
-                split.fees?.tip?.let { appendLine("Tip: ${it.formatUsd()}") }
-                split.fees?.serviceFee?.let { appendLine("Service Fee: ${it.formatUsd()}") }
+                split.fees?.tax?.let { appendLine("Tax: ${it.formatForDisplay()}") }
+                split.fees?.tip?.let { appendLine("Tip: ${it.formatForDisplay()}") }
+                split.fees?.serviceFee?.let { appendLine("Service Fee: ${it.formatForDisplay()}") }
 
-                appendLine("TOTAL: ${settlement.totalAmount.formatUsd()}")
+                appendLine("TOTAL: ${settlement.totalAmount.formatForDisplay()}")
                 appendLine()
             }
 
@@ -122,14 +122,14 @@ class TextExporter {
 
             for (balance in settlement.participantBalances) {
                 appendLine("${balance.participantName}:")
-                appendLine("  Items: ${balance.itemsSubtotal.formatUsd()}")
+                appendLine("  Items: ${balance.itemsSubtotal.formatForDisplay()}")
                 if (balance.taxShare.minorUnits > 0) {
-                    appendLine("  Tax: ${balance.taxShare.formatUsd()}")
+                    appendLine("  Tax: ${balance.taxShare.formatForDisplay()}")
                 }
                 if (balance.tipShare.minorUnits > 0) {
-                    appendLine("  Tip: ${balance.tipShare.formatUsd()}")
+                    appendLine("  Tip: ${balance.tipShare.formatForDisplay()}")
                 }
-                appendLine("  Total: ${balance.totalOwed.formatUsd()}")
+                appendLine("  Total: ${balance.totalOwed.formatForDisplay()}")
                 appendLine()
             }
 
@@ -143,7 +143,7 @@ class TextExporter {
             } else {
                 for (tx in settlement.transactions) {
                     val status = if (tx.status == TransactionStatus.COMPLETED) "✓" else "○"
-                    appendLine("$status ${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatUsd()}")
+                    appendLine("$status ${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatForDisplay()}")
 
                     if (options.includePaymentLinks) {
                         val paymentInfo = options.participantPaymentMethods[tx.toParticipantId]
@@ -192,7 +192,7 @@ class TextExporter {
                         }
                         .joinToString(", ")
 
-                    appendLine("| ${item.description} | ${item.totalPrice.formatUsd()} | $participants |")
+                    appendLine("| ${item.description} | ${item.totalPrice.formatForDisplay()} | $participants |")
                 }
                 appendLine()
             }
@@ -202,10 +202,10 @@ class TextExporter {
             appendLine()
 
             val subtotal = split.items.sumOf { it.totalPrice.minorUnits }
-            appendLine("- **Subtotal:** ${Money(subtotal, split.currency).formatUsd()}")
-            split.fees?.tax?.let { appendLine("- **Tax:** ${it.formatUsd()}") }
-            split.fees?.tip?.let { appendLine("- **Tip:** ${it.formatUsd()}") }
-            appendLine("- **Total:** ${settlement.totalAmount.formatUsd()}")
+            appendLine("- **Subtotal:** ${Money(subtotal, split.currency).formatForDisplay()}")
+            split.fees?.tax?.let { appendLine("- **Tax:** ${it.formatForDisplay()}") }
+            split.fees?.tip?.let { appendLine("- **Tip:** ${it.formatForDisplay()}") }
+            appendLine("- **Total:** ${settlement.totalAmount.formatForDisplay()}")
             appendLine()
 
             // Per-person
@@ -215,7 +215,7 @@ class TextExporter {
             appendLine("|--------|-------|-----|-----|-------|")
 
             for (balance in settlement.participantBalances) {
-                appendLine("| ${balance.participantName} | ${balance.itemsSubtotal.formatUsd()} | ${balance.taxShare.formatUsd()} | ${balance.tipShare.formatUsd()} | **${balance.totalOwed.formatUsd()}** |")
+                appendLine("| ${balance.participantName} | ${balance.itemsSubtotal.formatForDisplay()} | ${balance.taxShare.formatForDisplay()} | ${balance.tipShare.formatForDisplay()} | **${balance.totalOwed.formatForDisplay()}** |")
             }
             appendLine()
 
@@ -228,7 +228,7 @@ class TextExporter {
             } else {
                 for (tx in settlement.transactions) {
                     val checkbox = if (tx.status == TransactionStatus.COMPLETED) "[x]" else "[ ]"
-                    appendLine("- $checkbox **${tx.fromParticipantName}** pays **${tx.toParticipantName}**: ${tx.amount.formatUsd()}")
+                    appendLine("- $checkbox **${tx.fromParticipantName}** pays **${tx.toParticipantName}**: ${tx.amount.formatForDisplay()}")
                 }
             }
 
@@ -243,10 +243,10 @@ class TextExporter {
      */
     fun exportShortText(settlement: Settlement): String {
         return buildString {
-            appendLine("Split: ${settlement.totalAmount.formatUsd()}")
+            appendLine("Split: ${settlement.totalAmount.formatForDisplay()}")
 
             for (tx in settlement.transactions.filter { it.status == TransactionStatus.PENDING }) {
-                appendLine("• ${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatUsd()}")
+                appendLine("• ${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatForDisplay()}")
             }
         }
     }
@@ -328,7 +328,7 @@ actual class ImageExporter {
         paint.textSize = 28f
         for (balance in settlement.participantBalances) {
             canvas.drawText(
-                "${balance.participantName}: ${balance.totalOwed.formatUsd()}",
+                "${balance.participantName}: ${balance.totalOwed.formatForDisplay()}",
                 60f, y, paint
             )
             y += 45f
@@ -348,7 +348,7 @@ actual class ImageExporter {
         paint.textSize = 28f
         for (tx in settlement.transactions) {
             canvas.drawText(
-                "${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatUsd()}",
+                "${tx.fromParticipantName} → ${tx.toParticipantName}: ${tx.amount.formatForDisplay()}",
                 60f, y, paint
             )
             y += 45f
@@ -613,4 +613,3 @@ class TextExporterTest {
 ## Estimated Complexity
 
 **Low** - Text formatting with platform-specific sharing.
-

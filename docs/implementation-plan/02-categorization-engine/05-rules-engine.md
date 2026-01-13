@@ -59,8 +59,12 @@ class MerchantEqualsMatcher : RuleMatcher {
 class DescriptionRegexMatcher : RuleMatcher {
     override fun matches(transaction: TransactionForMatching, rule: Rule): Boolean {
         return try {
-            val regex = Regex(rule.matchExpression, RegexOption.IGNORE_CASE)
-            regex.containsMatchIn(transaction.descriptionRaw)
+            // SECURITY: Avoid catastrophic backtracking DoS from user-supplied patterns.
+            // Implement `SafeRegex` via `expect/actual`:
+            // - JVM (Android/Desktop): RE2J-backed implementation (linear-time)
+            // - Other platforms: constrained engine or feature-gated rule type
+            SafeRegex(pattern = rule.matchExpression, ignoreCase = true)
+                .containsMatchIn(transaction.descriptionRaw)
         } catch (e: Exception) {
             false  // Invalid regex doesn't match
         }
@@ -69,12 +73,13 @@ class DescriptionRegexMatcher : RuleMatcher {
 
 class AmountRangeMatcher : RuleMatcher {
     override fun matches(transaction: TransactionForMatching, rule: Rule): Boolean {
-        // Expression format: "min:max" e.g., "0:50" or "100:"
+        // Expression format (major-units strings): "min:max" e.g., "0:50" or "100:" or ":25.50"
         val parts = rule.matchExpression.split(":")
         if (parts.size != 2) return false
 
-        val min = parts[0].toLongOrNull()?.let { Money(it * 100, transaction.amount.currencyCode) }
-        val max = parts[1].toLongOrNull()?.let { Money(it * 100, transaction.amount.currencyCode) }
+        val currency = transaction.amount.currencyCode
+        val min = parts[0].takeIf { it.isNotBlank() }?.let { Money.parseMajor(it, currency) }
+        val max = parts[1].takeIf { it.isNotBlank() }?.let { Money.parseMajor(it, currency) }
 
         val amount = transaction.amount.abs()
 
@@ -91,6 +96,15 @@ class AccountMatcher : RuleMatcher {
     override fun matches(transaction: TransactionForMatching, rule: Rule): Boolean {
         return transaction.accountId == rule.matchExpression
     }
+}
+
+/**
+ * Safe regex abstraction to prevent regex-based DoS.
+ *
+ * JVM recommendation: RE2J (`com.google.re2j`) instead of `java.util.regex`.
+ */
+expect class SafeRegex(pattern: String, ignoreCase: Boolean = true) {
+    fun containsMatchIn(text: String): Boolean
 }
 ```
 
@@ -250,14 +264,20 @@ class RuleService(
         when (ruleType) {
             "description_regex" -> {
                 try {
-                    Regex(expression)
+                    // Validate with the safe regex engine (not JVM backtracking regex).
+                    SafeRegex(pattern = expression, ignoreCase = true)
                 } catch (e: Exception) {
                     throw InvalidRuleException("Invalid regex: ${e.message}")
                 }
             }
             "amount_range" -> {
-                if (!expression.matches(Regex("""\d*:\d*"""))) {
-                    throw InvalidRuleException("Amount range must be format 'min:max'")
+                // Format: "min:max" where min/max are optional decimal strings (major units).
+                // Examples: "0:50", "100:", ":25.50", "-10.00:0"
+                val rangePattern = Regex(
+                    """^\s*-?\d*(?:[.,]\d+)?\s*:\s*-?\d*(?:[.,]\d+)?\s*$"""
+                )
+                if (!expression.matches(rangePattern)) {
+                    throw InvalidRuleException("Amount range must be format 'min:max' (major-units decimals)")
                 }
             }
         }

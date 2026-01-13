@@ -20,6 +20,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -131,6 +134,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release-android:
     runs-on: ubuntu-latest
@@ -156,6 +162,10 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew :android:assembleRelease
+
+      - name: Cleanup keystore
+        if: always()
+        run: rm -f keystore.jks
 
       - name: Upload release APK
         uses: actions/upload-artifact@v4

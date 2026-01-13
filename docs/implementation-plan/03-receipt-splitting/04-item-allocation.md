@@ -115,8 +115,8 @@ class ItemAllocator(
 
         // Use MoneyAllocator for precise splitting
         val amounts = MoneyAllocator.splitEqual(
-            amount = item.totalPrice,
-            ways = participantIds.size
+            total = item.totalPrice,
+            parties = participantIds.size
         )
 
         val allocations = participantIds.mapIndexed { index, participantId ->
@@ -509,4 +509,3 @@ class ItemAllocatorTest {
 ## Estimated Complexity
 
 **Medium** - Core allocation logic with multiple strategies.
-

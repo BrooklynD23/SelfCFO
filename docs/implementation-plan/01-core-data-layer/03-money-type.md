@@ -41,28 +41,29 @@ data class Money(
 
     companion object {
         /**
-         * Create Money from a major units value (e.g., dollars).
+         * Create Money from minor units (canonical storage representation).
          */
-        fun fromMajorUnits(
-            amount: Double,
-            currencyCode: String
-        ): Money {
-            val scale = CurrencyMetadata.getScale(currencyCode)
-            val multiplier = 10.0.pow(scale)
-            val minorUnits = (amount * multiplier).roundToLong()
-            return Money(minorUnits, currencyCode, scale)
-        }
+        fun fromMinorUnits(minorUnits: Long, currencyCode: String): Money =
+            Money(minorUnits, currencyCode, CurrencyMetadata.getScale(currencyCode))
 
         /**
-         * Create Money from a string (e.g., "12.34").
+         * Parse a user-entered decimal string (e.g., "12.34") into minor units.
+         *
+         * IMPORTANT: Do not use `Double`/`Float` for parsing or construction.
+         * Parsing must be deterministic across platforms and stable for persistence.
          */
-        fun parse(
+        fun parseMajor(
             amountString: String,
-            currencyCode: String
+            currencyCode: String,
+            roundingMode: RoundingMode = RoundingMode.HALF_UP
         ): Money {
-            val amount = amountString.toDoubleOrNull()
-                ?: throw IllegalArgumentException("Invalid amount: $amountString")
-            return fromMajorUnits(amount, currencyCode)
+            val scale = CurrencyMetadata.getScale(currencyCode)
+            val minorUnits = MoneyParser.parseToMinorUnits(
+                amountString = amountString,
+                scale = scale,
+                roundingMode = roundingMode
+            )
+            return Money(minorUnits, currencyCode, scale)
         }
 
         /**
@@ -74,25 +75,10 @@ data class Money(
     }
 
     /**
-     * Convert to major units (e.g., dollars).
-     * Use only for display, not calculations.
+     * Convert to a major-units string (e.g., "12.34") for display/export.
+     * Locale/currency-symbol formatting belongs in platform UI utilities.
      */
-    fun toMajorUnits(): Double {
-        return minorUnits / 10.0.pow(scale)
-    }
-
-    /**
-     * Format for display.
-     */
-    fun format(
-        showCurrency: Boolean = true,
-        locale: Locale = Locale.getDefault()
-    ): String {
-        val formatter = NumberFormat.getCurrencyInstance(locale)
-        formatter.currency = Currency.getInstance(currencyCode)
-        val formatted = formatter.format(toMajorUnits())
-        return if (showCurrency) formatted else formatted.replace(Regex("[^0-9.,\\-]"), "").trim()
-    }
+    fun toMajorString(): String = MoneyFormatter.toMajorString(this)
 
     // Arithmetic operations
 
@@ -115,20 +101,33 @@ data class Money(
     }
 
     /**
-     * Multiply by a decimal with specified rounding.
+     * Multiply by a fixed-point rate expressed in basis points (1/10,000).
+     * Example: 8.5% = 850 bps.
      */
-    fun multiply(
-        multiplier: Double,
+    fun multiplyByBasisPoints(
+        basisPoints: Int,
         roundingMode: RoundingMode = RoundingMode.HALF_UP
     ): Money {
-        val result = minorUnits * multiplier
+        require(basisPoints >= 0) { "basisPoints must be non-negative" }
+
+        val numerator = minorUnits * basisPoints.toLong() // NOTE: keep inputs bounded to avoid overflow.
+        val quotient = numerator / 10_000L
+        val remainder = numerator % 10_000L
+
         val rounded = when (roundingMode) {
-            RoundingMode.HALF_UP -> (result + 0.5).toLong()
-            RoundingMode.HALF_DOWN -> (result + 0.4999999).toLong()
-            RoundingMode.DOWN -> result.toLong()
-            RoundingMode.UP -> if (result > result.toLong()) result.toLong() + 1 else result.toLong()
-            RoundingMode.HALF_EVEN -> result.roundToLong() // Banker's rounding
+            RoundingMode.DOWN -> quotient
+            RoundingMode.UP -> if (remainder == 0L) quotient else quotient + 1
+            RoundingMode.HALF_UP -> if (remainder >= 5_000L) quotient + 1 else quotient
+            RoundingMode.HALF_DOWN -> if (remainder > 5_000L) quotient + 1 else quotient
+            RoundingMode.HALF_EVEN -> {
+                when {
+                    remainder > 5_000L -> quotient + 1
+                    remainder < 5_000L -> quotient
+                    else -> if (quotient % 2L == 0L) quotient else quotient + 1
+                }
+            }
         }
+
         return copy(minorUnits = rounded)
     }
 
@@ -184,6 +183,168 @@ enum class RoundingMode {
     DOWN,         // Truncate toward zero
     UP            // Always round away from zero
 }
+```
+
+### Step 1b: Parsing & Formatting Utilities (No Floating Point)
+
+Keep the canonical `Money` type free of locale/JVM dependencies. Provide:
+- `MoneyParser` for deterministic parsing from user/import strings
+- `MoneyFormatter` for canonical major-units strings (no locale)
+- Platform/UI formatting in a separate `expect/actual` formatter
+
+```kotlin
+// shared/src/commonMain/kotlin/com/ledgerlens/domain/MoneyParser.kt
+package com.ledgerlens.domain
+
+object MoneyParser {
+    /**
+     * Parse a decimal string into minor units using integer math.
+     *
+     * Supported inputs (examples):
+     * - "12.34"
+     * - "-12.34"
+     * - "(12.34)"   // accounting negative
+     * - "1,234.56"  // thousands separators
+     *
+     * NOTE: If more fractional digits are provided than the currency `scale`,
+     * apply `roundingMode` deterministically.
+     */
+    fun parseToMinorUnits(
+        amountString: String,
+        scale: Int,
+        roundingMode: RoundingMode = RoundingMode.HALF_UP
+    ): Long {
+        require(scale >= 0) { "scale must be non-negative" }
+
+        var text = amountString.trim()
+        require(text.isNotBlank()) { "amountString is blank" }
+
+        // Accounting negatives: "(12.34)"
+        var negative = false
+        if (text.startsWith("(") && text.endsWith(")")) {
+            negative = true
+            text = text.substring(1, text.length - 1).trim()
+        }
+
+        // Leading sign
+        if (text.startsWith("+")) text = text.drop(1).trim()
+        if (text.startsWith("-")) {
+            negative = true
+            text = text.drop(1).trim()
+        }
+
+        // Keep digits and separators only; other characters (currency symbols, spaces) are ignored.
+        text = text.replace(Regex("""[^0-9.,]"""), "")
+        require(text.isNotBlank()) { "No digits found in amountString" }
+
+        val lastDot = text.lastIndexOf('.')
+        val lastComma = text.lastIndexOf(',')
+
+        val decimalSep: Char? = when {
+            lastDot >= 0 && lastComma >= 0 -> if (lastDot > lastComma) '.' else ','
+            lastDot >= 0 -> '.'
+            lastComma >= 0 -> {
+                // Heuristic: treat comma as decimal only if it looks like a fractional separator.
+                val digitsAfter = text.length - lastComma - 1
+                if (digitsAfter in 1..maxOf(scale, 1)) ',' else null
+            }
+            else -> null
+        }
+
+        val groupingSep: Char? = when (decimalSep) {
+            '.' -> ','
+            ',' -> '.'
+            else -> ','
+        }
+
+        val (wholeRaw, fracRaw) = if (decimalSep != null && text.contains(decimalSep)) {
+            val parts = text.split(decimalSep, limit = 2)
+            parts[0] to parts.getOrElse(1) { "" }
+        } else {
+            text to ""
+        }
+
+        val wholeDigits = wholeRaw.replace(groupingSep.toString(), "").ifBlank { "0" }
+        val fracDigits = fracRaw.replace(groupingSep.toString(), "")
+
+        val whole = wholeDigits.toLongOrNull()
+            ?: throw IllegalArgumentException("Invalid whole part: $wholeDigits")
+
+        fun pow10Long(exp: Int): Long = (1..exp).fold(1L) { acc, _ -> acc * 10L }
+        val factor = pow10Long(scale)
+
+        val keptFrac = when {
+            scale == 0 -> ""
+            fracDigits.length <= scale -> fracDigits.padEnd(scale, '0')
+            else -> fracDigits.substring(0, scale)
+        }
+        val baseFrac = if (keptFrac.isBlank()) 0L else keptFrac.toLong()
+
+        var minorUnits = whole * factor + baseFrac
+
+        // Rounding if extra fractional digits exist
+        if (fracDigits.length > scale) {
+            val nextDigit = fracDigits.getOrNull(scale)?.digitToIntOrNull() ?: 0
+            val rest = fracDigits.drop(scale + 1)
+            val restNonZero = rest.any { it != '0' }
+
+            val roundUp = when (roundingMode) {
+                RoundingMode.DOWN -> false
+                RoundingMode.UP -> nextDigit != 0 || restNonZero
+                RoundingMode.HALF_UP -> nextDigit >= 5
+                RoundingMode.HALF_DOWN -> nextDigit > 5 || (nextDigit == 5 && restNonZero)
+                RoundingMode.HALF_EVEN -> when {
+                    nextDigit > 5 -> true
+                    nextDigit < 5 -> false
+                    restNonZero -> true
+                    else -> (minorUnits % 2L) != 0L
+                }
+            }
+
+            if (roundUp) minorUnits += 1L
+        }
+
+        return if (negative) -minorUnits else minorUnits
+    }
+}
+
+// shared/src/commonMain/kotlin/com/ledgerlens/domain/MoneyFormatter.kt
+package com.ledgerlens.domain
+
+object MoneyFormatter {
+    /**
+     * Canonical major-units string (e.g., "12.34") for export/debugging.
+     * Locale/currency symbol formatting belongs in platform UI.
+     */
+    fun toMajorString(money: Money): String {
+        val sign = if (money.minorUnits < 0) "-" else ""
+        val abs = kotlin.math.abs(money.minorUnits)
+
+        val scale = money.scale
+        if (scale == 0) return sign + abs.toString()
+
+        val divisor = (1L..scale).fold(1L) { acc, _ -> acc * 10L }
+        val whole = abs / divisor
+        val frac = abs % divisor
+        return sign + whole.toString() + "." + frac.toString().padStart(scale, '0')
+    }
+}
+
+// shared/src/commonMain/kotlin/com/ledgerlens/domain/MoneyLocaleFormatter.kt
+package com.ledgerlens.domain
+
+/**
+ * Platform/UI-specific formatting (symbols, grouping, locale rules).
+ */
+expect object MoneyLocaleFormatter {
+    fun format(money: Money, showCurrency: Boolean = true): String
+}
+
+/**
+ * Convenience for app/UI code.
+ */
+fun Money.formatForDisplay(showCurrency: Boolean = true): String =
+    MoneyLocaleFormatter.format(this, showCurrency)
 ```
 
 ### Step 2: Currency Metadata
@@ -263,7 +424,7 @@ object MoneyAllocator {
      * Split evenly among N parties.
      * Remainder goes to the first party (typically the payer).
      */
-    fun splitEvenly(
+    fun splitEqual(
         total: Money,
         parties: Int,
         remainderRecipient: RemainderRecipient = RemainderRecipient.FIRST
@@ -284,41 +445,59 @@ object MoneyAllocator {
     }
 
     /**
-     * Split by percentages.
-     * @param percentages List of percentages (should sum to 100)
+     * Split by fixed-point percentages in basis points (1/10,000).
+     * Example: 33.33% = 3333 bps.
+     *
+     * @param percentagesBps List of basis points (should sum to 10_000)
      */
-    fun splitByPercent(
+    fun splitByPercentBps(
         total: Money,
-        percentages: List<Double>,
+        percentagesBps: List<Int>,
         remainderRecipient: RemainderRecipient = RemainderRecipient.LARGEST
     ): List<Money> {
-        require(percentages.isNotEmpty()) { "Must have at least one percentage" }
+        require(percentagesBps.isNotEmpty()) { "Must have at least one percentage" }
+        require(percentagesBps.all { it >= 0 }) { "Percentages must be non-negative" }
+        require(percentagesBps.sum() == 10_000) { "Percentages must sum to 10,000 bps (100.00%)" }
 
-        // Calculate initial allocations
-        val allocations = percentages.map { pct ->
-            (total.minorUnits * pct / 100.0).toLong()
-        }.toMutableList()
+        // Integer-only allocation:
+        //   floor(total * bps / 10_000) with largest-remainder distribution.
+        val baseAllocations = mutableListOf<Long>()
+        val remainders = mutableListOf<Long>()
 
-        // Calculate remainder
-        val allocated = allocations.sum()
-        var remainder = total.minorUnits - allocated
+        for (bps in percentagesBps) {
+            val numerator = total.minorUnits * bps.toLong() // Keep inputs bounded to avoid overflow.
+            baseAllocations += numerator / 10_000L
+            remainders += numerator % 10_000L
+        }
 
-        // Distribute remainder
-        when (remainderRecipient) {
-            RemainderRecipient.FIRST -> {
-                allocations[0] = allocations[0] + remainder
-            }
-            RemainderRecipient.LAST -> {
-                allocations[allocations.lastIndex] = allocations.last() + remainder
-            }
-            RemainderRecipient.LARGEST -> {
-                // Give to the party with largest percentage
-                val maxIndex = percentages.indices.maxByOrNull { percentages[it] } ?: 0
-                allocations[maxIndex] = allocations[maxIndex] + remainder
+        var allocated = baseAllocations.sum()
+        var remainingCents = total.minorUnits - allocated
+
+        if (remainingCents > 0) {
+            val indicesByRemainder = remainders.indices.sortedByDescending { remainders[it] }
+            var i = 0
+            while (remainingCents > 0 && i < indicesByRemainder.size) {
+                val idx = indicesByRemainder[i]
+                baseAllocations[idx] = baseAllocations[idx] + 1
+                remainingCents--
+                i++
             }
         }
 
-        return allocations.map { total.copy(minorUnits = it) }
+        if (remainingCents != 0L) {
+            // As a deterministic fallback, assign any unexpected remainder per requested strategy.
+            when (remainderRecipient) {
+                RemainderRecipient.FIRST -> baseAllocations[0] = baseAllocations[0] + remainingCents
+                RemainderRecipient.LAST -> baseAllocations[baseAllocations.lastIndex] =
+                    baseAllocations.last() + remainingCents
+                RemainderRecipient.LARGEST -> {
+                    val maxIndex = percentagesBps.indices.maxByOrNull { percentagesBps[it] } ?: 0
+                    baseAllocations[maxIndex] = baseAllocations[maxIndex] + remainingCents
+                }
+            }
+        }
+
+        return baseAllocations.map { total.copy(minorUnits = it) }
     }
 
     /**
@@ -333,9 +512,60 @@ object MoneyAllocator {
         require(ratios.isNotEmpty()) { "Must have at least one ratio" }
         require(ratios.all { it > 0 }) { "All ratios must be positive" }
 
-        val totalRatio = ratios.sum()
-        val percentages = ratios.map { it.toDouble() / totalRatio * 100 }
-        return splitByPercent(total, percentages, remainderRecipient)
+        val totalRatio = ratios.sum().toLong()
+        val weights = ratios.map { it.toLong() }
+        return splitByWeights(total, weights, totalRatio, remainderRecipient)
+    }
+
+    /**
+     * Split by integer weights.
+     *
+     * This is the primitive used for proportional fee allocation and other “share of total” cases.
+     */
+    fun splitByWeights(
+        total: Money,
+        weights: List<Long>,
+        totalWeight: Long = weights.sum(),
+        remainderRecipient: RemainderRecipient = RemainderRecipient.LARGEST
+    ): List<Money> {
+        require(weights.isNotEmpty()) { "Must have at least one weight" }
+        require(weights.all { it >= 0L }) { "Weights must be non-negative" }
+        require(totalWeight > 0L) { "Total weight must be positive" }
+
+        val baseAllocations = mutableListOf<Long>()
+        val remainders = mutableListOf<Long>()
+
+        for (w in weights) {
+            val numerator = total.minorUnits * w // Keep inputs bounded to avoid overflow.
+            baseAllocations += numerator / totalWeight
+            remainders += numerator % totalWeight
+        }
+
+        var remainingCents = total.minorUnits - baseAllocations.sum()
+        if (remainingCents > 0) {
+            val indicesByRemainder = remainders.indices.sortedByDescending { remainders[it] }
+            var i = 0
+            while (remainingCents > 0 && i < indicesByRemainder.size) {
+                val idx = indicesByRemainder[i]
+                baseAllocations[idx] = baseAllocations[idx] + 1
+                remainingCents--
+                i++
+            }
+        }
+
+        if (remainingCents != 0L) {
+            when (remainderRecipient) {
+                RemainderRecipient.FIRST -> baseAllocations[0] = baseAllocations[0] + remainingCents
+                RemainderRecipient.LAST -> baseAllocations[baseAllocations.lastIndex] =
+                    baseAllocations.last() + remainingCents
+                RemainderRecipient.LARGEST -> {
+                    val maxIndex = weights.indices.maxByOrNull { weights[it] } ?: 0
+                    baseAllocations[maxIndex] = baseAllocations[maxIndex] + remainingCents
+                }
+            }
+        }
+
+        return baseAllocations.map { total.copy(minorUnits = it) }
     }
 
     enum class RemainderRecipient {
@@ -411,7 +641,7 @@ class MoneyTest {
 
     @Test
     fun `create from major units`() {
-        val money = Money.fromMajorUnits(12.34, "USD")
+        val money = Money.parseMajor("12.34", "USD")
         assertEquals(1234L, money.minorUnits)
         assertEquals("USD", money.currencyCode)
         assertEquals(2, money.scale)
@@ -428,7 +658,7 @@ class MoneyTest {
     @Test
     fun `split evenly with remainder`() {
         val total = Money(1000L, "USD")  // $10.00
-        val splits = MoneyAllocator.splitEvenly(total, 3)
+        val splits = MoneyAllocator.splitEqual(total, 3)
 
         assertEquals(3, splits.size)
         assertEquals(334L, splits[0].minorUnits)  // Gets remainder
@@ -439,7 +669,7 @@ class MoneyTest {
 
     @Test
     fun `JPY has zero decimal places`() {
-        val yen = Money.fromMajorUnits(1234.0, "JPY")
+        val yen = Money.parseMajor("1234", "JPY")
         assertEquals(1234L, yen.minorUnits)
         assertEquals(0, yen.scale)
     }
@@ -447,7 +677,7 @@ class MoneyTest {
     @Test
     fun `percentage split sums to total`() {
         val total = Money(10000L, "USD")  // $100.00
-        val splits = MoneyAllocator.splitByPercent(total, listOf(33.33, 33.33, 33.34))
+        val splits = MoneyAllocator.splitByPercentBps(total, listOf(3333, 3333, 3334))
 
         assertEquals(total.minorUnits, splits.sumOf { it.minorUnits })
     }
