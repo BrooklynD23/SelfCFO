@@ -55,6 +55,9 @@
 - [x] Android Keystore integration (EncryptedSharedPreferences + Android Keystore)
 - [x] Desktop keychain integration (File-based with AES-GCM + Java Preferences)
 - [x] SQLCipher database factory (Android + Desktop createEncryptedDriver)
+- [x] PlatformKeystoreTest (round-trip, delete, overwrite tests)
+- [x] FileEncryptionTest (AES-GCM round-trip, tamper detection)
+- [x] DatabaseDriverFactoryTest (driver creation, encryption key validation)
 
 #### Sprint 01: Money Type ✅
 - [x] Money data class with integer minor units
@@ -64,6 +67,8 @@
 - [x] MoneyAllocator (split with remainder handling)
 - [x] MoneyLocaleFormatter expect/actual (platform formatting)
 - [x] Unit tests for Money, Allocator, Parser
+- [x] MoneyEdgeCasesTest (zero, negative, overflow, currencies)
+- [x] MoneyAllocatorPropertyTest (sum invariant verification)
 
 #### Sprint 01: PDF Import Pipeline 
 - [x] PdfParser interface with result types
@@ -147,4 +152,4 @@
 - [x] Sha256 expect/actual (JVM implementation)
 - [x] Unit tests for MerchantNormalizer and DuplicateDetector
 
-*Last Updated: 2026-01-13 (Session 4 - PDF Import Pipeline completed)*
+*Last Updated: 2026-01-13 (Session 5 - Sprint 01 Integration Tests added)*
