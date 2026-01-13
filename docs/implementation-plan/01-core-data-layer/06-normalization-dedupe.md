@@ -379,13 +379,13 @@ class ImportOrchestrator(
 
 ## Acceptance Criteria
 
-- [ ] Merchant normalization removes noise
-- [ ] Known merchant aliases mapped
-- [ ] Fingerprint generation is deterministic
-- [ ] Exact duplicates detected
-- [ ] Near-duplicates flagged for review
-- [ ] Import is idempotent (re-import same file = no duplicates)
-- [ ] Cross-file duplicates detected
+- [x] Merchant normalization removes noise
+- [x] Known merchant aliases mapped
+- [x] Fingerprint generation is deterministic
+- [x] Exact duplicates detected
+- [x] Near-duplicates flagged for review
+- [x] Import is idempotent (re-import same file = no duplicates)
+- [x] Cross-file duplicates detected
 
 ---
 

@@ -353,14 +353,14 @@ class FlexibleDateParser {
 
 ## Acceptance Criteria
 
-- [ ] Auto-detect delimiter (comma, tab, semicolon, pipe)
-- [ ] Auto-detect encoding (UTF-8, UTF-16, ASCII)
-- [ ] Auto-detect header row
-- [ ] Column mapping heuristics work
-- [ ] Handles separate debit/credit columns
-- [ ] Parses common date formats
-- [ ] Handles amount formats (parentheses for negative, etc.)
-- [ ] >99% parse rate on standard bank CSVs
+- [x] Auto-detect delimiter (comma, tab, semicolon, pipe)
+- [x] Auto-detect encoding (UTF-8, UTF-16, ASCII)
+- [x] Auto-detect header row
+- [x] Column mapping heuristics work
+- [x] Handles separate debit/credit columns
+- [x] Parses common date formats
+- [x] Handles amount formats (parentheses for negative, etc.)
+- [ ] >99% parse rate on standard bank CSVs (requires golden file testing)
 
 ---
 

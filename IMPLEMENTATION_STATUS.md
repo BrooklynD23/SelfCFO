@@ -36,7 +36,7 @@
   - [x] Migrate root build.gradle.kts to version catalog
 
 ### Current Task
-- [ ] **Sprint 01: PDF/CSV Import Pipeline** (Next)
+- [x] **Sprint 01: Normalization & Deduplication** ✅ COMPLETE
 
 ### Completed Tasks
 
@@ -55,6 +55,15 @@
 - [x] Android Keystore integration (EncryptedSharedPreferences + Android Keystore)
 - [x] Desktop keychain integration (File-based with AES-GCM + Java Preferences)
 - [x] SQLCipher database factory (Android + Desktop createEncryptedDriver)
+- [x] PlatformKeystoreTest (round-trip, delete, overwrite tests)
+- [x] FileEncryptionTest (AES-GCM round-trip, tamper detection)
+- [x] DatabaseDriverFactoryTest (driver creation, encryption key validation)
+- [x] KeyManagerImpl - Full implementation per ADR-003
+- [x] MnemonicGenerator - BIP39 24-word recovery key generation
+- [x] Bip39WordList - 2048-word English word list
+- [x] KeyWrapper - AES-GCM key wrapping (JVM)
+- [x] Sha256 - Platform-specific SHA-256 hashing (JVM)
+- [x] KeyManagerTest - Unit tests for passphrase, mnemonic, backup
 
 #### Sprint 01: Money Type ✅
 - [x] Money data class with integer minor units
@@ -64,6 +73,26 @@
 - [x] MoneyAllocator (split with remainder handling)
 - [x] MoneyLocaleFormatter expect/actual (platform formatting)
 - [x] Unit tests for Money, Allocator, Parser
+- [x] MoneyEdgeCasesTest (zero, negative, overflow, currencies)
+- [x] MoneyAllocatorPropertyTest (sum invariant verification)
+
+#### Sprint 01: PDF Import Pipeline 
+- [x] PdfParser interface with result types
+- [x] ParsedTransaction data classes
+- [x] StatementTemplate registry with bank-specific templates
+- [x] TemplateBasedParser for extracting transactions
+- [x] PdfParserDesktop (PDFBox implementation)
+- [x] PdfParserAndroid (ML Kit stub - TODO)
+- [x] PdfParserFactory expect/actual pattern
+- [x] Unit tests for StatementTemplate
+
+#### Sprint 01: CSV Import Pipeline 
+- [x] CsvParser interface with data classes
+- [x] CsvAutoDetector (encoding, delimiter, header detection)
+- [x] ColumnMapper (heuristic column mapping)
+- [x] FlexibleDateParser (multi-format date parsing)
+- [x] CsvParserImpl (full implementation)
+- [x] Unit tests for all components
 
 ### Pending Tasks
 
@@ -71,8 +100,8 @@
 - [x] Database Schema
 - [x] Encryption Layer
 - [x] Money Type
-- [ ] PDF Import Pipeline
-- [ ] CSV Import Pipeline
+- [x] PDF Import Pipeline
+- [x] CSV Import Pipeline
 - [ ] Normalization & Deduplication
 
 #### Sprint 02: Categorization Engine
@@ -121,4 +150,12 @@
 
 ---
 
-*Last Updated: 2026-01-13 (Session 2 - Encryption Layer + Money Type completed)*
+#### Sprint 01: Normalization & Deduplication 
+- [x] MerchantNormalizer (noise removal, alias mapping, heuristic extraction)
+- [x] TransactionFingerprint (SHA-256 of account_id|date|amount|description_prefix)
+- [x] DuplicateDetector (exact match + fuzzy ±2 day window)
+- [x] ImportIdempotency (batch processing, file hash, review workflow)
+- [x] Sha256 expect/actual (JVM implementation)
+- [x] Unit tests for MerchantNormalizer and DuplicateDetector
+
+*Last Updated: 2026-01-13 (Session 6 - KeyManager implementation complete)*

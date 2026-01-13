@@ -99,6 +99,8 @@ kotlin {
                 implementation(libs.sqldelight.sqlite.driver)
                 // SQLCipher for encrypted database
                 implementation(libs.sqlcipher.jdbc)
+                // PDFBox for PDF text extraction
+                implementation(libs.pdfbox)
             }
         }
 
