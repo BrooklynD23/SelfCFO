@@ -1,0 +1,6 @@
+﻿package com.ledgerlens.categorization
+import kotlinx.datetime.Instant
+data class CategoryCorrection(val id: String, val transactionId: String, val oldCategoryId: String, val newCategoryId: String, val timestamp: Instant, val features: TransactionFeatures, val confidence: Float, val classifierUsed: String) { val isActualCorrection: Boolean get() = oldCategoryId != newCategoryId; val wasHighConfidenceMiss: Boolean get() = isActualCorrection && confidence >= ClassificationResult.HIGH_CONFIDENCE_THRESHOLD }
+data class CorrectionStats(val totalPredictions: Int, val totalCorrections: Int, val correctionsByCategory: Map<String, Int>, val mostCommonCorrection: Pair<String, String>?) { val correctionRate: Float get() = if (totalPredictions > 0) totalCorrections.toFloat() / totalPredictions else 0f; val isFrequentlyCorrected: Boolean get() = correctionRate >= 0.3f && totalCorrections >= 3 }
+data class SuggestedRule(val merchantPattern: String, val suggestedCategoryId: String, val supportingCorrections: Int, val confidence: Float, val reason: String)
+data class CorrectionAnalysis(val merchantStats: Map<String, CorrectionStats>, val categoryStats: Map<String, CorrectionStats>, val suggestedRules: List<SuggestedRule>, val totalCorrections: Int, val averageCorrectionRate: Float)
