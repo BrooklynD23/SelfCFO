@@ -20,6 +20,7 @@ class ParticipantRepositoryTest {
     }
 
     @Test fun quickAdd_trims_name() = runTest { assertEquals("Bob", repo().quickAdd("  Bob  ").name) }
+
     @Test fun quickAdd_fails_blank() = runTest { assertFailsWith<ParticipantException> { repo().quickAdd("   ") } }
 
     @Test fun create_validates() = runTest {
@@ -42,11 +43,13 @@ class ParticipantRepositoryTest {
         val r = repo()
         val a = r.quickAdd("Alice"); r.quickAdd("Bob"); val c = r.quickAdd("Charlie")
         r.markUsed(c.id); r.markUsed(a.id)
-        assertEquals("Alice", r.getAll()[0].name)
+        val all = r.getAll()
+        assertEquals("Alice", all[0].name)
+        assertEquals("Charlie", all[1].name)
     }
 
     @Test fun getFavorites_returns_favorites() = runTest {
-        val r = repo(); r.getSelf(); val a = r.quickAdd("Alice")
+        val r = repo(); r.getSelf(); val a = r.quickAdd("Alice"); r.quickAdd("Bob")
         r.toggleFavorite(a.id)
         assertEquals(2, r.getFavorites().size)
     }
@@ -62,11 +65,18 @@ class ParticipantRepositoryTest {
         val r = repo(); val p = r.quickAdd("Alice")
         val u = r.update(p.copy(name = "Alice Smith", email = "a@x.com"))
         assertEquals("Alice Smith", u.name)
+        assertEquals("a@x.com", u.email)
+    }
+
+    @Test fun update_preserves_isSelf() = runTest {
+        val r = repo(); val s = r.getSelf()
+        assertTrue(r.update(s.copy(isSelf = false, name = "Me2")).isSelf)
     }
 
     @Test fun delete_removes() = runTest {
         val r = repo(); val p = r.quickAdd("Alice")
-        r.delete(p.id); assertNull(r.getById(p.id))
+        r.delete(p.id)
+        assertNull(r.getById(p.id))
     }
 
     @Test fun delete_fails_for_self() = runTest {
@@ -78,6 +88,18 @@ class ParticipantRepositoryTest {
         val r = repo(); val p = r.quickAdd("Alice")
         assertTrue(r.toggleFavorite(p.id).isFavorite)
         assertFalse(r.toggleFavorite(p.id).isFavorite)
+    }
+
+    @Test fun updateSelfName_works() = runTest {
+        val r = repo(); r.getSelf()
+        assertEquals("John", r.updateSelfName("John").name)
+    }
+
+    @Test fun getByIds_returns_in_order() = runTest {
+        val r = repo()
+        val a = r.quickAdd("Alice"); val b = r.quickAdd("Bob"); val c = r.quickAdd("Charlie")
+        val res = r.getByIds(listOf(c.id, a.id, b.id))
+        assertEquals(listOf("Charlie", "Alice", "Bob"), res.map { it.name })
     }
 
     @Test fun count_excludes_self() = runTest {

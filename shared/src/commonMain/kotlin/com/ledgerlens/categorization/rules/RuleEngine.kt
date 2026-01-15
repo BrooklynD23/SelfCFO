@@ -5,12 +5,8 @@ import com.ledgerlens.categorization.ClassificationResult
 import com.ledgerlens.categorization.TransactionFeatures
 import kotlinx.datetime.LocalDate
 
-/**
- * Orchestrates rule evaluation with priority ordering and conflict resolution.
- */
-class RuleEngine(
-    private val matcher: RuleMatcher = RuleMatcher()
-) {
+class RuleEngine(private val matcher: RuleMatcher = RuleMatcher()) {
+
     fun evaluate(
         rules: List<CategoryRule>,
         features: TransactionFeatures,
@@ -18,7 +14,6 @@ class RuleEngine(
         stopOnFirstCategory: Boolean = true
     ): RuleEngineResult {
         val sortedRules = rules.filter { it.enabled }.sortedByDescending { it.priority }
-
         val matchedRules = mutableListOf<RuleMatchResult>()
         var primaryCategoryResult: RuleMatchResult? = null
         val allActions = mutableListOf<RuleAction>()
@@ -28,9 +23,7 @@ class RuleEngine(
             if (result.matched) {
                 matchedRules.add(result)
                 allActions.addAll(result.appliedActions)
-                if (primaryCategoryResult == null && rule.setsCategory) {
-                    primaryCategoryResult = result
-                }
+                if (primaryCategoryResult == null && rule.setsCategory) primaryCategoryResult = result
             }
         }
 
@@ -60,71 +53,42 @@ class RuleEngine(
         )
     }
 
-    fun findMatchingRules(
-        rules: List<CategoryRule>,
-        features: TransactionFeatures,
-        transactionDate: LocalDate? = null
-    ): List<CategoryRule> {
-        return rules
-            .filter { it.enabled }
-            .filter { matcher.evaluate(it, features, transactionDate).matched }
-            .sortedByDescending { it.priority }
+    fun findMatchingRules(rules: List<CategoryRule>, features: TransactionFeatures, transactionDate: LocalDate? = null): List<CategoryRule> {
+        return rules.filter { it.enabled }.filter { matcher.evaluate(it, features, transactionDate).matched }.sortedByDescending { it.priority }
     }
 
-    fun testRule(
-        rule: CategoryRule,
-        features: TransactionFeatures,
-        transactionDate: LocalDate? = null
-    ): RuleMatchResult = matcher.evaluate(rule, features, transactionDate)
+    fun testRule(rule: CategoryRule, features: TransactionFeatures, transactionDate: LocalDate? = null): RuleMatchResult =
+        matcher.evaluate(rule, features, transactionDate)
 
     private fun mergeActions(actions: List<RuleAction>): List<RuleAction> {
         val result = mutableListOf<RuleAction>()
-
         actions.filterIsInstance<SetCategory>().firstOrNull()?.let { result.add(it) }
         actions.filterIsInstance<SetMerchant>().firstOrNull()?.let { result.add(it) }
-
         val allAddTags = actions.filterIsInstance<AddTag>().flatMap { it.tags }.distinct()
         if (allAddTags.isNotEmpty()) result.add(AddTag(allAddTags))
-
         val allRemoveTags = actions.filterIsInstance<RemoveTag>().flatMap { it.tags }.distinct()
         if (allRemoveTags.isNotEmpty()) result.add(RemoveTag(allRemoveTags))
-
         val setNotes = actions.filterIsInstance<SetNote>()
         if (setNotes.isNotEmpty()) {
             val appendNotes = setNotes.filter { it.appendMode }
             val replaceNote = setNotes.firstOrNull { !it.appendMode }
             if (replaceNote != null) {
-                val combinedNote = buildString {
-                    append(replaceNote.note)
-                    appendNotes.forEach { append("\n${it.note}") }
-                }
+                val combinedNote = buildString { append(replaceNote.note); appendNotes.forEach { append("\n${it.note}") } }
                 result.add(SetNote(combinedNote))
-            } else if (appendNotes.isNotEmpty()) {
-                result.add(SetNote(appendNotes.joinToString("\n") { it.note }, appendMode = true))
-            }
+            } else if (appendNotes.isNotEmpty()) result.add(SetNote(appendNotes.joinToString("\n") { it.note }, appendMode = true))
         }
-
         actions.filterIsInstance<FlagForReview>().firstOrNull()?.let { result.add(it) }
-
         val excludes = actions.filterIsInstance<ExcludeFromReports>()
-        if (excludes.isNotEmpty()) {
-            result.add(ExcludeFromReports(
-                excludeFromBudget = excludes.any { it.excludeFromBudget },
-                excludeFromStats = excludes.any { it.excludeFromStats }
-            ))
-        }
-
+        if (excludes.isNotEmpty()) result.add(ExcludeFromReports(excludes.any { it.excludeFromBudget }, excludes.any { it.excludeFromStats }))
         actions.filterIsInstance<Split>().firstOrNull()?.let { result.add(it) }
         result.addAll(actions.filterIsInstance<LinkTransaction>())
-
         return result
     }
 
     private fun detectConflicts(matchedRules: List<RuleMatchResult>): Boolean {
         val categorySettingRules = matchedRules.filter { it.rule.setsCategory }
         if (categorySettingRules.size <= 1) return false
-        val categories = categorySettingRules.mapNotNull { it.rule.categoryId }.distinct()
-        return categories.size > 1
+        return categorySettingRules.mapNotNull { it.rule.categoryId }.distinct().size > 1
     }
 
     private fun extractMatchedTokens(rule: CategoryRule): List<String> {
@@ -155,8 +119,5 @@ data class RuleEngineResult(
     val categoryId: String? get() = primaryCategoryRule?.categoryId
     val confidence: Float get() = primaryCategoryRule?.confidence ?: 0f
     val matchedRuleIds: List<String> get() = matchedRules.map { it.rule.id }
-
-    companion object {
-        val EMPTY = RuleEngineResult(emptyList(), null, emptyList(), false)
-    }
+    companion object { val EMPTY = RuleEngineResult(emptyList(), null, emptyList(), false) }
 }

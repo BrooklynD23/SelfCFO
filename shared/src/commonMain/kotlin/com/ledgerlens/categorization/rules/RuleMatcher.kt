@@ -3,16 +3,9 @@ package com.ledgerlens.categorization.rules
 import com.ledgerlens.categorization.TransactionFeatures
 import kotlinx.datetime.LocalDate
 
-/**
- * Evaluates rule conditions against transaction features.
- */
 class RuleMatcher {
 
-    fun matches(
-        condition: RuleCondition,
-        features: TransactionFeatures,
-        transactionDate: LocalDate? = null
-    ): Boolean {
+    fun matches(condition: RuleCondition, features: TransactionFeatures, transactionDate: LocalDate? = null): Boolean {
         return when (condition) {
             is MerchantContains -> matchesMerchantContains(condition, features)
             is MerchantEquals -> matchesMerchantEquals(condition, features)
@@ -29,19 +22,11 @@ class RuleMatcher {
         }
     }
 
-    fun evaluate(
-        rule: CategoryRule,
-        features: TransactionFeatures,
-        transactionDate: LocalDate? = null
-    ): RuleMatchResult {
+    fun evaluate(rule: CategoryRule, features: TransactionFeatures, transactionDate: LocalDate? = null): RuleMatchResult {
         if (!rule.enabled) return RuleMatchResult.noMatch(rule)
-
         val matched = matches(rule.conditions, features, transactionDate)
-        return if (matched) {
-            RuleMatchResult.match(rule, "Matched: ${rule.conditions.describe()}")
-        } else {
-            RuleMatchResult.noMatch(rule)
-        }
+        return if (matched) RuleMatchResult.match(rule, "Matched: ${rule.conditions.describe()}") 
+               else RuleMatchResult.noMatch(rule)
     }
 
     private fun matchesMerchantContains(condition: MerchantContains, features: TransactionFeatures): Boolean {
@@ -51,31 +36,19 @@ class RuleMatcher {
     }
 
     private fun matchesMerchantEquals(condition: MerchantEquals, features: TransactionFeatures): Boolean {
-        return if (condition.caseSensitive) {
-            features.merchantNormalized == condition.value
-        } else {
-            features.merchantNormalized.equals(condition.value, ignoreCase = true)
-        }
+        return if (condition.caseSensitive) features.merchantNormalized == condition.value
+               else features.merchantNormalized.equals(condition.value, ignoreCase = true)
     }
 
     private fun matchesDescriptionMatches(condition: DescriptionMatches, features: TransactionFeatures): Boolean {
         val options = if (condition.caseSensitive) emptySet() else setOf(RegexOption.IGNORE_CASE)
-        return try {
-            Regex(condition.pattern, options).containsMatchIn(features.descriptionRaw)
-        } catch (e: Exception) {
-            false
-        }
+        return try { Regex(condition.pattern, options).containsMatchIn(features.descriptionRaw) } catch (e: Exception) { false }
     }
 
     private fun matchesDescriptionContains(condition: DescriptionContains, features: TransactionFeatures): Boolean {
         val description = if (condition.caseSensitive) features.descriptionRaw else features.descriptionRaw.lowercase()
         val keywords = if (condition.caseSensitive) condition.keywords else condition.keywords.map { it.lowercase() }
-
-        return if (condition.matchAll) {
-            keywords.all { description.contains(it) }
-        } else {
-            keywords.any { description.contains(it) }
-        }
+        return if (condition.matchAll) keywords.all { description.contains(it) } else keywords.any { description.contains(it) }
     }
 
     private fun matchesAmountRange(condition: AmountRange, features: TransactionFeatures): Boolean {
@@ -98,8 +71,7 @@ class RuleMatcher {
     }
 
     private fun matchesDayOfWeek(condition: DayOfWeek, features: TransactionFeatures): Boolean {
-        val featureDayOfWeek = features.dayOfWeek + 1
-        return featureDayOfWeek in condition.days
+        return (features.dayOfWeek + 1) in condition.days
     }
 
     private fun matchesDayOfMonth(condition: DayOfMonth, features: TransactionFeatures): Boolean {
@@ -114,11 +86,7 @@ class RuleMatcher {
         return features.accountId == condition.accountId
     }
 
-    private fun matchesConditionGroup(
-        group: ConditionGroup,
-        features: TransactionFeatures,
-        transactionDate: LocalDate?
-    ): Boolean {
+    private fun matchesConditionGroup(group: ConditionGroup, features: TransactionFeatures, transactionDate: LocalDate?): Boolean {
         return when (group.operator) {
             LogicalOperator.AND -> group.conditions.all { matches(it, features, transactionDate) }
             LogicalOperator.OR -> group.conditions.any { matches(it, features, transactionDate) }
