@@ -1,10 +1,10 @@
 # Fixer Agent Tracking Document
 
 **Generated:** 2026-01-15 08:50 UTC-08:00
-**Updated:** 2026-01-15 09:15 UTC-08:00
-**Agent:** Fixer Agent
+**Updated:** 2026-01-15 12:30 UTC-08:00
+**Agent:** Fixer Agent → Re-implementation Agent
 **Project:** LedgerLens (SelfCFO)
-**Status:** ✅ INTEGRATION COMPLETE
+**Status:** ✅ RE-IMPLEMENTATION COMPLETE
 
 ---
 
@@ -101,28 +101,28 @@ f479d90 merge: Receipt OCR with category hierarchy
 
 ---
 
-## Lost/Missing Work - TO BE RE-IMPLEMENTED
+## Lost/Missing Work - RE-IMPLEMENTATION STATUS
 
 | Component | Expected Files | Status | Priority |
 |-----------|----------------|--------|----------|
-| **CategoryTree.kt** | CategoryTree class with hierarchy ops | ❌ NOT FOUND | HIGH |
-| **DefaultCategories.kt** | Pre-defined category seeds | ❌ NOT FOUND | HIGH |
-| **CategoryRepository.kt** | Interface for category CRUD | ❌ NOT FOUND | HIGH |
-| **MerchantPrior.kt** | Prior data class | ❌ NOT FOUND | MEDIUM |
-| **PriorCalculator.kt** | Bayesian prior calculation | ❌ NOT FOUND | MEDIUM |
-| **FeatureExtractor.kt** | ML feature extraction | ❌ NOT FOUND | MEDIUM |
-| **TransactionClassifier.kt** | Main classifier interface | ❌ NOT FOUND | MEDIUM |
-| **ClassifierChain.kt** | Chained classifier orchestration | ❌ NOT FOUND | MEDIUM |
-| **ClassifierTrainer.kt** | Training data management | ❌ NOT FOUND | LOW |
-| **TrainingDataStore.kt** | Training persistence | ❌ NOT FOUND | LOW |
-| **BatchRetrainer.kt** | Batch retraining logic | ❌ NOT FOUND | LOW |
-| **FeedbackLoop.kt** | User feedback integration | ❌ NOT FOUND | LOW |
-| **CategoryCorrection.kt** | Correction data class | ❌ NOT FOUND | LOW |
-| **CategoryExplanation.kt** | Full explanation system | ⚠️ PARTIAL | MEDIUM |
-| **ExplanationReason.kt** | Explanation enums | ❌ NOT FOUND | MEDIUM |
-| **ExplanationFactor.kt** | Factor data class | ❌ NOT FOUND | MEDIUM |
-| **ExplanationGenerator.kt** | Explanation generation | ❌ NOT FOUND | MEDIUM |
-| **ExplanationFormatter.kt** | UI formatting | ❌ NOT FOUND | LOW |
+| **CategoryTree.kt** | CategoryTree class with hierarchy ops | ✅ IMPLEMENTED | HIGH |
+| **DefaultCategories.kt** | Pre-defined category seeds | ✅ IMPLEMENTED | HIGH |
+| **CategoryRepository.kt** | Interface for category CRUD | ✅ IMPLEMENTED | HIGH |
+| **MerchantPrior.kt** | Prior data class | ✅ IMPLEMENTED | MEDIUM |
+| **PriorCalculator.kt** | Bayesian prior calculation | ✅ IMPLEMENTED | MEDIUM |
+| **FeatureExtractor.kt** | ML feature extraction | ✅ IMPLEMENTED | MEDIUM |
+| **TransactionClassifier.kt** | Main classifier interface + ClassifierChain + MerchantPriorClassifier + EnsembleClassifier | ✅ IMPLEMENTED | MEDIUM |
+| **ClassifierChain.kt** | Chained classifier orchestration | ✅ IN TransactionClassifier.kt | MEDIUM |
+| **ClassifierTrainer.kt** | Training data management | ⏳ DEFERRED | LOW |
+| **TrainingDataStore.kt** | Training persistence | ⏳ DEFERRED | LOW |
+| **BatchRetrainer.kt** | Batch retraining logic | ⏳ DEFERRED | LOW |
+| **FeedbackLoop.kt** | User feedback integration | ⏳ DEFERRED | LOW |
+| **CategoryCorrection.kt** | Correction data class | ⏳ DEFERRED | LOW |
+| **CategoryExplanation.kt** | Full explanation system | ✅ IN ExplanationGenerator.kt | MEDIUM |
+| **ExplanationReason.kt** | Explanation enums | ✅ IMPLEMENTED | MEDIUM |
+| **ExplanationFactor.kt** | Factor data class | ✅ IMPLEMENTED | MEDIUM |
+| **ExplanationGenerator.kt** | Explanation generation | ✅ IMPLEMENTED | MEDIUM |
+| **ExplanationFormatter.kt** | UI formatting | ✅ IN ExplanationGenerator.kt | LOW |
 
 ---
 
@@ -146,30 +146,38 @@ f479d90 merge: Receipt OCR with category hierarchy
 
 ## Next Steps for Another Agent
 
-### Priority 1: HIGH - Category Hierarchy
+### ✅ COMPLETED - Priority 1: HIGH - Category Hierarchy
 ```
-Files to implement:
-- CategoryTree.kt - Build tree from flat list, get path, find by ID
-- DefaultCategories.kt - Income/Expense/Transfer root categories with children
-- CategoryRepository.kt - Interface with create/update/delete/getChildren
-```
-
-### Priority 2: MEDIUM - ML Categorization
-```
-Files to implement:
-- FeatureExtractor.kt - Extract features from transaction for classification
-- TransactionClassifier.kt - Interface for classify(TransactionFeatures)
-- MerchantPrior.kt - Data class for merchant category priors
-- PriorCalculator.kt - Calculate/update Bayesian priors
+Files implemented:
+- CategoryTree.kt - Build tree from flat list, get path, find by ID, canAddChild
+- DefaultCategories.kt - 30+ pre-seeded categories (Income/Expense/Transfer roots with children)
+- CategoryRepository.kt - Interface with create/update/delete/getChildren/move/seedDefaults
 ```
 
-### Priority 3: MEDIUM - Explanation System
+### ✅ COMPLETED - Priority 2: MEDIUM - ML Categorization
 ```
-Files to implement:
-- ExplanationReason.kt - Enum for why category was chosen
-- ExplanationFactor.kt - Weight/contribution of each factor
-- ExplanationGenerator.kt - Generate explanations from classification
-- CategoryExplanation.kt - Full explanation with factors
+Files implemented:
+- FeatureExtractor.kt - Extract features, tokenize, normalize merchants, feature vectors
+- TransactionClassifier.kt - Interface + ClassifierChain + MerchantPriorClassifier + EnsembleClassifier
+- MerchantPrior.kt - Data class with category counts, probabilities, MerchantCategoryDistribution
+- PriorCalculator.kt - Laplace smoothing, log-probabilities, time decay, confidence calculation
+```
+
+### ✅ COMPLETED - Priority 3: MEDIUM - Explanation System
+```
+Files implemented:
+- ExplanationReason.kt - 9 reason types (MERCHANT_MATCH, KEYWORD_MATCH, RULE_MATCH, etc.)
+- ExplanationFactor.kt - Factor with weight/score, FactorCollection with normalization
+- ExplanationGenerator.kt - Generate explanations, CategoryExplanation, ExplanationFormatter
+```
+
+### ⏳ REMAINING - Priority 4: LOW - Training System
+```
+Files to implement if needed:
+- ClassifierTrainer.kt - Training data management
+- TrainingDataStore.kt - Training persistence
+- BatchRetrainer.kt - Batch retraining logic
+- FeedbackLoop.kt - User feedback integration
 ```
 
 ---
@@ -189,4 +197,9 @@ Files to implement:
 | 09:08 | Merged feat/categorization-pipeline | Resolved 2 conflicts |
 | 09:12 | Merged agent2-ml-categorization-preserved | Resolved 7 conflicts |
 | 09:15 | Integration complete | 51 new files merged |
+| 12:10 | Re-implementation started | Reading tracking doc, planning work |
+| 12:15 | HIGH priority complete | CategoryRepository.kt, CategoryTree.kt, DefaultCategories.kt |
+| 12:20 | MEDIUM ML files complete | MerchantPrior.kt, PriorCalculator.kt, FeatureExtractor.kt, TransactionClassifier.kt |
+| 12:25 | MEDIUM explanation files complete | ExplanationReason.kt, ExplanationFactor.kt, ExplanationGenerator.kt |
+| 12:30 | Re-implementation complete | 10 files created, tracking doc updated |
 
