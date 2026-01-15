@@ -15,10 +15,10 @@ This directory contains the sprint-based implementation plans for LedgerLens. Ea
 
 **Implementation Status:**
 <!-- Status badges - update as sprints progress -->
-![Sprint 00](https://img.shields.io/badge/Sprint%2000-Not%20Started-lightgrey)
-![Sprint 01](https://img.shields.io/badge/Sprint%2001-Not%20Started-lightgrey)
-![Sprint 02](https://img.shields.io/badge/Sprint%2002-Not%20Started-lightgrey)
-![Sprint 03](https://img.shields.io/badge/Sprint%2003-Not%20Started-lightgrey)
+![Sprint 00](https://img.shields.io/badge/Sprint%2000-Complete-green)
+![Sprint 01](https://img.shields.io/badge/Sprint%2001-Complete-green)
+![Sprint 02](https://img.shields.io/badge/Sprint%2002-Complete-green)
+![Sprint 03](https://img.shields.io/badge/Sprint%2003-Complete-green)
 ![Sprint 04](https://img.shields.io/badge/Sprint%2004-Not%20Started-lightgrey)
 
 ---
@@ -27,10 +27,10 @@ This directory contains the sprint-based implementation plans for LedgerLens. Ea
 
 | Sprint | Name | Focus Area | Status |
 |--------|------|------------|--------|
-| [00](./00-project-foundation/) | Project Foundation | KMP setup, build system, CI/CD | Not Started |
-| [01](./01-core-data-layer/) | Core Data Layer | Database, encryption, import pipeline | Not Started |
-| [02](./02-categorization-engine/) | Categorization Engine | ML inference, rules, learning loop | Not Started |
-| [03](./03-receipt-splitting/) | Receipt Splitting | OCR, item extraction, settlements | Not Started |
+| [00](./00-project-foundation/) | Project Foundation | KMP setup, build system, CI/CD | ✅ Complete |
+| [01](./01-core-data-layer/) | Core Data Layer | Database, encryption, import pipeline | ✅ Complete |
+| [02](./02-categorization-engine/) | Categorization Engine | ML inference, rules, learning loop | ✅ Complete |
+| [03](./03-receipt-splitting/) | Receipt Splitting | OCR, item extraction, settlements | ✅ Complete |
 | [04](./04-ui-implementation/) | UI Implementation | All screens with Compose Multiplatform | Not Started |
 
 ---
@@ -303,4 +303,4 @@ If requirements are unclear:
 
 ---
 
-*Last Updated: 2026-01-12*
+*Last Updated: 2026-01-15*
