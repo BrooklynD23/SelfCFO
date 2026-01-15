@@ -11,7 +11,7 @@ detekt = "1.23.4"
 dokka = "1.9.10"
 
 # Kotlin Libraries
-coroutines = "1.7.3"
+coroutines = "1.10.2"
 serialization = "1.6.2"
 datetime = "0.5.0"
 
