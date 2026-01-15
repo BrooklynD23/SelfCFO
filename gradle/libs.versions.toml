@@ -29,7 +29,7 @@ androidx-security = "1.1.0-alpha06"
 # Testing
 junit = "4.13.2"
 junit5 = "5.10.1"
-mockk = "1.13.9"
+mockk = "1.14.7"
 turbine = "1.0.0"
 
 [libraries]
