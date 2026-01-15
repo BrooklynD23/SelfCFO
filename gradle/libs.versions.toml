@@ -2,7 +2,7 @@
 # Core
 kotlin = "1.9.22"
 agp = "8.2.0"
-compose = "1.5.12"
+compose = "1.10.0"
 
 # Development Tooling
 ktlint = "12.1.0"
