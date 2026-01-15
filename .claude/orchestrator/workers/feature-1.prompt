@@ -1,0 +1,87 @@
+You are a worker agent focused on implementing a single feature.
+
+## Your Task
+Feature 1: KMP Project Setup - Create Kotlin Multiplatform project structure with shared/, android/, desktop/ modules, Gradle Kotlin DSL configuration, and basic entry points per 01-kmp-project-setup.md
+
+## Orchestration Context
+Implement Sprint 00: Project Foundation for LedgerLens - a Kotlin Multiplatform personal finance app.
+
+CONTEXT:
+- This is a greenfield project with only documentation currently
+- Must follow the implementation plans in docs/implementation-plan/00-project-foundation/
+- Target: Android + Desktop (Windows/macOS/Linux) using Compose Multiplatform
+- Database: SQLDelight with SQLCipher encryption
+- Must use TDD approach with >80% coverage
+
+REFERENCE DOCUMENTS:
+- docs/implementation-plan/00-project-foundation/01-kmp-project-setup.md
+- docs/implementation-plan/00-project-foundation/02-build-configuration.md
+- docs/implementation-plan/00-project-foundation/03-development-tooling.md
+- docs/implementation-plan/00-project-foundation/04-ci-cd-pipeline.md
+- docs/PRDs/13-architecture-decision-records.md (for ADR-001 through ADR-007)
+
+
+## Instructions
+1. Focus ONLY on implementing this specific feature
+2. Make small, incremental changes
+3. Test your changes as you go
+4. When you are DONE:
+   - Commit your changes following conventional commit format:
+     * Use: feat(scope), fix(scope), docs(scope), refactor(scope), test(scope)
+     * Example: "feat(auth): add user authentication system"
+     * Add footer: "🤖 Committed by claude-swarm worker feature-1"
+   - Create a file at: .claude/orchestrator/workers/feature-1.done
+     with a brief summary of what you implemented
+
+## Important
+- Do not work on other features
+- If you encounter a blocker, document it in the .done file and stop
+- Keep changes minimal and focused
+- Always commit using conventional commit format with the worker attribution footer
+- The .claude/ directory is already gitignored - don't worry about it
+
+## Commit Format Example
+```bash
+# Add only the specific files you changed for this feature
+git add src/path/to/file1.ts src/path/to/file2.ts
+
+# Commit with subject and attribution footer
+git commit -m "feat(feature-name): implement the feature" -m "🤖 Committed by claude-swarm worker feature-1"
+```
+
+
+## Additional Context
+IMPORTANT: Read docs/implementation-plan/00-project-foundation/01-kmp-project-setup.md FIRST for detailed implementation steps.
+
+You are implementing Feature 1: KMP Project Setup for LedgerLens, a Kotlin Multiplatform personal finance app.
+
+KEY REQUIREMENTS:
+1. Create the full directory structure as specified in the implementation plan
+2. Use Gradle Kotlin DSL (.gradle.kts files)
+3. Configure for Android (SDK 34, minSdk 26) and Desktop (JVM 17)
+4. Include jvmMain source set for shared JVM-only code
+5. Configure SQLDelight plugin (for later use)
+6. Set up Compose Multiplatform for UI
+
+FILES TO CREATE:
+- build.gradle.kts (root)
+- settings.gradle.kts
+- gradle.properties
+- shared/build.gradle.kts
+- android/build.gradle.kts
+- desktop/build.gradle.kts
+- Android entry point: android/src/main/kotlin/com/ledgerlens/android/MainActivity.kt
+- Desktop entry point: desktop/src/main/kotlin/com/ledgerlens/desktop/Main.kt
+- Shared App composable: shared/src/commonMain/kotlin/com/ledgerlens/App.kt
+- AndroidManifest.xml
+
+VERSIONS TO USE:
+- Kotlin: 1.9.22
+- Compose Multiplatform: 1.5.12
+- Android Gradle Plugin: 8.2.0
+- SQLDelight: 2.0.1
+- Coroutines: 1.7.3
+
+After creating files, verify the structure is correct. Do NOT run gradle build (may not work without Android SDK).
+
+Begin implementing the feature now.

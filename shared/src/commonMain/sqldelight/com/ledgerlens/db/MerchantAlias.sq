@@ -1,0 +1,35 @@
+CREATE TABLE merchant_alias (
+    id TEXT NOT NULL PRIMARY KEY,
+    merchant_id TEXT NOT NULL REFERENCES merchant(id),
+    alias_pattern TEXT NOT NULL,
+    match_type TEXT NOT NULL DEFAULT 'contains',
+    source TEXT NOT NULL DEFAULT 'parser',
+    created_at INTEGER NOT NULL,
+    CHECK (match_type IN ('exact', 'contains', 'regex')),
+    CHECK (source IN ('parser', 'user', 'learned'))
+);
+
+CREATE INDEX idx_merchant_alias_merchant ON merchant_alias(merchant_id);
+CREATE INDEX idx_merchant_alias_pattern ON merchant_alias(alias_pattern);
+
+insert:
+INSERT INTO merchant_alias(id, merchant_id, alias_pattern, match_type, source, created_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+selectByMerchant:
+SELECT * FROM merchant_alias WHERE merchant_id = ?;
+
+selectByExactPattern:
+SELECT ma.*, m.canonical_name, m.category_id
+FROM merchant_alias ma
+JOIN merchant m ON ma.merchant_id = m.id
+WHERE ma.alias_pattern = ? AND ma.match_type = 'exact';
+
+selectByContainsPattern:
+SELECT ma.*, m.canonical_name, m.category_id
+FROM merchant_alias ma
+JOIN merchant m ON ma.merchant_id = m.id
+WHERE ? LIKE '%' || ma.alias_pattern || '%' AND ma.match_type = 'contains';
+
+deleteByMerchant:
+DELETE FROM merchant_alias WHERE merchant_id = ?;

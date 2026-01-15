@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__claude-swarm__set_dependencies",
+      "mcp__claude-swarm__enrich_feature",
+      "mcp__claude-swarm__start_worker",
+      "mcp__claude-swarm__check_all_workers",
+      "mcp__claude-swarm__orchestrator_status"
+    ]
+  }
+}

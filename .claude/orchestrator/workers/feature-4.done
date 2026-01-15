@@ -1,0 +1,50 @@
+# Feature 4: CI/CD Pipeline - COMPLETED
+
+## Summary
+Successfully implemented the CI/CD Pipeline for LedgerLens following the implementation plan in docs/implementation-plan/00-project-foundation/04-ci-cd-pipeline.md
+
+## Files Created
+
+### 1. `.github/workflows/ci.yml`
+Main CI workflow that runs on push/PR to main:
+- Matrix build for ubuntu-latest, macos-latest, windows-latest
+- JDK 17 with temurin distribution
+- Gradle caching with cache-read-only for non-main branches
+- Runs `./gradlew check` for all checks
+- Builds shared module and desktop app
+- Uploads test results as artifacts
+
+### 2. `.github/workflows/release.yml`
+Release workflow triggered on version tags (v*):
+- Android release APK with keystore secrets
+- Desktop installers (DMG for macOS, MSI for Windows, DEB for Linux)
+- Creates GitHub release with all artifacts
+
+### 3. `.github/dependabot.yml`
+Dependabot configuration:
+- Gradle dependencies: weekly updates, max 5 PRs
+- GitHub Actions: weekly updates
+
+### 4. `.github/BRANCH_PROTECTION.md`
+Documentation for branch protection rules including:
+- Required PR reviews (1 approval)
+- Required status checks (all CI jobs)
+- Linear history enforcement
+- Required secrets documentation for Android signing
+
+## Acceptance Criteria Met
+- [x] CI workflow runs on push and PR
+- [x] All platform builds configured in CI
+- [x] Tests run and report results (artifacts uploaded)
+- [x] Lint checks (ktlint/detekt) gate PRs
+- [x] Release workflow creates artifacts
+- [x] Dependabot configured
+- [x] Branch protection rules documented
+
+## Required Secrets (for releases)
+| Secret | Description |
+|--------|-------------|
+| `KEYSTORE_BASE64` | Base64-encoded Android keystore |
+| `KEYSTORE_PASSWORD` | Keystore password |
+| `KEY_ALIAS` | Signing key alias |
+| `KEY_PASSWORD` | Key password |

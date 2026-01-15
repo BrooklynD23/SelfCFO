@@ -1,0 +1,1859 @@
+Document 0 Product brief
+Product name
+LedgerLens
+One-line
+Local-first finance intake that parses messy bank statements and receipts, auto-categorizes transactions, learns from corrections, and supports item-level bill splitting.
+Platforms
+
+
+Android APK
+
+
+Desktop local app (Windows first, then macOS, then Linux)
+
+
+Core problems
+
+
+Bank exports are inconsistent, hard to parse, and often PDF-only.
+
+
+Categorization is tedious and requires constant manual fixes.
+
+
+Group expenses require item-level assignment and tax allocation, which current apps make painful.
+
+
+Users want “hands-off” budgeting, but full automation requires expensive integrations and high trust.
+
+
+Strategy
+
+
+Phase-gated capability ladder:
+
+
+Local ingestion + parsing + categorization + learning loop
+
+
+Local budgeting and insights + optional cloud sync
+
+
+Read-only bank API aggregation
+
+
+Assisted actions (draft bill pay/transfers)
+
+
+Fully automated actions only after safety, permissions, and compliance gates
+
+
+
+
+Key principles
+
+
+Local-first by default: no account/PII required to get value.
+
+
+Deterministic fallbacks: rules + templates + human-in-the-loop, not “LLM hallucination.”
+
+
+Auditability: every categorization and split has an explanation trail.
+
+
+Progressive trust: write-access automation is opt-in and gated.
+
+
+
+Document 1 Product requirements
+Goals
+
+
+Ingest bank statements (PDF/CSV) from any bank and normalize into a canonical transaction ledger.
+
+
+Categorize transactions with high precision, improving over time from user corrections.
+
+
+Parse receipts/bills into line items, then split costs by participant at item level, allocating tax/fees correctly.
+
+
+Operate fully offline (local machine / device) for MVP.
+
+
+Provide a clean migration path from localhost-only to cloud-enabled sync and compute.
+
+
+Non-goals for MVP
+
+
+Direct bank login credential storage.
+
+
+Bill pay execution, ACH initiation, investment trades.
+
+
+Real-time bank transaction streaming.
+
+
+Guaranteed-perfect OCR on low-quality scans without user review.
+
+
+Primary personas
+
+
+Solo budgeter: wants automated categorization and monthly summaries.
+
+
+Household manager: wants to reconcile, tag, and split shared purchases.
+
+
+Roommates/group: wants receipt splits and settlements with minimal friction.
+
+
+Power user: wants import/export, rules, and audit logs.
+
+
+User journeys
+Journey A Bank statement import to categorized ledger
+
+
+User imports PDF/CSV
+
+
+App detects format, extracts transactions
+
+
+App deduplicates and normalizes
+
+
+App assigns categories with confidence scores and explanations
+
+
+User reviews “low confidence” items, corrects categories
+
+
+App learns and updates future predictions
+
+
+Journey B Receipt to item-level split with tax allocation
+
+
+User uploads receipt image/PDF (or a “receipt-style list” exported from email)
+
+
+OCR + parser extracts merchant, date, items, quantities, line prices, tax, tip, fees
+
+
+App prompts to add/select participants
+
+
+User assigns each item (or fractions) to participants
+
+
+App computes per-person subtotal, proportional tax/tip/fees, and net owed to payer(s)
+
+
+App generates settlement summary and export/shareable record
+
+
+Journey C Budget insights
+
+
+App aggregates by month, category, merchant
+
+
+Shows anomalies, recurring charges, subscription detection
+
+
+User sets lightweight targets
+
+
+App flags deviations and upcoming known bills
+
+
+Functional scope
+Import sources
+
+
+PDF bank statements (text-based and scanned)
+
+
+CSV exports (bank-provided variations)
+
+
+Optional later: OFX/QIF
+
+
+Receipt images/PDFs (for splitting and optional posting as transactions)
+
+
+Ledger features
+
+
+Canonical transaction list with search/filter
+
+
+Category assignment with hierarchy
+
+
+Merchant normalization
+
+
+Rules and learning from corrections
+
+
+Attachments: link source statement pages and receipt images
+
+
+Export: CSV, JSON
+
+
+Splitting features
+
+
+Participants list and groups
+
+
+Assign items to one or more participants
+
+
+Support fractional splits per item (percent or quantity)
+
+
+Allocate tax/tip/fees proportionally or custom
+
+
+Multiple payers per receipt and partial payments
+
+
+Settlement calculation: who owes whom and how much
+
+
+Budgeting features MVP
+
+
+Monthly spend by category/merchant
+
+
+Cashflow view from imported statements
+
+
+Recurring transaction detection
+
+
+Alerts local-only (notification), based on rules
+
+
+Fully automated agent features later phases
+
+
+Read-only bank sync via aggregator
+
+
+Bill reminders and “draft payments”
+
+
+“Suggested transfers” between checking/savings
+
+
+Write-access actions only after permission + security gates
+
+
+Success metrics
+
+
+Parsing success rate: % of imports producing a usable ledger without manual re-entry
+
+
+Categorization precision at top-1 and top-3
+
+
+Reduction in user corrections over time per merchant
+
+
+Receipt item extraction accuracy (items, totals, tax)
+
+
+Time-to-finish for splitting a receipt
+
+
+Crash-free sessions, import latency, offline completion rate
+
+
+Constraints
+
+
+MVP must run without cloud services.
+
+
+ML models must run on consumer hardware (desktop CPU; Android CPU/NPU where available).
+
+
+Budget for training: single GPU for periodic model updates, not continuous expensive training.
+
+
+
+Document 2 Detailed functional specification
+2.1 Canonical data model
+Entities
+Transaction
+
+
+id (UUID)
+
+
+source_type: pdf_statement | csv | manual | receipt_posted
+
+
+source_file_id
+
+
+source_row_ref (page+line or csv row index)
+
+
+account_name (string)
+
+
+posted_date (date)
+
+
+transaction_date (date nullable)
+
+
+description_raw (string)
+
+
+merchant_normalized (string)
+
+
+amount (decimal; signed)
+
+
+currency (ISO code)
+
+
+category_id (FK)
+
+
+category_confidence (0–1)
+
+
+category_reason (text, structured)
+
+
+labels/tags (array)
+
+
+is_transfer (bool)
+
+
+counterparty (string nullable)
+
+
+notes (string nullable)
+
+
+hash_fingerprint (for dedupe)
+
+
+Category
+
+
+id
+
+
+name
+
+
+parent_id
+
+
+system_default (bool)
+
+
+user_custom (bool)
+
+
+Rule
+
+
+id
+
+
+rule_type: merchant_contains | merchant_equals | description_regex | amount_range | mcc | account
+
+
+match_expression
+
+
+target_category_id
+
+
+priority
+
+
+created_by_user
+
+
+enabled
+
+
+Correction event
+
+
+id
+
+
+transaction_id
+
+
+previous_category_id
+
+
+new_category_id
+
+
+timestamp
+
+
+features_snapshot (merchant, tokens, amount bucket)
+
+
+Receipt
+
+
+id
+
+
+merchant
+
+
+date
+
+
+subtotal
+
+
+tax_total
+
+
+tip_total
+
+
+fees_total
+
+
+total
+
+
+currency
+
+
+attachment_file_id
+
+
+status: extracted | needs_review | finalized
+
+
+Receipt item
+
+
+id
+
+
+receipt_id
+
+
+name_raw
+
+
+name_normalized
+
+
+quantity
+
+
+unit_price
+
+
+line_total
+
+
+category_hint optional
+
+
+Participant
+
+
+id
+
+
+display_name
+
+
+contact handle optional
+
+
+Item allocation
+
+
+id
+
+
+receipt_item_id
+
+
+participant_id
+
+
+share_type: percent | quantity | fixed_amount
+
+
+share_value
+
+
+computed_amount
+
+
+Settlement
+
+
+receipt_id
+
+
+payer_id
+
+
+payee_id
+
+
+amount
+
+
+2.2 Import pipeline requirements
+PDF ingestion
+
+
+Detect whether PDF is text-based:
+
+
+If text extraction yields stable lines and numeric columns, parse directly.
+
+
+Else render pages to images and OCR.
+
+
+
+
+Support multi-page statements.
+
+
+Handle rotated pages, faint scans, skew.
+
+
+CSV ingestion
+
+
+Auto-detect delimiter, encoding, header row.
+
+
+Map columns using heuristics:
+
+
+date columns, amount, description, balance optional.
+
+
+
+
+Handle separate debit/credit columns.
+
+
+Preserve unknown columns as metadata for debugging.
+
+
+Normalization
+
+
+Convert to canonical transaction format.
+
+
+Standardize date formats, currency symbols, thousands separators.
+
+
+Normalize sign conventions:
+
+
+Debits negative, credits positive.
+
+
+
+
+Merchant normalization:
+
+
+Remove common noise tokens (city/state codes, terminal ids).
+
+
+Maintain mapping table from raw description to normalized merchant.
+
+
+
+
+Deduplication
+
+
+Fingerprint strategy:
+
+
+hash(normalized merchant + posted_date ± window + absolute amount + last4 account optional)
+
+
+
+
+UI for duplicates:
+
+
+show likely duplicates and allow merge/ignore.
+
+
+
+
+Review workflow
+
+
+A “Needs review” inbox:
+
+
+low confidence category
+
+
+parse anomalies (totals mismatch, missing dates)
+
+
+duplicate candidates
+
+
+
+
+Bulk actions:
+
+
+assign category to multiple transactions
+
+
+create rule from selection
+
+
+
+
+2.3 Categorization requirements
+Output requirements
+
+
+category_id
+
+
+confidence score
+
+
+explanation components:
+
+
+rule matched
+
+
+merchant prior
+
+
+text token match
+
+
+amount pattern
+
+
+user-history similarity
+
+
+
+
+Learning loop requirements
+
+
+When user changes a category:
+
+
+create correction event
+
+
+update merchant-category preference table immediately (fast local learning)
+
+
+enqueue example for periodic model update (local or later cloud)
+
+
+
+
+Cold start
+
+
+System model provides initial guesses.
+
+
+Merchant prior table starts empty; fills from usage.
+
+
+Default category set provided and editable.
+
+
+Edge cases
+
+
+Transfers between accounts:
+
+
+identify by keywords and matched amounts/dates
+
+
+allow user confirmation and rule creation
+
+
+
+
+Refunds/chargebacks:
+
+
+link to original when possible by merchant+amount proximity
+
+
+
+
+Pending vs posted:
+
+
+store posted as authoritative; pending optional later
+
+
+
+
+2.4 Receipt parsing and split requirements
+Input types
+
+
+Receipt image (camera capture)
+
+
+Receipt PDF
+
+
+Screenshot/email PDF
+
+
+“Receipt-style list” text import (copy/paste)
+
+
+Extraction
+
+
+Identify:
+
+
+merchant
+
+
+date/time
+
+
+line items with amounts
+
+
+subtotal, tax, tip, fees, total
+
+
+
+
+Validate totals:
+
+
+If sum(items) ≠ subtotal within tolerance, flag needs_review.
+
+
+
+
+Item assignment UX requirements
+
+
+Participants:
+
+
+create/select participants per group
+
+
+
+
+Assigning:
+
+
+tap item → assign to one or more participants
+
+
+quick modes:
+
+
+“all shared evenly”
+
+
+“split selected evenly”
+
+
+“repeat last allocations”
+
+
+
+
+
+
+Fractional assignment:
+
+
+percent, quantity, fixed amount
+
+
+
+
+Tax and fee allocation rules
+
+
+Default: allocate tax proportionally to each person’s pre-tax allocated subtotal.
+
+
+Tip:
+
+
+allocate proportionally to allocated subtotal or custom.
+
+
+
+
+Fees:
+
+
+allocate evenly or proportionally; configurable per receipt.
+
+
+
+
+Settlement computation
+
+
+Inputs:
+
+
+payer(s) and how much each paid
+
+
+
+
+Output:
+
+
+minimal set of transfers (optional optimization) or direct owes-to payer
+
+
+
+
+Store computed settlement and allow export/share.
+
+
+Posting to ledger
+
+
+Optional:
+
+
+create one transaction per participant (personal ledger)
+
+
+or store receipt split separately and create a single “group expense” transaction with allocations
+
+
+
+
+
+Document 3 UX and app structure
+Navigation
+
+
+Home dashboard
+
+
+Transactions
+
+
+Import
+
+
+Receipts and splits
+
+
+Rules and categories
+
+
+Settings and data control
+
+
+Core screens
+Import screen
+
+
+Drop zone (desktop) or file picker (Android)
+
+
+Import type auto-detect and override
+
+
+Progress with per-stage visibility: extract → parse → normalize → categorize → dedupe
+
+
+Transactions screen
+
+
+List with:
+
+
+merchant, date, amount, category badge, confidence indicator
+
+
+
+
+Bulk select tools
+
+
+Inline correction:
+
+
+change category
+
+
+create rule from correction
+
+
+
+
+Review inbox
+
+
+Grouped by issue:
+
+
+parsing errors
+
+
+low confidence
+
+
+duplicates
+
+
+
+
+One-tap resolve patterns:
+
+
+“always categorize merchant as X”
+
+
+
+
+Receipts and splits
+
+
+Receipt list
+
+
+Receipt detail:
+
+
+extracted items editable
+
+
+participant assignments
+
+
+computed totals and settlements
+
+
+export/share
+
+
+
+
+Rules and categories
+
+
+Category tree editor
+
+
+Rules list with priority
+
+
+Rule builder with test preview on historical transactions
+
+
+Accessibility and internationalization
+
+
+Currency/locale-aware number parsing and display
+
+
+Right-to-left layout readiness
+
+
+Screen reader labels for core actions
+
+
+
+Document 4 ML and OCR requirements
+4.1 OCR stack
+Android
+
+
+Primary: on-device OCR using a proven mobile text recognition SDK.
+
+
+Fallback: image pre-processing (deskew, contrast) then OCR retry.
+
+
+Desktop
+
+
+Primary: text extraction from PDFs if embedded text exists.
+
+
+Fallback: OCR via a local OCR engine on rendered page images.
+
+
+OCR quality gates
+
+
+Confidence thresholds per line and per page.
+
+
+If below threshold:
+
+
+route to needs_review with highlighted uncertain regions.
+
+
+
+
+4.2 Statement parsing models
+Approach
+Hybrid, not purely generative:
+
+
+Layout detection:
+
+
+detect table-like regions and column boundaries
+
+
+
+
+Field extraction:
+
+
+date, description, amount, balance optional
+
+
+
+
+Heuristic templates + learned classifier:
+
+
+template inference per statement type
+
+
+learned model chooses parsing strategy
+
+
+
+
+Training data
+
+
+Synthetic PDFs produced from known templates.
+
+
+User-consented anonymized samples for future improvements (opt-in only).
+
+
+Labeling:
+
+
+canonical rows extracted + human-verified fields.
+
+
+
+
+Evaluation
+
+
+Field-level F1:
+
+
+date accuracy
+
+
+amount accuracy
+
+
+description completeness
+
+
+
+
+Transaction row recall:
+
+
+missing/extra transactions
+
+
+
+
+4.3 Transaction categorization model
+Baseline
+
+
+Model: lightweight text+metadata classifier (TFLite compatible)
+
+
+Features:
+
+
+merchant tokens
+
+
+description tokens
+
+
+amount bucket
+
+
+day-of-week, month
+
+
+account type optional
+
+
+
+
+Personalization
+Two-tier learning:
+
+
+Immediate local learning:
+
+
+merchant → category mapping with recency weighting
+
+
+rules override model
+
+
+
+
+Periodic training:
+
+
+batch retrain global model (single GPU) using aggregated non-sensitive features or consented anonymized data
+
+
+ship model updates with app releases or model bundle downloads (later cloud)
+
+
+
+
+Confidence calibration
+
+
+Temperature scaling or isotonic regression offline.
+
+
+Target behavior:
+
+
+low confidence → routed to review inbox.
+
+
+
+
+4.4 Receipt itemization model
+
+
+Primarily deterministic parsing + regex + line grouping.
+
+
+Optional later: small sequence labeling model for item/price pairing.
+
+
+Totals reconciliation as validator.
+
+
+
+Document 5 Non-functional requirements
+Performance
+
+
+Desktop import:
+
+
+10-page PDF processed within acceptable interactive time on CPU.
+
+
+
+
+Android:
+
+
+receipt OCR completes within a few seconds on mid-tier devices for a single image.
+
+
+
+
+Categorization:
+
+
+per transaction inference under 10 ms on desktop CPU; under 30 ms on Android.
+
+
+
+
+Reliability
+
+
+Import pipeline must be resumable after crash:
+
+
+staged checkpoints persisted locally.
+
+
+
+
+No data loss:
+
+
+all raw source files stored (encrypted) unless user deletes.
+
+
+
+
+Offline operation
+
+
+All MVP features work without network.
+
+
+Network used only for:
+
+
+optional updates
+
+
+optional cloud sync in later phases
+
+
+
+
+Data storage
+
+
+Local database: SQLite with migrations
+
+
+Full-text search for merchant/description
+
+
+Attachments stored in app-managed encrypted storage
+
+
+Security
+
+
+Encryption at rest for DB and attachments.
+
+
+Encryption in transit for any future sync.
+
+
+Secrets management:
+
+
+Android Keystore
+
+
+Desktop OS keychain where available
+
+
+
+
+Privacy
+
+
+Default: no account creation, no cloud upload.
+
+
+Explicit opt-in for any telemetry and for any data donation.
+
+
+Data deletion:
+
+
+delete ledger
+
+
+delete attachments
+
+
+delete learned mappings
+
+
+
+
+
+Document 6 Architecture requirements for local-first then cloud
+6.1 Target architecture
+Local core
+
+
+Shared “Finance Engine” library
+
+
+parsing, normalization, dedupe, categorization, rules, receipt splitting
+
+
+
+
+Local DB + encrypted attachments
+
+
+UI layer per platform
+
+
+Modular services
+
+
+Import service
+
+
+Categorization service
+
+
+Receipt parsing service
+
+
+Rules service
+
+
+Sync service placeholder (disabled in MVP)
+
+
+6.2 Recommended implementation pattern
+Option A Preferred for budget and reuse
+
+
+Shared core in Kotlin Multiplatform or Rust core + bindings
+
+
+Android UI: Kotlin + Jetpack Compose
+
+
+Desktop UI: Compose Desktop
+
+
+ML inference: TFLite models shipped with app
+
+
+OCR:
+
+
+Android: on-device OCR SDK
+
+
+Desktop: PDF text extraction + OCR fallback
+
+
+
+
+Option B Alternative
+
+
+Desktop local server (Python/FastAPI) + Electron UI
+
+
+Android native app calling shared model bundles
+
+
+Higher packaging and maintenance cost
+
+
+6.3 Cloud migration path
+Phase 1 Local only
+
+
+No backend required.
+
+
+Update distribution via app store / installer updates.
+
+
+Phase 2 Optional cloud sync
+
+
+Add user identity:
+
+
+email magic link or device keypair
+
+
+
+
+Sync service:
+
+
+per-user encrypted blobs or record-level sync
+
+
+
+
+Conflict resolution:
+
+
+last-write-wins for categories and notes
+
+
+merge for rules using timestamps
+
+
+
+
+Phase 3 Cloud compute for heavy parsing
+
+
+Upload only source files if user opts in.
+
+
+Cloud OCR/parsing:
+
+
+better accuracy for complex PDFs
+
+
+
+
+Return canonical transactions to device.
+
+
+Keep raw bank docs optional and encrypt.
+
+
+Phase 4 Read-only bank aggregation
+
+
+Integrate an aggregator to fetch transactions.
+
+
+Token-based auth; never store bank passwords.
+
+
+Map aggregator categories to internal categories; still learn user overrides.
+
+
+Phase 5 Assisted automation
+
+
+Draft bill payments, suggested transfers.
+
+
+Human approval required in-app.
+
+
+Phase 6 Fully automated agent
+
+
+Requires:
+
+
+verified identity
+
+
+explicit permissions
+
+
+robust anomaly detection
+
+
+audit logs
+
+
+rollback and dispute workflows
+
+
+regulatory/compliance review depending on jurisdictions and money movement scope
+
+
+
+
+6.4 Cloud API surface draft
+Auth
+
+
+POST /auth/start
+
+
+POST /auth/verify
+
+
+POST /auth/refresh
+
+
+Sync
+
+
+GET /sync/snapshot
+
+
+POST /sync/changes
+
+
+GET /sync/changes?since=cursor
+
+
+Parse and categorize as a service
+
+
+POST /parse/statement
+
+
+POST /parse/receipt
+
+
+POST /categorize/batch
+
+
+POST /train/feedback (opt-in)
+
+
+Observability
+
+
+POST /telemetry/events (opt-in)
+
+
+
+Document 7 Security threat model and controls
+Threats
+
+
+Local device compromise
+
+
+Malicious PDF payloads
+
+
+Data exfiltration via logs/telemetry
+
+
+Model inversion risks if training on sensitive text
+
+
+Cloud account takeover in sync phases
+
+
+Controls MVP
+
+
+Sandbox PDF parsing, limit file sizes, disable script execution paths.
+
+
+Validate and sanitize extracted text.
+
+
+No raw statement contents in logs.
+
+
+Encrypted local storage.
+
+
+Optional app lock (PIN/biometric).
+
+
+Deterministic parsers with bounded resource usage to resist zip bombs / huge PDFs.
+
+
+Controls later cloud
+
+
+End-to-end encryption option for synced ledger.
+
+
+Server-side rate limits and anomaly detection.
+
+
+Strict PII minimization for training:
+
+
+feature hashing, token redaction, merchant normalization locally before upload
+
+
+
+
+Audit logs for all automated actions.
+
+
+
+Document 8 Analytics and telemetry specification
+Telemetry posture
+
+
+Off by default.
+
+
+Separate toggles:
+
+
+diagnostics (crash reports)
+
+
+usage analytics (feature events)
+
+
+data donation (anonymized samples)
+
+
+
+
+Event taxonomy
+
+
+import_started {type, file_size, pages}
+
+
+import_completed {type, duration_ms, transactions_count, errors_count}
+
+
+parse_error {stage, error_code}
+
+
+category_assigned {source: model|rule|merchant_prior, confidence_bucket}
+
+
+category_corrected {from,to}
+
+
+rule_created {rule_type}
+
+
+receipt_uploaded {type}
+
+
+receipt_extracted {items_count, totals_match}
+
+
+split_finalized {participants_count, allocations_count}
+
+
+export_used {format}
+
+
+KPI dashboards
+
+
+Import success rate by type
+
+
+Average corrections per 100 transactions over time
+
+
+Receipt extraction totals-match rate
+
+
+Split completion time median
+
+
+
+Document 9 Release plan and milestones
+Phase 0 Prototype
+
+
+PDF text extraction + CSV import
+
+
+Canonical ledger + manual category editing
+
+
+Local DB + export
+
+
+Phase 1 MVP Local-first
+
+
+PDF OCR fallback
+
+
+Categorization model + confidence + explanations
+
+
+Correction learning via merchant prior + rules
+
+
+Review inbox
+
+
+Receipt upload + item extraction + split + settlement
+
+
+Desktop packaging + Android APK distribution
+
+
+Phase 2 Quality and scale on-device
+
+
+More bank format coverage via templates
+
+
+Better dedupe and transfer detection
+
+
+Faster OCR pipeline and caching
+
+
+Backup/restore locally
+
+
+Phase 3 Optional cloud sync
+
+
+Identity + encrypted sync
+
+
+Multi-device support
+
+
+Phase 4 Read-only bank APIs
+
+
+Aggregator integration
+
+
+Continuous import and reconciliation
+
+
+Phase 5 Assisted automation
+
+
+Bill reminders, draft payments, suggested transfers with approval
+
+
+
+Document 10 QA and acceptance criteria
+Import acceptance
+
+
+Given a supported CSV, app imports with correct dates and amounts for ≥ 99% rows.
+
+
+Given a text-based PDF statement, app extracts ≥ 98% transactions with correct signed amounts.
+
+
+Given a scanned PDF with legible text, app extracts ≥ 90% transactions; remainder routed to review with page references.
+
+
+Categorization acceptance
+
+
+For transactions with an existing merchant prior or rule, category matches expected behavior 100%.
+
+
+For new merchants, model assigns category with confidence; low confidence items appear in review inbox.
+
+
+User correction immediately affects future transactions for the same merchant (merchant prior learning).
+
+
+Receipt split acceptance
+
+
+If totals match, computed participant totals sum to receipt total within rounding tolerance.
+
+
+Tax allocation defaults to proportional by pre-tax allocations.
+
+
+Multiple payers produce correct net settlement amounts.
+
+
+Regression suite
+
+
+Corpus of PDFs/CSVs/receipts with golden outputs.
+
+
+Snapshot tests for parsing and categorization.
+
+
+Fuzz tests for PDF parsing safety and resource bounds.
+
+
+Supportability
+
+
+“Export debug bundle” local-only:
+
+
+parsing logs without raw statement text
+
+
+anonymized structure traces
+
+
+model version and config
+
+
+
+
+User-controlled and redaction-safe.
+
+
+
+Document 11 Open decisions locked for architecture team
+Decisions that must be fixed early
+
+
+Shared core strategy: Kotlin Multiplatform vs Rust core
+
+
+OCR library choices per platform
+
+
+Encryption library and key management approach
+
+
+Sync approach: record-level vs encrypted blob snapshots
+
+
+Model update mechanism: app release vs downloadable bundles
+
+
+Decisions deliberately deferred
+
+
+Bank aggregator vendor selection
+
+
+Any write-access money movement features
+
+
+LLM usage for “assistant” behavior until deterministic baselines are stable
+

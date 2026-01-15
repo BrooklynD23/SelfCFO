@@ -1,0 +1,90 @@
+-- Transaction View - Combines imported transactions with overrides
+
+CREATE VIEW transaction_view AS
+SELECT
+    it.id,
+    it.source_file_id,
+    it.source_row_ref,
+    it.account_id,
+    it.posted_date,
+    it.transaction_date,
+    it.description_raw,
+    COALESCE(tor.merchant_override, m.display_name, it.merchant_normalized) AS merchant_display,
+    it.merchant_normalized,
+    it.amount_minor_units,
+    it.currency_code,
+    COALESCE(tor.category_id, it.category_id_auto) AS category_id,
+    CASE
+        WHEN tor.category_id IS NOT NULL THEN 1.0
+        ELSE it.category_confidence
+    END AS category_confidence,
+    CASE
+        WHEN tor.category_id IS NOT NULL THEN 'user_override'
+        ELSE it.category_reason
+    END AS category_reason,
+    COALESCE(tor.tags, '[]') AS tags,
+    COALESCE(tor.notes, '') AS notes,
+    EXISTS(SELECT 1 FROM transfer t WHERE t.from_transaction_id = it.id OR t.to_transaction_id = it.id) AS is_transfer,
+    COALESCE(tor.is_excluded, 0) AS is_excluded,
+    COALESCE(tor.is_reviewed, 0) AS is_reviewed,
+    it.fingerprint AS hash_fingerprint,
+    it.imported_at
+FROM imported_transaction it
+LEFT JOIN transaction_override tor ON it.id = tor.transaction_id
+LEFT JOIN merchant m ON it.merchant_id = m.id;
+
+selectAllTransactions:
+SELECT * FROM transaction_view WHERE is_excluded = 0 ORDER BY posted_date DESC;
+
+selectByAccount:
+SELECT * FROM transaction_view WHERE account_id = ? AND is_excluded = 0 ORDER BY posted_date DESC;
+
+selectByCategory:
+SELECT * FROM transaction_view WHERE category_id = ? AND is_excluded = 0 ORDER BY posted_date DESC;
+
+selectByDateRange:
+SELECT * FROM transaction_view
+WHERE posted_date BETWEEN ? AND ? AND is_excluded = 0
+ORDER BY posted_date DESC;
+
+selectNeedingReview:
+SELECT * FROM transaction_view
+WHERE is_reviewed = 0 AND category_confidence < 0.8 AND is_excluded = 0
+ORDER BY posted_date DESC;
+
+-- Category summary view
+CREATE VIEW category_summary AS
+SELECT
+    c.id AS category_id,
+    c.name AS category_name,
+    c.parent_id,
+    c.icon,
+    c.color,
+    COUNT(tv.id) AS transaction_count,
+    SUM(CASE WHEN tv.amount_minor_units < 0 THEN tv.amount_minor_units ELSE 0 END) AS total_spent_minor,
+    SUM(CASE WHEN tv.amount_minor_units > 0 THEN tv.amount_minor_units ELSE 0 END) AS total_income_minor
+FROM category c
+LEFT JOIN transaction_view tv ON c.id = tv.category_id AND tv.is_excluded = 0
+GROUP BY c.id;
+
+selectCategorySummary:
+SELECT * FROM category_summary ORDER BY total_spent_minor ASC;
+
+-- Account balance view
+CREATE VIEW account_balance AS
+SELECT
+    a.id AS account_id,
+    a.display_name,
+    a.institution_name,
+    a.account_type,
+    a.currency_code,
+    COUNT(it.id) AS transaction_count,
+    SUM(it.amount_minor_units) AS net_balance_minor,
+    MAX(it.posted_date) AS last_transaction_date
+FROM account a
+LEFT JOIN imported_transaction it ON a.id = it.account_id
+WHERE a.is_active = 1
+GROUP BY a.id;
+
+selectAccountBalances:
+SELECT * FROM account_balance ORDER BY display_name;

@@ -1,0 +1,53 @@
+CREATE TABLE category (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    parent_id TEXT REFERENCES category(id),
+    system_default INTEGER NOT NULL DEFAULT 0,
+    user_custom INTEGER NOT NULL DEFAULT 0,
+    icon TEXT,
+    color TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_category_parent ON category(parent_id);
+
+selectAll:
+SELECT * FROM category ORDER BY sort_order, name;
+
+selectById:
+SELECT * FROM category WHERE id = ?;
+
+selectByParent:
+SELECT * FROM category WHERE parent_id = ? ORDER BY sort_order, name;
+
+selectTopLevel:
+SELECT * FROM category WHERE parent_id IS NULL ORDER BY sort_order, name;
+
+insert:
+INSERT INTO category(id, name, parent_id, system_default, user_custom, icon, color, sort_order)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE category SET name = ?, icon = ?, color = ?, sort_order = ? WHERE id = ?;
+
+-- Seed default categories
+insertDefaults:
+INSERT OR IGNORE INTO category(id, name, parent_id, system_default, sort_order) VALUES
+('income', 'Income', NULL, 1, 0),
+('salary', 'Salary', 'income', 1, 1),
+('investments', 'Investments', 'income', 1, 2),
+('housing', 'Housing', NULL, 1, 10),
+('rent', 'Rent/Mortgage', 'housing', 1, 11),
+('utilities', 'Utilities', 'housing', 1, 12),
+('food', 'Food & Dining', NULL, 1, 20),
+('groceries', 'Groceries', 'food', 1, 21),
+('restaurants', 'Restaurants', 'food', 1, 22),
+('transport', 'Transportation', NULL, 1, 30),
+('gas', 'Gas', 'transport', 1, 31),
+('parking', 'Parking', 'transport', 1, 32),
+('shopping', 'Shopping', NULL, 1, 40),
+('entertainment', 'Entertainment', NULL, 1, 50),
+('subscriptions', 'Subscriptions', 'entertainment', 1, 51),
+('health', 'Health & Medical', NULL, 1, 60),
+('transfer', 'Transfers', NULL, 1, 90),
+('uncategorized', 'Uncategorized', NULL, 1, 99);

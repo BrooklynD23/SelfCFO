@@ -1,0 +1,36 @@
+-- Receipt entities - Placeholders for Sprint 03
+-- Full implementation will be done in Sprint 03: Receipt Splitting
+
+CREATE TABLE receipt (
+    id TEXT NOT NULL PRIMARY KEY,
+    transaction_id TEXT REFERENCES imported_transaction(id),
+    source_file_id TEXT REFERENCES source_file(id),
+    merchant_name TEXT,
+    receipt_date INTEGER,
+    subtotal_minor_units INTEGER,
+    tax_minor_units INTEGER,
+    tip_minor_units INTEGER,
+    total_minor_units INTEGER NOT NULL,
+    currency_code TEXT NOT NULL DEFAULT 'USD',
+    ocr_confidence REAL,
+    ocr_raw_text TEXT,
+    parse_status TEXT NOT NULL DEFAULT 'pending',
+    created_at INTEGER NOT NULL,
+    CHECK (parse_status IN ('pending', 'parsing', 'complete', 'failed', 'needs_review'))
+);
+
+CREATE INDEX idx_receipt_transaction ON receipt(transaction_id);
+CREATE INDEX idx_receipt_date ON receipt(receipt_date);
+
+insert:
+INSERT INTO receipt(id, transaction_id, source_file_id, merchant_name, receipt_date, subtotal_minor_units, tax_minor_units, tip_minor_units, total_minor_units, currency_code, ocr_confidence, ocr_raw_text, parse_status, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectById:
+SELECT * FROM receipt WHERE id = ?;
+
+selectByTransaction:
+SELECT * FROM receipt WHERE transaction_id = ?;
+
+selectPending:
+SELECT * FROM receipt WHERE parse_status = 'pending' ORDER BY created_at;

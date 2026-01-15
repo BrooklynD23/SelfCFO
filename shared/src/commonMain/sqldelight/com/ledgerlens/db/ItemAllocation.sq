@@ -1,0 +1,37 @@
+-- Item Allocation entity - Placeholder for Sprint 03
+
+CREATE TABLE item_allocation (
+    id TEXT NOT NULL PRIMARY KEY,
+    receipt_item_id TEXT NOT NULL REFERENCES receipt_item(id),
+    participant_id TEXT NOT NULL REFERENCES participant(id),
+    quantity REAL NOT NULL DEFAULT 1.0,
+    amount_minor_units INTEGER NOT NULL,
+    notes TEXT,
+    UNIQUE(receipt_item_id, participant_id)
+);
+
+CREATE INDEX idx_item_allocation_item ON item_allocation(receipt_item_id);
+CREATE INDEX idx_item_allocation_participant ON item_allocation(participant_id);
+
+insert:
+INSERT INTO item_allocation(id, receipt_item_id, participant_id, quantity, amount_minor_units, notes)
+VALUES (?, ?, ?, ?, ?, ?);
+
+selectByReceiptItem:
+SELECT ia.*, p.name AS participant_name
+FROM item_allocation ia
+JOIN participant p ON ia.participant_id = p.id
+WHERE ia.receipt_item_id = ?;
+
+selectByParticipant:
+SELECT ia.*, ri.description AS item_description
+FROM item_allocation ia
+JOIN receipt_item ri ON ia.receipt_item_id = ri.id
+WHERE ia.participant_id = ?;
+
+upsert:
+INSERT OR REPLACE INTO item_allocation(id, receipt_item_id, participant_id, quantity, amount_minor_units, notes)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteByReceiptItem:
+DELETE FROM item_allocation WHERE receipt_item_id = ?;

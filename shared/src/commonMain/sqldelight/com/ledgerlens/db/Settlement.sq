@@ -1,0 +1,47 @@
+-- Settlement entity - Placeholder for Sprint 03
+
+CREATE TABLE settlement (
+    id TEXT NOT NULL PRIMARY KEY,
+    receipt_id TEXT NOT NULL REFERENCES receipt(id),
+    from_participant_id TEXT NOT NULL REFERENCES participant(id),
+    to_participant_id TEXT NOT NULL REFERENCES participant(id),
+    amount_minor_units INTEGER NOT NULL,
+    currency_code TEXT NOT NULL DEFAULT 'USD',
+    status TEXT NOT NULL DEFAULT 'pending',
+    settled_at INTEGER,
+    payment_method TEXT,
+    notes TEXT,
+    created_at INTEGER NOT NULL,
+    CHECK (status IN ('pending', 'settled', 'cancelled')),
+    CHECK (from_participant_id != to_participant_id)
+);
+
+CREATE INDEX idx_settlement_receipt ON settlement(receipt_id);
+CREATE INDEX idx_settlement_from ON settlement(from_participant_id);
+CREATE INDEX idx_settlement_to ON settlement(to_participant_id);
+CREATE INDEX idx_settlement_status ON settlement(status);
+
+insert:
+INSERT INTO settlement(id, receipt_id, from_participant_id, to_participant_id, amount_minor_units, currency_code, status, settled_at, payment_method, notes, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectByReceipt:
+SELECT s.*, fp.name AS from_name, tp.name AS to_name
+FROM settlement s
+JOIN participant fp ON s.from_participant_id = fp.id
+JOIN participant tp ON s.to_participant_id = tp.id
+WHERE s.receipt_id = ?;
+
+selectPendingByParticipant:
+SELECT s.*, r.merchant_name, fp.name AS from_name, tp.name AS to_name
+FROM settlement s
+JOIN receipt r ON s.receipt_id = r.id
+JOIN participant fp ON s.from_participant_id = fp.id
+JOIN participant tp ON s.to_participant_id = tp.id
+WHERE (s.from_participant_id = ? OR s.to_participant_id = ?) AND s.status = 'pending';
+
+markSettled:
+UPDATE settlement SET status = 'settled', settled_at = ?, payment_method = ? WHERE id = ?;
+
+cancel:
+UPDATE settlement SET status = 'cancelled' WHERE id = ?;
