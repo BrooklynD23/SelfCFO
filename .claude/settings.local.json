@@ -12,7 +12,10 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(git stash pop:*)",
-      "Bash(git stash drop:*)"
+      "Bash(git stash drop:*)",
+      "Bash(./gradlew :shared:compileKotlinDesktop:*)",
+      "Bash(ls:*)",
+      "Bash(/bin/bash ./gradlew:*)"
     ]
   }
 }
