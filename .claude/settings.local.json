@@ -10,7 +10,9 @@
       "mcp__claude-swarm__check_all_workers",
       "mcp__claude-swarm__orchestrator_status",
       "Bash(git checkout:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git stash drop:*)"
     ]
   }
 }
