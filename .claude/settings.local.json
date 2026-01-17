@@ -8,7 +8,9 @@
       "mcp__claude-swarm__enrich_feature",
       "mcp__claude-swarm__start_worker",
       "mcp__claude-swarm__check_all_workers",
-      "mcp__claude-swarm__orchestrator_status"
+      "mcp__claude-swarm__orchestrator_status",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)"
     ]
   }
 }
