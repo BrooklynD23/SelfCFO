@@ -82,8 +82,11 @@ interface KeyManager {
 data class RecoveryKey(
     val words: List<String>
 ) {
+    /** Alias for words property for UI compatibility */
+    val mnemonic: List<String> get() = words
+
     override fun toString(): String = words.joinToString(" ")
-    
+
     companion object {
         fun fromString(mnemonic: String): RecoveryKey {
             return RecoveryKey(mnemonic.split(" ").filter { it.isNotBlank() })

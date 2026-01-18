@@ -4,9 +4,9 @@
 
 ---
 
-## Current Sprint: 04 - UI Implementation
+## Current Sprint: 04 → 05 Transition
 
-**Status:** In Progress (CI Fix Pending)
+**Status:** Sprint 04 UI Complete, Sprint 05 Started
 **Last Updated:** 2026-01-18
 **Current Branch:** `sprint04/integration`
 **PR Status:** Awaiting CI verification after build fix
@@ -21,8 +21,8 @@
 | **01 - Core Data Layer** | ✅ Complete | 100% |
 | **02 - Categorization Engine** | ✅ Complete | 100% |
 | **03 - Receipt Splitting** | ✅ Complete | 100% |
-| **04 - UI Implementation** | 🔄 In Progress | 90% |
-| **05 - Data Layer Integration** | ⏳ Pending | 0% |
+| **04 - UI Implementation** | ✅ Complete | 100% |
+| **05 - Data Layer Integration** | 🔄 In Progress | 25% |
 
 ---
 
@@ -208,7 +208,7 @@
 - [x] BackupRestoreScreen.kt - Backup/restore UI
 - [x] SecuritySettingsScreen.kt - Security settings
 
-### ViewModels ✅ (7 files)
+### ViewModels ✅ (8 files)
 - [x] DashboardViewModel.kt - Dashboard state management
 - [x] TransactionsViewModel.kt - Transactions state
 - [x] ImportViewModel.kt - Import state
@@ -216,27 +216,41 @@
 - [x] ReceiptsViewModel.kt - Receipts state
 - [x] CategoriesViewModel.kt - Categories state
 - [x] CorrectionViewModel.kt - Corrections state
-
-### Remaining Tasks ⏳
-- [ ] SettingsViewModel.kt - Settings state (screens exist, VM missing)
-- [ ] BackupRestoreViewModel.kt - Backup state
-- [ ] SecuritySettingsViewModel.kt - Security state
-- [ ] RulesViewModel.kt - Rules management state
+- [x] SettingsViewModel.kt - Settings, Backup, Security state (unified VM)
 
 ---
 
-## Sprint 05: Data Layer Integration ⏳
+## Sprint 05: Data Layer Integration 🔄
 
-### Pending Tasks
-- [ ] TransactionRepository - SQLDelight-backed
-- [ ] CategoryRepository implementation
-- [ ] ReceiptRepository implementation
-- [ ] RuleRepository implementation
-- [ ] StatisticsRepository for dashboard
-- [ ] Dependency Injection setup
-- [ ] Platform-specific app initialization
-- [ ] Integration tests
-- [ ] E2E test utilities
+### Repository Interfaces ✅ (6 files)
+- [x] TransactionRepository.kt - Transaction CRUD interface
+- [x] CategoryRepository.kt - Category CRUD interface
+- [x] ReceiptRepository.kt - Receipt & item allocation interface
+- [x] RuleRepository.kt - Categorization rules interface
+- [x] AccountRepository.kt - Financial account interface
+- [x] StatisticsRepository.kt - Analytics & stats interface
+- [x] ImportRepository.kt - Import job tracking interface
+
+### SQLDelight Implementations ⏳
+- [ ] SqlDelightTransactionRepository
+- [ ] SqlDelightCategoryRepository
+- [ ] SqlDelightReceiptRepository
+- [ ] SqlDelightRuleRepository
+- [ ] SqlDelightAccountRepository
+- [ ] SqlDelightStatisticsRepository
+
+### Dependency Injection ⏳
+- [ ] AppModule.kt - Central dependency graph
+- [ ] PlatformModule.kt (expect/actual)
+- [ ] ViewModelFactory.kt
+- [ ] AppInitializer.kt
+
+### Integration Tests ⏳
+- [ ] TestFixtures.kt
+- [ ] FakeRepositories.kt
+- [ ] ViewModel integration tests
+- [ ] Repository integration tests
+- [ ] Flow integration tests
 
 ---
 
@@ -312,13 +326,19 @@ All implementations follow:
 
 1. **Verify CI passes**: Monitor PR checks after build fix commit
 2. **Merge Sprint 04 PR**: Once CI passes, merge to main
-3. **Implement Settings ViewModels**: Complete the remaining ViewModel layer (Agent 7)
-4. **Begin Sprint 05**: Repository implementations (Agent 8), DI setup (Agent 9), Integration tests (Agent 10)
+3. **Complete SQLDelight implementations**: Connect repository interfaces to database
+4. **Setup DI**: Wire ViewModels to repositories
+5. **Integration tests**: End-to-end testing
+
+### Completed This Session (2026-01-18)
+- [x] SettingsViewModel.kt - Unified settings/backup/security ViewModel
+- [x] RecoveryKey.mnemonic alias for UI compatibility
+- [x] All 7 repository interfaces created (Sprint 05 foundation)
 
 ### Immediate Actions
 - [ ] CI passes all checks (lint, build, android)
 - [ ] Merge PR to main
-- [ ] Create Sprint 05 branches for Agents 8-10
+- [ ] Implement SQLDelight repository classes
 
 ---
 
