@@ -27,6 +27,7 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
+                implementation(compose.materialIconsExtended)
 
                 // Coroutines - using version catalog
                 implementation(libs.kotlinx.coroutines.core)

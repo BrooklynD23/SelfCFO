@@ -14,6 +14,8 @@ trim_trailing_whitespace = true
 [*.{kt,kts}]
 ktlint_code_style = android_studio
 max_line_length = 120
+# Allow wildcard imports for Compose packages (common Compose pattern)
+ij_kotlin_packages_to_use_import_on_demand = androidx.compose.*,kotlinx.coroutines.*
 
 [*.md]
 trim_trailing_whitespace = false
