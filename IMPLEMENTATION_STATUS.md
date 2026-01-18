@@ -6,9 +6,10 @@
 
 ## Current Sprint: 04 - UI Implementation
 
-**Status:** In Progress (Integration Complete)
-**Last Updated:** 2026-01-17
+**Status:** In Progress (CI Fix Pending)
+**Last Updated:** 2026-01-18
 **Current Branch:** `sprint04/integration`
+**PR Status:** Awaiting CI verification after build fix
 
 ---
 
@@ -278,9 +279,14 @@
 - **JAVA_HOME** must be set to run Gradle builds
 - Run `./gradlew :shared:check` to verify tests
 
+### CI Fixes Applied (2026-01-18)
+- ✅ Added `compose.materialIconsExtended` dependency for Icons.Filled/Outlined
+- ✅ Configured ktlint to allow Compose wildcard imports in `.editorconfig`
+- Commit: `8646725 fix(build): Add missing Compose dependencies and ktlint config`
+
 ### Branch Status
 - **main**: Stable baseline (Sprint 01-03 complete)
-- **sprint04/integration**: Contains all Sprint 04 UI work (ready to merge)
+- **sprint04/integration**: Contains all Sprint 04 UI work + CI fixes (PR open)
 
 ### Deferred Items (LOW priority)
 - ClassifierTrainer.kt - Training data management
@@ -304,11 +310,16 @@ All implementations follow:
 
 ## Next Steps
 
-1. **Merge Sprint 04 branch**: `git checkout main && git merge sprint04/integration`
-2. **Implement Settings ViewModels**: Complete the remaining ViewModel layer
-3. **Begin Sprint 05**: Repository implementations and DI setup
-4. **Configure JAVA_HOME**: Required for build verification
+1. **Verify CI passes**: Monitor PR checks after build fix commit
+2. **Merge Sprint 04 PR**: Once CI passes, merge to main
+3. **Implement Settings ViewModels**: Complete the remaining ViewModel layer (Agent 7)
+4. **Begin Sprint 05**: Repository implementations (Agent 8), DI setup (Agent 9), Integration tests (Agent 10)
+
+### Immediate Actions
+- [ ] CI passes all checks (lint, build, android)
+- [ ] Merge PR to main
+- [ ] Create Sprint 05 branches for Agents 8-10
 
 ---
 
-*Last Updated: 2026-01-17*
+*Last Updated: 2026-01-18*
