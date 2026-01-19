@@ -34,3 +34,34 @@ SELECT * FROM receipt WHERE transaction_id = ?;
 
 selectPending:
 SELECT * FROM receipt WHERE parse_status = 'pending' ORDER BY created_at;
+
+selectAll:
+SELECT * FROM receipt ORDER BY receipt_date DESC, created_at DESC;
+
+search:
+SELECT * FROM receipt
+WHERE merchant_name LIKE '%' || ? || '%' OR ocr_raw_text LIKE '%' || ? || '%'
+ORDER BY receipt_date DESC;
+
+update:
+UPDATE receipt SET
+    merchant_name = ?,
+    receipt_date = ?,
+    subtotal_minor_units = ?,
+    tax_minor_units = ?,
+    tip_minor_units = ?,
+    total_minor_units = ?,
+    currency_code = ?,
+    ocr_confidence = ?,
+    ocr_raw_text = ?,
+    parse_status = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM receipt WHERE id = ?;
+
+linkToTransaction:
+UPDATE receipt SET transaction_id = ? WHERE id = ?;
+
+countAll:
+SELECT COUNT(*) FROM receipt;

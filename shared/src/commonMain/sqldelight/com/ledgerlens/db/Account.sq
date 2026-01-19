@@ -31,3 +31,28 @@ UPDATE account SET display_name = ? WHERE id = ?;
 
 deactivate:
 UPDATE account SET is_active = 0 WHERE id = ?;
+
+selectAllIncludingInactive:
+SELECT * FROM account ORDER BY display_name;
+
+selectByName:
+SELECT * FROM account WHERE display_name = ? LIMIT 1;
+
+update:
+UPDATE account SET
+    display_name = ?,
+    institution_name = ?,
+    account_type = ?,
+    currency_code = ?,
+    last_four = ?,
+    is_active = ?,
+    color = ?,
+    icon = ?,
+    notes = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM account WHERE id = ?;
+
+exists:
+SELECT COUNT(*) > 0 FROM account WHERE id = ?;

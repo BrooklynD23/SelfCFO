@@ -41,6 +41,9 @@ kotlin {
                 // SQLDelight runtime
                 implementation(libs.sqldelight.runtime)
                 implementation(libs.sqldelight.coroutines)
+
+                // Koin - Dependency Injection
+                implementation(libs.koin.core)
             }
         }
 
@@ -59,6 +62,7 @@ kotlin {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.turbine)
+                implementation(libs.koin.test)
             }
         }
 
@@ -81,6 +85,8 @@ kotlin {
                 implementation(libs.sqlcipher.android)
                 // AndroidX Security for EncryptedSharedPreferences
                 implementation(libs.androidx.security.crypto)
+                // Koin Android
+                implementation(libs.koin.android)
             }
         }
 

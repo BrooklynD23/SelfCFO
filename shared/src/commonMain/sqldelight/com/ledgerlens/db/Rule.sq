@@ -37,3 +37,18 @@ UPDATE rule SET priority = ? WHERE id = ?;
 
 delete:
 DELETE FROM rule WHERE id = ?;
+
+selectAll:
+SELECT * FROM rule ORDER BY priority ASC;
+
+update:
+UPDATE rule SET
+    rule_type = ?,
+    match_expression = ?,
+    target_category_id = ?,
+    priority = ?,
+    enabled = ?
+WHERE id = ?;
+
+incrementMatchCount:
+UPDATE rule SET priority = priority WHERE id = ?;

@@ -88,3 +88,21 @@ GROUP BY a.id;
 
 selectAccountBalances:
 SELECT * FROM account_balance ORDER BY display_name;
+
+selectTransactionById:
+SELECT * FROM transaction_view WHERE id = ?;
+
+selectRecentTransactions:
+SELECT * FROM transaction_view WHERE is_excluded = 0 ORDER BY posted_date DESC LIMIT ?;
+
+countAllTransactions:
+SELECT COUNT(*) FROM transaction_view WHERE is_excluded = 0;
+
+countTransactionsByAccount:
+SELECT COUNT(*) FROM transaction_view WHERE account_id = ? AND is_excluded = 0;
+
+selectBySearch:
+SELECT * FROM transaction_view
+WHERE is_excluded = 0
+AND (merchant_display LIKE '%' || ? || '%' OR description_raw LIKE '%' || ? || '%')
+ORDER BY posted_date DESC;

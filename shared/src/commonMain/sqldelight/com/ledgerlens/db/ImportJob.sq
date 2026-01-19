@@ -41,3 +41,24 @@ UPDATE import_job SET transactions_found = ?, transactions_new = ?, transactions
 
 selectQueued:
 SELECT * FROM import_job WHERE status = 'queued' ORDER BY started_at;
+
+selectAll:
+SELECT * FROM import_job ORDER BY started_at DESC;
+
+selectRecent:
+SELECT * FROM import_job ORDER BY started_at DESC LIMIT ?;
+
+markCompleted:
+UPDATE import_job SET status = 'complete', completed_at = ? WHERE id = ?;
+
+markCompletedWithErrors:
+UPDATE import_job SET status = 'complete', completed_at = ?, error_message = 'Completed with errors' WHERE id = ?;
+
+markFailed:
+UPDATE import_job SET status = 'failed', completed_at = ?, error_message = ?, error_details = ? WHERE id = ?;
+
+markCancelled:
+UPDATE import_job SET status = 'cancelled', completed_at = ? WHERE id = ?;
+
+delete:
+DELETE FROM import_job WHERE id = ?;

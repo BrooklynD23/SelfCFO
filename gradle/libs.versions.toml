@@ -19,6 +19,9 @@ datetime = "0.5.0"
 sqldelight = "2.0.1"
 sqlcipher = "4.5.6"
 
+# Dependency Injection
+koin = "3.5.3"
+
 # AndroidX
 androidx-core = "1.12.0"
 androidx-activity = "1.8.2"
@@ -54,6 +57,11 @@ sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", versi
 # SQLCipher
 sqlcipher-android = { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlcipher" }
 sqlcipher-jdbc = { module = "io.github.nickolasgoodwin:sqlite-jdbc-sqlcipher", version = "3.42.0.1" }
+
+# Koin - Dependency Injection
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 
 # AndroidX
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }

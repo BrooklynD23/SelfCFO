@@ -1,0 +1,106 @@
+-- Statistics queries for analytics and dashboard
+-- These use the transaction_view for consistent data access
+
+selectMonthlyStats:
+SELECT
+    CAST(strftime('%Y', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) AS year,
+    CAST(strftime('%m', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) AS month,
+    SUM(CASE WHEN amount_minor_units < 0 THEN amount_minor_units ELSE 0 END) AS total_spending_minor,
+    SUM(CASE WHEN amount_minor_units > 0 THEN amount_minor_units ELSE 0 END) AS total_income_minor,
+    SUM(amount_minor_units) AS net_change_minor,
+    COUNT(*) AS transaction_count
+FROM transaction_view
+WHERE is_excluded = 0
+AND CAST(strftime('%Y', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+AND CAST(strftime('%m', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+GROUP BY year, month;
+
+selectMonthlyStatsList:
+SELECT
+    CAST(strftime('%Y', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) AS year,
+    CAST(strftime('%m', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) AS month,
+    SUM(CASE WHEN amount_minor_units < 0 THEN amount_minor_units ELSE 0 END) AS total_spending_minor,
+    SUM(CASE WHEN amount_minor_units > 0 THEN amount_minor_units ELSE 0 END) AS total_income_minor,
+    SUM(amount_minor_units) AS net_change_minor,
+    COUNT(*) AS transaction_count
+FROM transaction_view
+WHERE is_excluded = 0
+AND posted_date >= ?
+AND posted_date <= ?
+GROUP BY year, month
+ORDER BY year, month;
+
+selectCategoryBreakdown:
+SELECT
+    c.id AS category_id,
+    c.name AS category_name,
+    c.color AS category_color,
+    ABS(SUM(CASE WHEN tv.amount_minor_units < 0 THEN tv.amount_minor_units ELSE 0 END)) AS total_spent_minor,
+    COUNT(tv.id) AS transaction_count
+FROM category c
+LEFT JOIN transaction_view tv ON c.id = tv.category_id
+    AND tv.is_excluded = 0
+    AND CAST(strftime('%Y', datetime(tv.posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+    AND CAST(strftime('%m', datetime(tv.posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+GROUP BY c.id
+HAVING total_spent_minor > 0
+ORDER BY total_spent_minor DESC;
+
+selectCategoryBreakdownForRange:
+SELECT
+    c.id AS category_id,
+    c.name AS category_name,
+    c.color AS category_color,
+    ABS(SUM(CASE WHEN tv.amount_minor_units < 0 THEN tv.amount_minor_units ELSE 0 END)) AS total_spent_minor,
+    COUNT(tv.id) AS transaction_count
+FROM category c
+LEFT JOIN transaction_view tv ON c.id = tv.category_id
+    AND tv.is_excluded = 0
+    AND tv.posted_date BETWEEN ? AND ?
+GROUP BY c.id
+HAVING total_spent_minor > 0
+ORDER BY total_spent_minor DESC;
+
+selectTopMerchants:
+SELECT
+    merchant_display AS merchant_name,
+    ABS(SUM(amount_minor_units)) AS total_spent_minor,
+    COUNT(*) AS transaction_count
+FROM transaction_view
+WHERE is_excluded = 0
+AND amount_minor_units < 0
+AND posted_date BETWEEN ? AND ?
+GROUP BY merchant_display
+ORDER BY total_spent_minor DESC
+LIMIT ?;
+
+selectDailySpending:
+SELECT
+    CAST(strftime('%d', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) AS day,
+    ABS(SUM(CASE WHEN amount_minor_units < 0 THEN amount_minor_units ELSE 0 END)) AS spending_minor
+FROM transaction_view
+WHERE is_excluded = 0
+AND CAST(strftime('%Y', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+AND CAST(strftime('%m', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) = ?
+GROUP BY day
+ORDER BY day;
+
+selectPendingReviewCount:
+SELECT COUNT(*) FROM transaction_view
+WHERE is_reviewed = 0 AND category_confidence < 0.8 AND is_excluded = 0;
+
+selectUncategorizedCount:
+SELECT COUNT(*) FROM transaction_view
+WHERE (category_id IS NULL OR category_id = 'uncategorized') AND is_excluded = 0;
+
+selectYearToDateStats:
+SELECT
+    ? AS year,
+    0 AS month,
+    SUM(CASE WHEN amount_minor_units < 0 THEN amount_minor_units ELSE 0 END) AS total_spending_minor,
+    SUM(CASE WHEN amount_minor_units > 0 THEN amount_minor_units ELSE 0 END) AS total_income_minor,
+    SUM(amount_minor_units) AS net_change_minor,
+    COUNT(*) AS transaction_count
+FROM transaction_view
+WHERE is_excluded = 0
+AND CAST(strftime('%Y', datetime(posted_date / 1000, 'unixepoch')) AS INTEGER) = ?;

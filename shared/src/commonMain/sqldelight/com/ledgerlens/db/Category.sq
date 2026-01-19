@@ -51,3 +51,9 @@ INSERT OR IGNORE INTO category(id, name, parent_id, system_default, sort_order) 
 ('health', 'Health & Medical', NULL, 1, 60),
 ('transfer', 'Transfers', NULL, 1, 90),
 ('uncategorized', 'Uncategorized', NULL, 1, 99);
+
+delete:
+DELETE FROM category WHERE id = ?;
+
+exists:
+SELECT COUNT(*) > 0 FROM category WHERE id = ?;
