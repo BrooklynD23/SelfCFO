@@ -19,7 +19,8 @@ This directory contains the sprint-based implementation plans for LedgerLens. Ea
 ![Sprint 01](https://img.shields.io/badge/Sprint%2001-Complete-green)
 ![Sprint 02](https://img.shields.io/badge/Sprint%2002-Complete-green)
 ![Sprint 03](https://img.shields.io/badge/Sprint%2003-Complete-green)
-![Sprint 04](https://img.shields.io/badge/Sprint%2004-Not%20Started-lightgrey)
+![Sprint 04](https://img.shields.io/badge/Sprint%2004-Complete-green)
+![Sprint 05](https://img.shields.io/badge/Sprint%2005-Complete-green)
 
 ---
 
@@ -31,7 +32,8 @@ This directory contains the sprint-based implementation plans for LedgerLens. Ea
 | [01](./01-core-data-layer/) | Core Data Layer | Database, encryption, import pipeline | ✅ Complete |
 | [02](./02-categorization-engine/) | Categorization Engine | ML inference, rules, learning loop | ✅ Complete |
 | [03](./03-receipt-splitting/) | Receipt Splitting | OCR, item extraction, settlements | ✅ Complete |
-| [04](./04-ui-implementation/) | UI Implementation | All screens with Compose Multiplatform | Not Started |
+| [04](./04-ui-implementation/) | UI Implementation | All screens with Compose Multiplatform | ✅ Complete |
+| [05](../sprint-summaries/sprint-05-summary.md) | Data Layer Integration | Repository implementations, DI, mappers | ✅ Complete |
 
 ---
 
@@ -72,6 +74,13 @@ Sprint Dependencies Diagram
                     │   Sprint 04     │
                     │   UI            │
                     │   Implementation│
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   Sprint 05     │
+                    │   Data Layer    │
+                    │   Integration   │
                     └─────────────────┘
 ```
 
@@ -84,6 +93,7 @@ graph TD
     S01 --> S03[Sprint 03: Receipt Splitting]
     S02 --> S04[Sprint 04: UI Implementation]
     S03 --> S04
+    S04 --> S05[Sprint 05: Data Layer Integration]
 ```
 
 **Dependency Rules:**
@@ -91,6 +101,7 @@ graph TD
 - Sprint 01 must complete before Sprints 02 and 03
 - Sprints 02 and 03 can proceed in parallel after Sprint 01
 - Sprint 04 requires both Sprint 02 and Sprint 03 to be complete
+- Sprint 05 requires Sprint 04 (connects UI to data layer)
 
 ---
 
@@ -160,6 +171,7 @@ Follow this standard cycle when implementing each plan:
 - **Sprint 02:** ML model accuracy tests, categorization rule tests, feedback loop tests
 - **Sprint 03:** OCR extraction tests, item parsing golden files, settlement calculation tests
 - **Sprint 04:** UI component tests, navigation tests, accessibility tests
+- **Sprint 05:** Repository integration tests, DI module verification, mapper unit tests
 
 ### Test Organization
 
@@ -303,4 +315,4 @@ If requirements are unclear:
 
 ---
 
-*Last Updated: 2026-01-15*
+*Last Updated: 2026-01-18 - Sprint 05 Complete*
