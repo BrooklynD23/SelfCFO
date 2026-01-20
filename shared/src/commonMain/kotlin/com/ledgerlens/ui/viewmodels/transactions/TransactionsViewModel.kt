@@ -1,6 +1,11 @@
 package com.ledgerlens.ui.viewmodels.transactions
 
 import com.ledgerlens.categorization.Category
+import com.ledgerlens.data.repositories.CategoryEntity
+import com.ledgerlens.data.repositories.CategoryRepository
+import com.ledgerlens.data.repositories.Transaction
+import com.ledgerlens.data.repositories.TransactionFilter
+import com.ledgerlens.data.repositories.TransactionRepository
 import com.ledgerlens.domain.Money
 import com.ledgerlens.ui.screens.dashboard.DateRange
 import com.ledgerlens.ui.screens.dashboard.TransactionUiModel
@@ -11,6 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -110,11 +116,13 @@ sealed class TransactionsEvent {
  * Provides transaction list with filtering, search, and pagination.
  */
 class TransactionsViewModel(
-    // TODO: Inject actual dependencies when available
-    // private val transactionRepository: TransactionRepository,
-    // private val categoryRepository: CategoryRepository
+    private val transactionRepository: TransactionRepository,
+    private val categoryRepository: CategoryRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    // Cache for category lookups
+    private var categoryCache: Map<String, CategoryEntity> = emptyMap()
 
     private val _uiState = MutableStateFlow(TransactionsUiState())
     val uiState: StateFlow<TransactionsUiState> = _uiState.asStateFlow()
@@ -137,8 +145,8 @@ class TransactionsViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                delay(400) // Simulated delay
-                allTransactions = generateMockTransactions()
+                val transactions = transactionRepository.getTransactions().first()
+                allTransactions = transactions.map { it.toUiModel() }
                 applyFiltersAndPagination()
             } catch (e: Exception) {
                 _uiState.update {
@@ -156,8 +164,8 @@ class TransactionsViewModel(
             _uiState.update { it.copy(isRefreshing = true, error = null) }
 
             try {
-                delay(300)
-                allTransactions = generateMockTransactions()
+                val transactions = transactionRepository.getTransactions().first()
+                allTransactions = transactions.map { it.toUiModel() }
                 applyFiltersAndPagination()
                 _uiState.update { it.copy(isRefreshing = false) }
             } catch (e: Exception) {
@@ -336,15 +344,13 @@ class TransactionsViewModel(
             _detailState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                delay(200)
-                val transaction = allTransactions.find { it.id == transactionId }
-                    ?: generateMockTransactions().find { it.id == transactionId }
+                val transaction = transactionRepository.getTransaction(transactionId).first()
 
                 _detailState.update {
                     it.copy(
                         isLoading = false,
-                        transaction = transaction,
-                        availableCategories = generateMockCategories()
+                        transaction = transaction?.toUiModel(),
+                        availableCategories = categoryCache.values.map { cat -> cat.toCategory() }
                     )
                 }
             } catch (e: Exception) {
@@ -371,7 +377,16 @@ class TransactionsViewModel(
             _detailState.update { it.copy(isSaving = true) }
 
             try {
-                delay(300) // Simulated save
+                val transaction = _detailState.value.transaction
+                if (transaction != null) {
+                    transactionRepository.updateCategory(
+                        transactionId = transaction.id,
+                        categoryId = categoryId,
+                        confidence = 1.0f,
+                        reason = "user_override"
+                    )
+                }
+
                 val newCategory = _detailState.value.availableCategories.find { it.id == categoryId }
                 _detailState.update { state ->
                     state.copy(
@@ -394,7 +409,14 @@ class TransactionsViewModel(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            _uiState.update { it.copy(availableCategories = generateMockCategories()) }
+            try {
+                val categories = categoryRepository.getAllCategories().first()
+                categoryCache = categories.associateBy { it.id }
+                _uiState.update { it.copy(availableCategories = categories.map { cat -> cat.toCategory() }) }
+            } catch (e: Exception) {
+                // Categories failed to load, use empty list
+                _uiState.update { it.copy(availableCategories = emptyList()) }
+            }
         }
     }
 
@@ -443,148 +465,41 @@ class TransactionsViewModel(
         }
     }
 
-    private fun generateMockCategories(): List<Category> = listOf(
-        Category(id = "food", name = "Food & Dining", color = "#FF5722"),
-        Category(id = "food_groceries", name = "Groceries", parentId = "food", color = "#8BC34A"),
-        Category(id = "food_restaurants", name = "Restaurants", parentId = "food", color = "#FF7043"),
-        Category(id = "food_coffee", name = "Coffee & Tea", parentId = "food", color = "#6F4E37"),
-        Category(id = "transport", name = "Transportation", color = "#2196F3"),
-        Category(id = "transport_gas", name = "Gas & Fuel", parentId = "transport", color = "#795548"),
-        Category(id = "transport_parking", name = "Parking", parentId = "transport", color = "#607D8B"),
-        Category(id = "shopping", name = "Shopping", color = "#FF9800"),
-        Category(id = "bills", name = "Bills & Utilities", color = "#9C27B0"),
-        Category(id = "entertainment", name = "Entertainment", color = "#E91E63"),
-        Category(id = "health", name = "Health", color = "#4CAF50"),
-        Category(id = "income", name = "Income", isSystemDefault = true, color = "#4CAF50"),
-        Category(id = "transfer", name = "Transfer", isSystemDefault = true, color = "#9E9E9E"),
-        Category(id = "uncategorized", name = "Uncategorized", isSystemDefault = true, color = "#757575")
-    )
+    // Extension function to map Transaction to TransactionUiModel
+    private fun Transaction.toUiModel(): TransactionUiModel {
+        val cachedCategory = categoryId?.let { categoryCache[it] }
+        val category = if (categoryId != null) {
+            Category(
+                id = categoryId!!,
+                name = cachedCategory?.name ?: categoryId!!,
+                parentId = cachedCategory?.parentId,
+                color = cachedCategory?.color
+            )
+        } else null
 
-    private fun generateMockTransactions(): List<TransactionUiModel> = listOf(
-        TransactionUiModel(
-            id = "1",
-            date = "Jan 15, 2026",
-            merchantName = "STARBUCKS STORE 12345",
-            normalizedMerchant = "Starbucks",
-            description = "Coffee purchase",
-            amount = Money.fromMinorUnits(-575, "USD"),
-            category = Category(id = "food_coffee", name = "Coffee & Tea", parentId = "food", color = "#6F4E37"),
-            categoryConfidence = 0.95f,
-            accountName = "Chase Checking"
-        ),
-        TransactionUiModel(
-            id = "2",
-            date = "Jan 14, 2026",
-            merchantName = "AMAZON.COM*123456",
-            normalizedMerchant = "Amazon",
-            description = "Online purchase",
-            amount = Money.fromMinorUnits(-4299, "USD"),
-            category = Category(id = "shopping", name = "Shopping", color = "#FF9800"),
-            categoryConfidence = 0.88f,
-            accountName = "Chase Credit"
-        ),
-        TransactionUiModel(
-            id = "3",
-            date = "Jan 13, 2026",
-            merchantName = "SHELL OIL 12345678",
-            normalizedMerchant = "Shell",
-            description = "Gas station",
-            amount = Money.fromMinorUnits(-5234, "USD"),
-            category = Category(id = "transport_gas", name = "Gas & Fuel", parentId = "transport", color = "#795548"),
-            categoryConfidence = 0.92f,
-            hasReceipt = true
-        ),
-        TransactionUiModel(
-            id = "4",
-            date = "Jan 12, 2026",
-            merchantName = "PAYROLL DEPOSIT",
-            normalizedMerchant = "Payroll",
-            description = "Direct deposit - ACME Corp",
-            amount = Money.fromMinorUnits(250000, "USD"),
-            category = Category(id = "income", name = "Income", color = "#4CAF50"),
-            categoryConfidence = 1.0f
-        ),
-        TransactionUiModel(
-            id = "5",
-            date = "Jan 11, 2026",
-            merchantName = "WHOLEFDS MKT 10234",
-            normalizedMerchant = "Whole Foods",
-            description = "Grocery shopping",
-            amount = Money.fromMinorUnits(-8756, "USD"),
-            category = Category(id = "food_groceries", name = "Groceries", parentId = "food", color = "#8BC34A"),
-            categoryConfidence = 0.91f,
-            hasReceipt = true
-        ),
-        TransactionUiModel(
-            id = "6",
-            date = "Jan 10, 2026",
-            merchantName = "NETFLIX.COM",
-            normalizedMerchant = "Netflix",
-            description = "Monthly subscription",
-            amount = Money.fromMinorUnits(-1599, "USD"),
-            category = Category(id = "entertainment", name = "Entertainment", color = "#E91E63"),
-            categoryConfidence = 0.98f
-        ),
-        TransactionUiModel(
-            id = "7",
-            date = "Jan 9, 2026",
-            merchantName = "UBER TRIP HELP.UBER.COM",
-            normalizedMerchant = "Uber",
-            description = "Ride share",
-            amount = Money.fromMinorUnits(-2347, "USD"),
-            category = Category(id = "transport", name = "Transportation", color = "#2196F3"),
-            categoryConfidence = 0.89f
-        ),
-        TransactionUiModel(
-            id = "8",
-            date = "Jan 8, 2026",
-            merchantName = "COSTCO WHSE #1234",
-            normalizedMerchant = "Costco",
-            description = "Wholesale shopping",
-            amount = Money.fromMinorUnits(-15678, "USD"),
-            category = null,
-            needsReview = true
-        ),
-        TransactionUiModel(
-            id = "9",
-            date = "Jan 7, 2026",
-            merchantName = "CVS/PHARM 12345",
-            normalizedMerchant = "CVS Pharmacy",
-            description = "Pharmacy",
-            amount = Money.fromMinorUnits(-2345, "USD"),
-            category = Category(id = "health", name = "Health", color = "#4CAF50"),
-            categoryConfidence = 0.85f
-        ),
-        TransactionUiModel(
-            id = "10",
-            date = "Jan 6, 2026",
-            merchantName = "VENMO PAYMENT",
-            normalizedMerchant = "Venmo",
-            description = "Payment to friend",
-            amount = Money.fromMinorUnits(-5000, "USD"),
-            category = Category(id = "transfer", name = "Transfer", color = "#9E9E9E"),
-            categoryConfidence = 0.75f,
-            needsReview = true
-        ),
-        TransactionUiModel(
-            id = "11",
-            date = "Jan 5, 2026",
-            merchantName = "TARGET #1234",
-            normalizedMerchant = "Target",
-            description = "General merchandise",
-            amount = Money.fromMinorUnits(-6789, "USD"),
-            category = Category(id = "shopping", name = "Shopping", color = "#FF9800"),
-            categoryConfidence = 0.82f
-        ),
-        TransactionUiModel(
-            id = "12",
-            date = "Jan 4, 2026",
-            merchantName = "ELECTRIC COMPANY",
-            normalizedMerchant = "Electric Company",
-            description = "Utility bill",
-            amount = Money.fromMinorUnits(-14523, "USD"),
-            category = Category(id = "bills", name = "Bills & Utilities", color = "#9C27B0"),
-            categoryConfidence = 0.94f
+        return TransactionUiModel(
+            id = id,
+            date = postedDate.toString(),
+            merchantName = descriptionRaw,
+            normalizedMerchant = merchantNormalized,
+            description = merchantDisplay,
+            amount = amount,
+            category = category,
+            categoryConfidence = categoryConfidence ?: 0f,
+            needsReview = !isReviewed && (categoryConfidence == null || categoryConfidence!! < 0.5f)
         )
-    )
+    }
+
+    // Extension function to map CategoryEntity to Category
+    private fun CategoryEntity.toCategory(): Category {
+        return Category(
+            id = id,
+            name = name,
+            parentId = parentId,
+            icon = icon,
+            color = color,
+            isSystemDefault = isSystemDefault,
+            isUserCustom = isUserCustom
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package com.ledgerlens.ui.viewmodels.settings
 
+import com.ledgerlens.security.KeyManager
 import com.ledgerlens.security.RecoveryKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,10 +95,7 @@ data class SecurityState(
  * Manages app preferences, backup operations, and security settings.
  */
 class SettingsViewModel(
-    // TODO: Inject actual dependencies when available
-    // private val keyManager: KeyManager,
-    // private val settingsRepository: SettingsRepository,
-    // private val backupService: BackupService
+    private val keyManager: KeyManager
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -364,27 +362,35 @@ class SettingsViewModel(
     fun changePassphrase() {
         viewModelScope.launch {
             _securityState.update { it.copy(isLoading = true) }
-            try {
-                // TODO: Call keyManager.changePassphrase
-                delay(500) // Simulated processing
-                _securityState.update {
-                    it.copy(
-                        isLoading = false,
-                        showChangePassphrase = false,
-                        currentPassphrase = "",
-                        newPassphrase = "",
-                        confirmPassphrase = "",
-                        successMessage = "Passphrase changed successfully"
-                    )
+
+            val state = _securityState.value
+            val result = keyManager.changePassphrase(
+                currentPassphrase = state.currentPassphrase,
+                newPassphrase = state.newPassphrase
+            )
+
+            result.fold(
+                onSuccess = {
+                    _securityState.update {
+                        it.copy(
+                            isLoading = false,
+                            showChangePassphrase = false,
+                            currentPassphrase = "",
+                            newPassphrase = "",
+                            confirmPassphrase = "",
+                            successMessage = "Passphrase changed successfully"
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _securityState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentPassphraseError = "Failed to change passphrase: ${e.message}"
+                        )
+                    }
                 }
-            } catch (e: Exception) {
-                _securityState.update {
-                    it.copy(
-                        isLoading = false,
-                        currentPassphraseError = "Failed to change passphrase: ${e.message}"
-                    )
-                }
-            }
+            )
         }
     }
 
@@ -407,22 +413,26 @@ class SettingsViewModel(
     fun executeCryptoErase() {
         viewModelScope.launch {
             _securityState.update { it.copy(isLoading = true) }
-            try {
-                // TODO: Call keyManager.cryptoErase()
-                delay(1000) // Simulated erasure
-                _securityState.update {
-                    it.copy(
-                        isLoading = false,
-                        showCryptoEraseConfirm = false,
-                        successMessage = "All data has been erased"
-                    )
+
+            val result = keyManager.cryptoErase()
+
+            result.fold(
+                onSuccess = {
+                    _securityState.update {
+                        it.copy(
+                            isLoading = false,
+                            showCryptoEraseConfirm = false,
+                            successMessage = "All data has been erased"
+                        )
+                    }
+                    // App should navigate to setup screen after this
+                },
+                onFailure = { e ->
+                    _securityState.update {
+                        it.copy(isLoading = false, error = "Failed to erase data: ${e.message}")
+                    }
                 }
-                // TODO: Navigate to setup screen
-            } catch (e: Exception) {
-                _securityState.update {
-                    it.copy(isLoading = false, error = "Failed to erase data: ${e.message}")
-                }
-            }
+            )
         }
     }
 

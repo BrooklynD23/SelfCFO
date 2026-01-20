@@ -1,5 +1,6 @@
 package com.ledgerlens.data.di
 
+import com.ledgerlens.categorization.pipeline.ReviewQueueManager
 import com.ledgerlens.data.repositories.AccountRepository
 import com.ledgerlens.data.repositories.CategoryRepository
 import com.ledgerlens.data.repositories.ImportRepository
@@ -15,6 +16,15 @@ import com.ledgerlens.data.repositories.impl.SqlDelightRuleRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightStatisticsRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightTransactionRepository
 import com.ledgerlens.db.LedgerLensDatabase
+import com.ledgerlens.security.KeyManager
+import com.ledgerlens.security.StubKeyManager
+import com.ledgerlens.ui.viewmodels.categories.CategoriesViewModel
+import com.ledgerlens.ui.viewmodels.dashboard.DashboardViewModel
+import com.ledgerlens.ui.viewmodels.import.ImportViewModel
+import com.ledgerlens.ui.viewmodels.receipts.ReceiptsViewModel
+import com.ledgerlens.ui.viewmodels.review.ReviewViewModel
+import com.ledgerlens.ui.viewmodels.settings.SettingsViewModel
+import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -95,13 +105,86 @@ val repositoryModule: Module = module {
 }
 
 /**
- * Combined app module including database and repositories.
+ * Koin module providing services.
+ */
+val servicesModule: Module = module {
+    // ReviewQueueManager - manages the review queue for transactions
+    single { ReviewQueueManager() }
+
+    // KeyManager - stub implementation until full encryption layer is ready
+    single<KeyManager> { StubKeyManager() }
+}
+
+/**
+ * Koin module providing ViewModels.
+ * ViewModels are created as factories so each request gets a new instance.
+ */
+val viewModelModule: Module = module {
+    // DashboardViewModel
+    factory {
+        DashboardViewModel(
+            transactionRepository = get(),
+            categoryRepository = get(),
+            statisticsRepository = get()
+        )
+    }
+
+    // TransactionsViewModel
+    factory {
+        TransactionsViewModel(
+            transactionRepository = get(),
+            categoryRepository = get()
+        )
+    }
+
+    // CategoriesViewModel
+    factory {
+        CategoriesViewModel(
+            categoryRepository = get(),
+            ruleRepository = get()
+        )
+    }
+
+    // ReceiptsViewModel
+    factory {
+        ReceiptsViewModel(
+            receiptRepository = get()
+        )
+    }
+
+    // ReviewViewModel
+    factory {
+        ReviewViewModel(
+            reviewQueueManager = get(),
+            transactionRepository = get()
+        )
+    }
+
+    // ImportViewModel
+    factory {
+        ImportViewModel(
+            importRepository = get()
+        )
+    }
+
+    // SettingsViewModel
+    factory {
+        SettingsViewModel(
+            keyManager = get()
+        )
+    }
+}
+
+/**
+ * Combined app module including database, repositories, services, and ViewModels.
  *
  * This module expects a LedgerLensDatabase to be provided by a platform-specific
  * module. Use [createAppModules] to get all required modules for a platform.
  */
 val appModule: Module = module {
     includes(repositoryModule)
+    includes(servicesModule)
+    includes(viewModelModule)
 }
 
 /**
@@ -123,5 +206,7 @@ fun createDatabaseModule(database: LedgerLensDatabase): Module = module {
  */
 fun createAppModules(database: LedgerLensDatabase): List<Module> = listOf(
     createDatabaseModule(database),
-    repositoryModule
+    repositoryModule,
+    servicesModule,
+    viewModelModule
 )

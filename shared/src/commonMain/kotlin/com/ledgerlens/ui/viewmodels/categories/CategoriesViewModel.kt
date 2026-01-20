@@ -4,11 +4,18 @@ import com.ledgerlens.categorization.Category
 import com.ledgerlens.categorization.CategoryNode
 import com.ledgerlens.categorization.CategoryTree
 import com.ledgerlens.categorization.rules.*
+import com.ledgerlens.data.repositories.CategoryEntity
+import com.ledgerlens.data.repositories.CategoryRepository
+import com.ledgerlens.data.repositories.CategoryWithStats
+import com.ledgerlens.data.repositories.RuleEntity
+import com.ledgerlens.data.repositories.RuleRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -164,36 +171,39 @@ enum class RuleWizardStep {
  * ViewModel for categories and rules screens.
  */
 class CategoriesViewModel(
-    // TODO: Replace with actual repository injection
-    // private val categoryRepository: CategoryRepository,
-    // private val ruleRepository: RuleRepository,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+    private val categoryRepository: CategoryRepository,
+    private val ruleRepository: RuleRepository
 ) {
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    // Cache for category lookups
+    private var categoryCache: Map<String, CategoryEntity> = emptyMap()
+
     private val _categoriesState = MutableStateFlow(CategoriesUiState())
     val categoriesState: StateFlow<CategoriesUiState> = _categoriesState.asStateFlow()
-    
+
     private val _rulesState = MutableStateFlow(RulesUiState())
     val rulesState: StateFlow<RulesUiState> = _rulesState.asStateFlow()
-    
+
     private val _wizardState = MutableStateFlow(RuleWizardState())
     val wizardState: StateFlow<RuleWizardState> = _wizardState.asStateFlow()
-    
+
     init {
         loadCategories()
         loadRules()
     }
     
     // ========== Categories Actions ==========
-    
+
     fun loadCategories() {
-        scope.launch {
+        viewModelScope.launch {
             _categoriesState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Load from repository
-                // val categories = categoryRepository.getAll()
-                // val tree = CategoryTree.build(categories)
+                val categoriesWithStats = categoryRepository.getCategoriesWithStats().first()
+                categoryCache = categoriesWithStats.associate { it.category.id to it.category }
+                val uiModels = buildCategoryTree(categoriesWithStats)
                 _categoriesState.update { it.copy(
-                    categories = emptyList(), // TODO: Map from domain
+                    categories = uiModels,
                     isLoading = false
                 )}
             } catch (e: Exception) {
@@ -276,28 +286,39 @@ class CategoriesViewModel(
     }
     
     fun saveCategory() {
-        scope.launch {
+        viewModelScope.launch {
             val state = _categoriesState.value
             val category = state.editingCategory ?: return@launch
-            
+
             try {
                 // Validate
                 val validation = category.copy(
                     id = if (state.isCreatingNew) generateCategoryId(category.name) else category.id
                 ).let { com.ledgerlens.categorization.validate(it) }
-                
+
                 if (validation is com.ledgerlens.categorization.CategoryValidationResult.Invalid) {
                     _categoriesState.update { it.copy(error = validation.reason) }
                     return@launch
                 }
-                
-                // TODO: Save to repository
-                // if (state.isCreatingNew) {
-                //     categoryRepository.insert(category)
-                // } else {
-                //     categoryRepository.update(category)
-                // }
-                
+
+                // Convert to entity and save
+                val categoryEntity = CategoryEntity(
+                    id = if (state.isCreatingNew) generateCategoryId(category.name) else category.id,
+                    name = category.name,
+                    parentId = category.parentId,
+                    isSystemDefault = category.isSystemDefault,
+                    isUserCustom = category.isUserCustom,
+                    icon = category.icon,
+                    color = category.color,
+                    sortOrder = 0
+                )
+
+                if (state.isCreatingNew) {
+                    categoryRepository.insertCategory(categoryEntity)
+                } else {
+                    categoryRepository.updateCategory(categoryEntity)
+                }
+
                 hideEditDialog()
                 loadCategories()
             } catch (e: Exception) {
@@ -305,12 +326,11 @@ class CategoriesViewModel(
             }
         }
     }
-    
+
     fun deleteCategory(categoryId: String) {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Delete from repository
-                // categoryRepository.delete(categoryId)
+                categoryRepository.deleteCategory(categoryId)
                 loadCategories()
             } catch (e: Exception) {
                 _categoriesState.update { it.copy(error = "Failed to delete category: ${e.message}") }
@@ -319,15 +339,15 @@ class CategoriesViewModel(
     }
     
     // ========== Rules Actions ==========
-    
+
     fun loadRules() {
-        scope.launch {
+        viewModelScope.launch {
             _rulesState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Load from repository
-                // val rules = ruleRepository.getAll()
+                val rules = ruleRepository.getAllRules().first()
+                val uiModels = rules.map { it.toUiModel() }
                 _rulesState.update { it.copy(
-                    rules = emptyList(), // TODO: Map from domain
+                    rules = uiModels,
                     isLoading = false
                 )}
             } catch (e: Exception) {
@@ -356,34 +376,34 @@ class CategoriesViewModel(
     }
     
     fun toggleRuleEnabled(ruleId: String) {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Toggle in repository
-                // val rule = ruleRepository.getById(ruleId)
-                // ruleRepository.update(rule.copy(enabled = !rule.enabled))
+                val rule = ruleRepository.getRule(ruleId).first()
+                if (rule != null) {
+                    ruleRepository.setEnabled(ruleId, !rule.isEnabled)
+                }
                 loadRules()
             } catch (e: Exception) {
                 _rulesState.update { it.copy(error = "Failed to toggle rule: ${e.message}") }
             }
         }
     }
-    
+
     fun deleteRule(ruleId: String) {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Delete from repository
-                // ruleRepository.delete(ruleId)
+                ruleRepository.deleteRule(ruleId)
                 loadRules()
             } catch (e: Exception) {
                 _rulesState.update { it.copy(error = "Failed to delete rule: ${e.message}") }
             }
         }
     }
-    
+
     fun updateRulePriority(ruleId: String, newPriority: Int) {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Update priority in repository
+                ruleRepository.updatePriority(ruleId, newPriority)
                 loadRules()
             } catch (e: Exception) {
                 _rulesState.update { it.copy(error = "Failed to update priority: ${e.message}") }
@@ -463,26 +483,33 @@ class CategoriesViewModel(
     }
     
     fun wizardSaveRule() {
-        scope.launch {
+        viewModelScope.launch {
             val state = _wizardState.value
-            
+
             if (!state.isValid) {
                 _wizardState.update { it.copy(validationErrors = listOf("Please complete all required fields")) }
                 return@launch
             }
-            
+
             try {
-                // TODO: Build and save rule
-                // val rule = RuleBuilder()
-                //     .name(state.name)
-                //     .description(state.description)
-                //     .conditions(ConditionGroup(state.conditions))
-                //     .setCategory(state.selectedCategoryId!!)
-                //     .priority(state.priority)
-                //     .enabled(state.enabled)
-                //     .build()
-                // ruleRepository.insert(rule)
-                
+                // Build conditions JSON (simplified for now)
+                val conditionsJson = state.conditions.joinToString(",") {
+                    """{"type":"${it::class.simpleName}"}"""
+                }.let { "[$it]" }
+
+                val ruleEntity = RuleEntity(
+                    id = generateRuleId(state.name),
+                    name = state.name,
+                    conditionsJson = conditionsJson,
+                    targetCategoryId = state.selectedCategoryId!!,
+                    priority = state.priority,
+                    isEnabled = state.enabled,
+                    matchCount = 0,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                ruleRepository.insertRule(ruleEntity)
+
                 hideRuleWizard()
                 loadRules()
             } catch (e: Exception) {
@@ -492,21 +519,99 @@ class CategoriesViewModel(
     }
     
     // ========== Helpers ==========
-    
+
     fun clearError() {
         _categoriesState.update { it.copy(error = null) }
         _rulesState.update { it.copy(error = null) }
     }
-    
+
     private fun findCategoryDomain(categoryId: String): Category? {
-        // TODO: Get from repository or cached data
-        return null
+        val entity = categoryCache[categoryId] ?: return null
+        return Category(
+            id = entity.id,
+            name = entity.name,
+            parentId = entity.parentId,
+            icon = entity.icon,
+            color = entity.color,
+            isSystemDefault = entity.isSystemDefault,
+            isUserCustom = entity.isUserCustom
+        )
     }
-    
+
     private fun generateCategoryId(name: String): String {
         return name.lowercase()
             .replace(Regex("[^a-z0-9]"), "-")
             .replace(Regex("-+"), "-")
             .trim('-') + "-${System.currentTimeMillis()}"
+    }
+
+    private fun generateRuleId(name: String): String {
+        return "rule-" + name.lowercase()
+            .replace(Regex("[^a-z0-9]"), "-")
+            .replace(Regex("-+"), "-")
+            .trim('-') + "-${System.currentTimeMillis()}"
+    }
+
+    private fun buildCategoryTree(categoriesWithStats: List<CategoryWithStats>): List<CategoryUiModel> {
+        val categoryMap = categoriesWithStats.associateBy { it.category.id }
+
+        // Find root categories (no parent)
+        val roots = categoriesWithStats.filter { it.category.parentId == null }
+
+        fun buildNode(catWithStats: CategoryWithStats, depth: Int): CategoryUiModel {
+            val children = categoriesWithStats
+                .filter { it.category.parentId == catWithStats.category.id }
+                .map { buildNode(it, depth + 1) }
+
+            return catWithStats.toUiModel(depth, children)
+        }
+
+        return roots.map { buildNode(it, 0) }
+    }
+
+    // Extension function to map CategoryWithStats to CategoryUiModel
+    private fun CategoryWithStats.toUiModel(depth: Int, children: List<CategoryUiModel>): CategoryUiModel {
+        return CategoryUiModel(
+            id = category.id,
+            name = category.name,
+            parentId = category.parentId,
+            icon = category.icon,
+            color = category.color,
+            isSystemDefault = category.isSystemDefault,
+            transactionCount = transactionCount,
+            totalAmount = totalSpentMinorUnits,
+            children = children,
+            depth = depth,
+            isExpanded = false
+        )
+    }
+
+    // Extension function to map RuleEntity to RuleUiModel
+    private fun RuleEntity.toUiModel(): RuleUiModel {
+        val targetCategory = categoryCache[targetCategoryId]
+        return RuleUiModel(
+            id = id,
+            name = name,
+            description = null,
+            conditionSummary = parseConditionSummary(conditionsJson),
+            actionSummary = "Set category to ${targetCategory?.name ?: targetCategoryId}",
+            priority = priority,
+            enabled = isEnabled,
+            matchCount = matchCount.toLong(),
+            source = RuleSource.USER,
+            categoryId = targetCategoryId,
+            categoryName = targetCategory?.name
+        )
+    }
+
+    private fun parseConditionSummary(conditionsJson: String): String {
+        // Simple parsing for display
+        return if (conditionsJson.contains("MerchantEquals")) {
+            "Merchant matches"
+        } else if (conditionsJson.contains("AmountRange")) {
+            "Amount in range"
+        } else {
+            "Custom conditions"
+        }
     }
 }

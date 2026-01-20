@@ -1,12 +1,17 @@
 package com.ledgerlens.ui.viewmodels.receipts
 
+import com.ledgerlens.data.repositories.ReceiptEntity
+import com.ledgerlens.data.repositories.ReceiptRepository
+import com.ledgerlens.data.repositories.ReceiptWithItems
 import com.ledgerlens.domain.Money
 import com.ledgerlens.receipts.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -135,34 +140,33 @@ data class SplitReceiptUiState(
  * ViewModel for receipts screens.
  */
 class ReceiptsViewModel(
-    // TODO: Replace with actual repository injection
-    // private val receiptRepository: ReceiptRepository,
-    // private val participantRepository: ParticipantRepository,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+    private val receiptRepository: ReceiptRepository
 ) {
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     private val _receiptsState = MutableStateFlow(ReceiptsUiState())
     val receiptsState: StateFlow<ReceiptsUiState> = _receiptsState.asStateFlow()
-    
+
     private val _detailState = MutableStateFlow(ReceiptDetailUiState())
     val detailState: StateFlow<ReceiptDetailUiState> = _detailState.asStateFlow()
-    
+
     private val _splitState = MutableStateFlow(SplitReceiptUiState())
     val splitState: StateFlow<SplitReceiptUiState> = _splitState.asStateFlow()
-    
+
     init {
         loadReceipts()
     }
     
     // ========== Receipts List Actions ==========
-    
+
     fun loadReceipts() {
-        scope.launch {
+        viewModelScope.launch {
             _receiptsState.update { it.copy(isLoading = true, error = null) }
             try {
-                // TODO: Load from repository
-                // val receipts = receiptRepository.getAll()
+                val receipts = receiptRepository.getAllReceipts().first()
+                val uiModels = receipts.map { it.toUiModel() }
                 _receiptsState.update { it.copy(
-                    receipts = emptyList(), // TODO: Map from domain
+                    receipts = uiModels,
                     isLoading = false
                 )}
             } catch (e: Exception) {
@@ -218,18 +222,17 @@ class ReceiptsViewModel(
     }
     
     fun deleteSelectedReceipts() {
-        scope.launch {
+        viewModelScope.launch {
             val toDelete = _receiptsState.value.selectedReceiptIds
             try {
-                // TODO: Delete from repository
-                // toDelete.forEach { receiptRepository.delete(it) }
+                toDelete.forEach { receiptRepository.deleteReceipt(it) }
                 _receiptsState.update { state ->
                     state.copy(
-                        receipts = state.receipts.filterNot { it.id in toDelete },
                         selectedReceiptIds = emptySet(),
                         isSelectionMode = false
                     )
                 }
+                loadReceipts() // Reload to refresh the list
             } catch (e: Exception) {
                 _receiptsState.update { it.copy(error = "Failed to delete receipts: ${e.message}") }
             }
@@ -237,19 +240,25 @@ class ReceiptsViewModel(
     }
     
     // ========== Receipt Detail Actions ==========
-    
+
     fun loadReceiptDetail(receiptId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _detailState.update { it.copy(receiptId = receiptId, isLoading = true, error = null) }
             try {
-                // TODO: Load from repository
-                // val receipt = receiptRepository.getById(receiptId)
-                // val participants = participantRepository.getAll()
-                _detailState.update { it.copy(
-                    receipt = null, // TODO: Load from repository
-                    participants = emptyList(),
-                    isLoading = false
-                )}
+                val receiptWithItems = receiptRepository.getReceiptWithItems(receiptId).first()
+                if (receiptWithItems != null) {
+                    _detailState.update { it.copy(
+                        receipt = receiptWithItems.toExtractedReceipt(),
+                        imagePath = receiptWithItems.receipt.imagePath,
+                        participants = emptyList(), // Participant management kept local for now
+                        isLoading = false
+                    )}
+                } else {
+                    _detailState.update { it.copy(
+                        isLoading = false,
+                        error = "Receipt not found"
+                    )}
+                }
             } catch (e: Exception) {
                 _detailState.update { it.copy(
                     isLoading = false,
@@ -258,11 +267,12 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     fun linkToTransaction(transactionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Link receipt to transaction in repository
+                val receiptId = _detailState.value.receiptId
+                receiptRepository.linkToTransaction(receiptId, transactionId)
                 _detailState.update { it.copy(
                     linkedTransaction = LinkedTransactionInfo(
                         transactionId = transactionId,
@@ -276,11 +286,13 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     fun unlinkTransaction() {
-        scope.launch {
+        viewModelScope.launch {
             try {
-                // TODO: Unlink in repository
+                val receiptId = _detailState.value.receiptId
+                // Unlink by setting transaction to empty string
+                receiptRepository.linkToTransaction(receiptId, "")
                 _detailState.update { it.copy(linkedTransaction = null) }
             } catch (e: Exception) {
                 _detailState.update { it.copy(error = "Failed to unlink transaction: ${e.message}") }
@@ -369,17 +381,17 @@ class ReceiptsViewModel(
     }
     
     private fun recalculateSplit() {
-        scope.launch {
+        viewModelScope.launch {
             _splitState.update { it.copy(isCalculating = true) }
-            
+
             val state = _splitState.value
             val receipt = state.receipt
-            
+
             if (receipt == null || state.participants.isEmpty()) {
                 _splitState.update { it.copy(isCalculating = false, previewResult = null) }
                 return@launch
             }
-            
+
             val splitParticipants = state.participants.map { participant ->
                 SplitParticipant.create(
                     participant = participant,
@@ -387,7 +399,7 @@ class ReceiptsViewModel(
                     currencyCode = receipt.currency
                 )
             }
-            
+
             val result = SplitResult(
                 participants = splitParticipants,
                 totalAmount = receipt.totalAmount?.minorUnits ?: receipt.calculatedTotal.minorUnits,
@@ -395,16 +407,16 @@ class ReceiptsViewModel(
                 splitType = state.splitType,
                 remainder = (receipt.totalAmount?.minorUnits ?: 0L) - splitParticipants.sumOf { it.allocatedAmount }
             )
-            
+
             _splitState.update { it.copy(isCalculating = false, previewResult = result) }
         }
     }
-    
+
     fun confirmSplit() {
-        scope.launch {
+        viewModelScope.launch {
             val result = _splitState.value.previewResult ?: return@launch
             try {
-                // TODO: Save split result to repository
+                // Split result storage not yet implemented in repository
                 hideSplitSheet()
                 _detailState.update { it.copy(splitResult = result) }
             } catch (e: Exception) {
@@ -412,9 +424,56 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     fun clearError() {
         _receiptsState.update { it.copy(error = null) }
         _detailState.update { it.copy(error = null) }
+    }
+
+    // ========== Mapping Functions ==========
+
+    // Extension function to map ReceiptEntity to ReceiptUiModel
+    private fun ReceiptEntity.toUiModel(): ReceiptUiModel {
+        return ReceiptUiModel(
+            id = id,
+            merchant = merchantName ?: "Unknown Merchant",
+            date = receiptDate?.toString() ?: "",
+            totalAmount = totalAmount ?: Money.zero("USD"),
+            itemCount = 0, // Would need separate query for item count
+            linkedTransactionId = linkedTransactionId,
+            thumbnailPath = thumbnailPath,
+            confidence = ocrConfidence?.toDouble() ?: 1.0
+        )
+    }
+
+    // Extension function to map ReceiptWithItems to ExtractedReceipt
+    private fun ReceiptWithItems.toExtractedReceipt(): ExtractedReceipt {
+        val productItems = items.map { item ->
+            ProductItem(
+                description = item.name,
+                quantity = item.quantity,
+                unitPrice = Money.fromMinorUnits(item.unitPriceMinorUnits, item.currencyCode),
+                totalPrice = Money.fromMinorUnits(
+                    item.unitPriceMinorUnits * item.quantity,
+                    item.currencyCode
+                ),
+                confidence = 1.0
+            )
+        }
+
+        return ExtractedReceipt(
+            merchantName = receipt.merchantName ?: "Unknown",
+            merchantAddress = null,
+            dateTime = receipt.receiptDate?.toString(),
+            currency = receipt.totalAmount?.currency ?: "USD",
+            productItems = productItems,
+            subtotal = null,
+            taxAmount = null,
+            totalAmount = receipt.totalAmount,
+            paymentMethod = null,
+            receiptNumber = null,
+            rawText = receipt.ocrText,
+            overallConfidence = receipt.ocrConfidence?.toDouble() ?: 1.0
+        )
     }
 }

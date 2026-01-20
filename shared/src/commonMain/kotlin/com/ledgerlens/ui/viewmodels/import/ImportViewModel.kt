@@ -1,5 +1,10 @@
 package com.ledgerlens.ui.viewmodels.import
 
+import com.ledgerlens.data.repositories.ImportJobEntity
+import com.ledgerlens.data.repositories.ImportRepository
+import com.ledgerlens.data.repositories.ImportSourceType
+import com.ledgerlens.data.repositories.ImportStatus
+import com.ledgerlens.data.repositories.SourceFileEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -9,19 +14,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 /**
  * ViewModel for the Import wizard flow.
  * Manages file selection, import progress, and result display.
  */
 class ImportViewModel(
-    // TODO: Inject actual dependencies when available
-    // private val csvParser: CsvParser,
-    // private val pdfParser: PdfParser,
-    // private val duplicateDetector: DuplicateDetector,
-    // private val transactionRepository: TransactionRepository
+    private val importRepository: ImportRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    // Track current import job ID for progress updates
+    private var currentJobId: String? = null
 
     private val _uiState = MutableStateFlow<ImportUiState>(ImportUiState.Idle)
     val uiState: StateFlow<ImportUiState> = _uiState.asStateFlow()
@@ -56,17 +61,56 @@ class ImportViewModel(
         if (currentState !is ImportUiState.FileSelected) return
 
         viewModelScope.launch {
-            _uiState.value = ImportUiState.Importing(
-                fileName = currentState.fileName,
-                progress = 0f,
-                statusMessage = "Reading file...",
-                transactionsFound = 0,
-                transactionsProcessed = 0
-            )
+            try {
+                // Create import job in repository
+                val jobId = generateJobId()
+                val job = ImportJobEntity(
+                    id = jobId,
+                    sourceFileName = currentState.fileName,
+                    sourceType = currentState.fileType.toSourceType(),
+                    bankTemplate = currentState.bank?.templateId,
+                    status = ImportStatus.IN_PROGRESS,
+                    totalRows = 0,
+                    importedCount = 0,
+                    duplicatesSkipped = 0,
+                    errorsCount = 0,
+                    errorDetails = null,
+                    startedAt = Clock.System.now(),
+                    completedAt = null
+                )
+                importRepository.createImportJob(job)
+                currentJobId = jobId
 
-            // TODO: Replace with actual import logic
-            // Simulated import progress for UI development
-            simulateImportProgress(currentState.fileName)
+                // Record source file
+                val sourceFile = SourceFileEntity(
+                    id = generateSourceFileId(),
+                    importJobId = jobId,
+                    filePath = currentState.filePath,
+                    fileName = currentState.fileName,
+                    fileHash = currentState.filePath.hashCode().toString(), // Simplified hash for now
+                    fileSize = 0L, // Would need actual file size
+                    createdAt = Clock.System.now()
+                )
+                importRepository.insertSourceFile(sourceFile)
+
+                _uiState.value = ImportUiState.Importing(
+                    fileName = currentState.fileName,
+                    progress = 0f,
+                    statusMessage = "Reading file...",
+                    transactionsFound = 0,
+                    transactionsProcessed = 0
+                )
+
+                // Simulated import progress (actual parsing not yet implemented)
+                simulateImportProgress(currentState.fileName)
+            } catch (e: Exception) {
+                _uiState.value = ImportUiState.Error(
+                    message = e.message ?: "Failed to start import",
+                    errorType = ImportErrorType.UNKNOWN,
+                    filePath = currentState.filePath,
+                    fileName = currentState.fileName
+                )
+            }
         }
     }
 
@@ -82,11 +126,27 @@ class ImportViewModel(
 
         var transactionsFound = 0
         var transactionsProcessed = 0
+        var duplicatesSkipped = 0
 
         for ((message, progress) in stages) {
             delay(500) // Simulated delay
             transactionsFound = (progress * 150).toInt()
-            transactionsProcessed = (progress * 145).toInt()
+            transactionsProcessed = (progress * 142).toInt()
+            duplicatesSkipped = (progress * 5).toInt()
+
+            // Update repository progress
+            currentJobId?.let { jobId ->
+                try {
+                    importRepository.updateProgress(
+                        id = jobId,
+                        importedCount = transactionsProcessed,
+                        duplicatesSkipped = duplicatesSkipped,
+                        errorsCount = 0
+                    )
+                } catch (_: Exception) {
+                    // Continue even if progress update fails
+                }
+            }
 
             _uiState.value = ImportUiState.Importing(
                 fileName = fileName,
@@ -95,6 +155,15 @@ class ImportViewModel(
                 transactionsFound = transactionsFound,
                 transactionsProcessed = transactionsProcessed
             )
+        }
+
+        // Mark job as completed in repository
+        currentJobId?.let { jobId ->
+            try {
+                importRepository.markCompleted(jobId, withErrors = false)
+            } catch (_: Exception) {
+                // Continue even if completion update fails
+            }
         }
 
         // Simulated result
@@ -111,13 +180,25 @@ class ImportViewModel(
                 errors = emptyList()
             )
         )
+        currentJobId = null
     }
 
     fun cancelImport() {
-        _uiState.value = ImportUiState.Idle
+        viewModelScope.launch {
+            currentJobId?.let { jobId ->
+                try {
+                    importRepository.markCancelled(jobId)
+                } catch (_: Exception) {
+                    // Ignore errors on cancel
+                }
+            }
+            currentJobId = null
+            _uiState.value = ImportUiState.Idle
+        }
     }
 
     fun resetToIdle() {
+        currentJobId = null
         _uiState.value = ImportUiState.Idle
         _selectedBank.value = null
     }
@@ -136,6 +217,21 @@ class ImportViewModel(
 
     fun dismissError() {
         _uiState.value = ImportUiState.Idle
+    }
+
+    private fun generateJobId(): String {
+        return "import_${Clock.System.now().toEpochMilliseconds()}"
+    }
+
+    private fun generateSourceFileId(): String {
+        return "file_${Clock.System.now().toEpochMilliseconds()}"
+    }
+
+    private fun ImportFileType.toSourceType(): ImportSourceType {
+        return when (this) {
+            ImportFileType.CSV -> ImportSourceType.CSV
+            ImportFileType.PDF -> ImportSourceType.PDF
+        }
     }
 }
 

@@ -1,5 +1,10 @@
 package com.ledgerlens.ui.viewmodels.review
 
+import com.ledgerlens.categorization.pipeline.ReviewDecision
+import com.ledgerlens.categorization.pipeline.ReviewQueueItem
+import com.ledgerlens.categorization.pipeline.ReviewQueueManager
+import com.ledgerlens.categorization.pipeline.ReviewStatus
+import com.ledgerlens.data.repositories.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,10 +21,8 @@ import kotlinx.datetime.Instant
  * Manages the review queue, filtering, and batch operations.
  */
 class ReviewViewModel(
-    // TODO: Inject actual dependencies when available
-    // private val reviewQueueManager: ReviewQueueManager,
-    // private val categoryRepository: CategoryRepository,
-    // private val transactionRepository: TransactionRepository
+    private val reviewQueueManager: ReviewQueueManager,
+    private val transactionRepository: TransactionRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -37,15 +40,25 @@ class ReviewViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // TODO: Replace with actual data from ReviewQueueManager
-            val mockItems = generateMockReviewItems()
+            try {
+                val queueItems = reviewQueueManager.pendingItems
+                val uiItems = queueItems.map { it.toUiModel() }
 
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    items = mockItems,
-                    stats = calculateStats(mockItems)
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        items = uiItems,
+                        filteredItems = applyFilter(uiItems, it.currentFilter),
+                        stats = calculateStats(uiItems)
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load review items: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -68,102 +81,103 @@ class ReviewViewModel(
     }
 
     fun acceptSuggestion(itemId: String) {
-        updateItemStatus(itemId, ReviewItemStatus.ACCEPTED)
+        viewModelScope.launch {
+            try {
+                // Record decision in review queue
+                reviewQueueManager.recordDecision(itemId, ReviewDecision.Accept())
+                // Mark transaction as reviewed
+                transactionRepository.markAsReviewed(itemId)
+                // Reload review items
+                loadReviewItems()
+                // Move to next item if in detail view
+                if (_selectedItem.value?.id == itemId) {
+                    selectNextPendingItem()
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to accept suggestion: ${e.message}") }
+            }
+        }
     }
 
     fun rejectSuggestion(itemId: String, newCategoryId: String) {
         viewModelScope.launch {
-            _uiState.update { state ->
-                val updatedItems = state.items.map { item ->
-                    if (item.id == itemId) {
-                        item.copy(
-                            status = ReviewItemStatus.REJECTED,
-                            selectedCategoryId = newCategoryId,
-                            reviewedAt = Clock.System.now()
-                        )
-                    } else item
-                }
-                state.copy(
-                    items = updatedItems,
-                    filteredItems = applyFilter(updatedItems, state.currentFilter),
-                    stats = calculateStats(updatedItems)
+            try {
+                // Record decision in review queue
+                reviewQueueManager.recordDecision(
+                    itemId,
+                    ReviewDecision.Reject(newCategoryId = newCategoryId, reason = "User correction")
                 )
-            }
-            // Move to next item if in detail view
-            if (_selectedItem.value?.id == itemId) {
-                selectNextPendingItem()
+                // Update category in transaction repository
+                transactionRepository.updateCategory(
+                    transactionId = itemId,
+                    categoryId = newCategoryId,
+                    confidence = 1.0f,
+                    reason = "user_override"
+                )
+                // Mark as reviewed
+                transactionRepository.markAsReviewed(itemId)
+                // Reload review items
+                loadReviewItems()
+                // Move to next item if in detail view
+                if (_selectedItem.value?.id == itemId) {
+                    selectNextPendingItem()
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to reject suggestion: ${e.message}") }
             }
         }
     }
 
     fun deferItem(itemId: String) {
-        updateItemStatus(itemId, ReviewItemStatus.DEFERRED)
+        viewModelScope.launch {
+            try {
+                // Record decision in review queue
+                reviewQueueManager.recordDecision(itemId, ReviewDecision.Defer(reason = "Deferred by user"))
+                // Reload review items
+                loadReviewItems()
+                // Move to next item if in detail view
+                if (_selectedItem.value?.id == itemId) {
+                    selectNextPendingItem()
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to defer item: ${e.message}") }
+            }
+        }
     }
 
     fun acceptAll() {
         viewModelScope.launch {
-            _uiState.update { state ->
-                val updatedItems = state.filteredItems.map { item ->
-                    if (item.status == ReviewItemStatus.PENDING) {
-                        item.copy(
-                            status = ReviewItemStatus.ACCEPTED,
-                            reviewedAt = Clock.System.now()
-                        )
-                    } else item
+            try {
+                val pendingItems = _uiState.value.filteredItems.filter {
+                    it.status == ReviewItemStatus.PENDING
                 }
-                // Merge back into full list
-                val allItems = state.items.map { item ->
-                    updatedItems.find { it.id == item.id } ?: item
+                pendingItems.forEach { item ->
+                    reviewQueueManager.recordDecision(item.transactionId, ReviewDecision.Accept())
+                    transactionRepository.markAsReviewed(item.transactionId)
                 }
-                state.copy(
-                    items = allItems,
-                    filteredItems = applyFilter(allItems, state.currentFilter),
-                    stats = calculateStats(allItems)
-                )
+                loadReviewItems()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to accept all: ${e.message}") }
             }
         }
     }
 
     fun dismissAll() {
         viewModelScope.launch {
-            _uiState.update { state ->
-                val updatedItems = state.filteredItems.map { item ->
-                    if (item.status == ReviewItemStatus.PENDING) {
-                        item.copy(
-                            status = ReviewItemStatus.DISMISSED,
-                            reviewedAt = Clock.System.now()
-                        )
-                    } else item
+            try {
+                val pendingItems = _uiState.value.filteredItems.filter {
+                    it.status == ReviewItemStatus.PENDING
                 }
-                val allItems = state.items.map { item ->
-                    updatedItems.find { it.id == item.id } ?: item
+                // Dismiss is treated as defer with "dismissed" reason
+                pendingItems.forEach { item ->
+                    reviewQueueManager.recordDecision(
+                        item.transactionId,
+                        ReviewDecision.Defer(reason = "Dismissed by user")
+                    )
                 }
-                state.copy(
-                    items = allItems,
-                    filteredItems = applyFilter(allItems, state.currentFilter),
-                    stats = calculateStats(allItems)
-                )
-            }
-        }
-    }
-
-    private fun updateItemStatus(itemId: String, status: ReviewItemStatus) {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                val updatedItems = state.items.map { item ->
-                    if (item.id == itemId) {
-                        item.copy(status = status, reviewedAt = Clock.System.now())
-                    } else item
-                }
-                state.copy(
-                    items = updatedItems,
-                    filteredItems = applyFilter(updatedItems, state.currentFilter),
-                    stats = calculateStats(updatedItems)
-                )
-            }
-            // Move to next item if in detail view
-            if (_selectedItem.value?.id == itemId) {
-                selectNextPendingItem()
+                loadReviewItems()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to dismiss all: ${e.message}") }
             }
         }
     }
@@ -206,105 +220,34 @@ class ReviewViewModel(
         )
     }
 
-    private fun generateMockReviewItems(): List<ReviewItemUi> {
-        // TODO: Replace with actual data from ReviewQueueManager
-        return listOf(
-            ReviewItemUi(
-                id = "1",
-                transactionId = "txn_001",
-                merchantName = "AMZN MKTP US*2K4J8H9",
-                normalizedMerchant = "Amazon",
-                description = "Online purchase",
-                amount = -4599,
-                date = "2024-01-15",
-                suggestedCategoryId = "shopping",
-                suggestedCategoryName = "Shopping",
-                confidence = 0.45f,
-                alternatives = listOf(
-                    CategoryAlternative("online_services", "Online Services", 0.30f),
-                    CategoryAlternative("entertainment", "Entertainment", 0.15f)
-                ),
-                explanation = "Merchant 'Amazon' often categorized as Shopping, but low confidence due to ambiguous description",
-                reviewType = ReviewType.LOW_CONFIDENCE,
-                status = ReviewItemStatus.PENDING
-            ),
-            ReviewItemUi(
-                id = "2",
-                transactionId = "txn_002",
-                merchantName = "UBER *TRIP",
-                normalizedMerchant = "Uber",
-                description = "Uber trip",
-                amount = -1850,
-                date = "2024-01-14",
-                suggestedCategoryId = "transportation",
-                suggestedCategoryName = "Transportation",
-                confidence = 0.92f,
-                alternatives = emptyList(),
-                explanation = "Merchant 'Uber' consistently categorized as Transportation",
-                reviewType = ReviewType.POSSIBLE_DUPLICATE,
-                duplicateOf = DuplicateInfo(
-                    transactionId = "txn_existing_045",
-                    date = "2024-01-14",
-                    amount = -1850,
-                    similarity = 0.95f
-                ),
-                status = ReviewItemStatus.PENDING
-            ),
-            ReviewItemUi(
-                id = "3",
-                transactionId = "txn_003",
-                merchantName = "POS DEBIT 12345",
-                normalizedMerchant = "Unknown",
-                description = "Point of sale transaction",
-                amount = -2340,
-                date = "2024-01-13",
-                suggestedCategoryId = null,
-                suggestedCategoryName = null,
-                confidence = 0.0f,
-                alternatives = listOf(
-                    CategoryAlternative("shopping", "Shopping", 0.20f),
-                    CategoryAlternative("dining", "Dining", 0.15f),
-                    CategoryAlternative("groceries", "Groceries", 0.10f)
-                ),
-                explanation = "Unable to determine category from generic POS description",
-                reviewType = ReviewType.UNCATEGORIZED,
-                status = ReviewItemStatus.PENDING
-            ),
-            ReviewItemUi(
-                id = "4",
-                transactionId = "txn_004",
-                merchantName = "SPOTIFY USA",
-                normalizedMerchant = "Spotify",
-                description = "Monthly subscription",
-                amount = -999,
-                date = "2024-01-12",
-                suggestedCategoryId = "subscriptions",
-                suggestedCategoryName = "Subscriptions",
-                confidence = 0.38f,
-                alternatives = listOf(
-                    CategoryAlternative("entertainment", "Entertainment", 0.35f),
-                    CategoryAlternative("music", "Music", 0.20f)
-                ),
-                explanation = "Merchant 'Spotify' could be Subscriptions or Entertainment",
-                reviewType = ReviewType.LOW_CONFIDENCE,
-                status = ReviewItemStatus.PENDING
-            ),
-            ReviewItemUi(
-                id = "5",
-                transactionId = "txn_005",
-                merchantName = "WHOLEFDS MKT 10847",
-                normalizedMerchant = "Whole Foods",
-                description = "Grocery purchase",
-                amount = -8745,
-                date = "2024-01-11",
-                suggestedCategoryId = "groceries",
-                suggestedCategoryName = "Groceries",
-                confidence = 0.88f,
-                alternatives = emptyList(),
-                explanation = "Merchant 'Whole Foods' consistently categorized as Groceries",
-                reviewType = ReviewType.LOW_CONFIDENCE,
-                status = ReviewItemStatus.PENDING
-            )
+    // Extension function to map ReviewQueueItem to ReviewItemUi
+    private fun ReviewQueueItem.toUiModel(): ReviewItemUi {
+        return ReviewItemUi(
+            id = transactionId,
+            transactionId = transactionId,
+            merchantName = features.descriptionRaw,
+            normalizedMerchant = features.merchantNormalized,
+            description = features.descriptionRaw,
+            amount = features.amountCents,
+            date = enqueuedAt.toString().take(10),
+            suggestedCategoryId = suggestedCategory.categoryId,
+            suggestedCategoryName = suggestedCategory.categoryId, // Category name lookup would be separate
+            confidence = confidence,
+            alternatives = alternatives.map {
+                CategoryAlternative(it.categoryId, it.categoryId, it.score)
+            },
+            explanation = suggestedCategory.explanation.classifierUsed,
+            reviewType = when {
+                confidence < 0.5f -> ReviewType.LOW_CONFIDENCE
+                suggestedCategory.categoryId.isEmpty() -> ReviewType.UNCATEGORIZED
+                else -> ReviewType.LOW_CONFIDENCE
+            },
+            status = when (this.status) {
+                ReviewStatus.PENDING -> ReviewItemStatus.PENDING
+                ReviewStatus.ACCEPTED -> ReviewItemStatus.ACCEPTED
+                ReviewStatus.REJECTED -> ReviewItemStatus.REJECTED
+                ReviewStatus.DEFERRED -> ReviewItemStatus.DEFERRED
+            }
         )
     }
 }
