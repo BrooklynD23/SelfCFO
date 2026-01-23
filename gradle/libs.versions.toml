@@ -17,7 +17,9 @@ datetime = "0.5.0"
 
 # Database
 sqldelight = "2.0.1"
-sqlcipher = "4.5.6"
+# Note: `net.zetetic:android-database-sqlcipher` is only published up to 4.5.4 on Maven Central.
+# Later SQLCipher releases exist, but this legacy Android artifact is deprecated/upstream-distribution-limited.
+sqlcipher = "4.5.4"
 
 # Dependency Injection
 koin = "3.5.3"
