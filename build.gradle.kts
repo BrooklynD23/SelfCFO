@@ -45,8 +45,10 @@ subprojects {
     }
 }
 
-// Dokka multi-module documentation - task is auto-registered by the plugin
-// Configure output directory for the existing task
-tasks.named<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>("dokkaHtmlMultiModule") {
+// Dokka multi-module documentation
+//
+// Use type-based configuration so builds don't fail if the specific task name
+// isn't registered by the applied Dokka plugin/version in a given environment.
+tasks.withType<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>().configureEach {
     outputDirectory.set(layout.buildDirectory.dir("dokka"))
 }
