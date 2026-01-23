@@ -334,8 +334,9 @@
 ## Known Issues / Notes
 
 ### Build Requirements
-- **JAVA_HOME** must be set to run Gradle builds
+- **JAVA_HOME** must be set to run Gradle builds (JDK 17 recommended)
 - Run `./gradlew :shared:check` to verify tests
+- **Windows note:** If `java` is not on PATH, install a JDK and set `JAVA_HOME` before running Gradle
 
 ### CI Fixes Applied (2026-01-18)
 - ✅ Added `compose.materialIconsExtended` dependency for Icons.Filled/Outlined
@@ -344,7 +345,11 @@
 
 ### Branch Status
 - **main**: Stable baseline (Sprint 01-03 complete)
-- **sprint04/integration**: Contains all Sprint 04 UI work + CI fixes (PR open)
+- **sprint04/integration**: Contains Sprint 04 UI + Sprint 05 data integration + Sprint 06 testing; ready for PR to `main` once CI passes
+- **Note:** `sprint04/integration` is currently ~30 commits ahead of `main` and ~9 commits ahead of `origin/sprint04/integration` (push pending)
+
+### Desktop Encryption Status
+- **Desktop SQLCipher** is currently **deferred** (no readily available JDBC SQLCipher driver); Android encryption remains supported via SQLCipher
 
 ### Deferred Items (LOW priority)
 - ClassifierTrainer.kt - Training data management
