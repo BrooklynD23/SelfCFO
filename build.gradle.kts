@@ -17,6 +17,7 @@ allprojects {
         google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://jitpack.io") // For SQLCipher JDBC and other GitHub packages
     }
 }
 
@@ -44,7 +45,8 @@ subprojects {
     }
 }
 
-// Dokka multi-module documentation task
-tasks.register<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>("dokkaHtmlMultiModule") {
+// Dokka multi-module documentation - task is auto-registered by the plugin
+// Configure output directory for the existing task
+tasks.named<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>("dokkaHtmlMultiModule") {
     outputDirectory.set(layout.buildDirectory.dir("dokka"))
 }

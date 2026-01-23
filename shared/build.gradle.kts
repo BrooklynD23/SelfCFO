@@ -104,8 +104,8 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 // SQLDelight JVM/Desktop driver
                 implementation(libs.sqldelight.sqlite.driver)
-                // SQLCipher for encrypted database
-                implementation(libs.sqlcipher.jdbc)
+                // Note: Desktop encryption deferred - SQLCipher JDBC not readily available
+                // TODO: Add desktop-compatible encryption in future sprint
             }
         }
 

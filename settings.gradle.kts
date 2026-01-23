@@ -14,12 +14,9 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://jitpack.io") // For SQLCipher JDBC and other GitHub packages
     }
-    versionCatalogs {
-        create("libs") {
-            from(files("gradle/libs.versions.toml"))
-        }
-    }
+    // libs.versions.toml is automatically loaded by Gradle 8.x from gradle/libs.versions.toml
 }
 
 include(":shared")
