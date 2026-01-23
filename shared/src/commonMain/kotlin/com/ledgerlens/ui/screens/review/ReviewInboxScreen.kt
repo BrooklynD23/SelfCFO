@@ -190,7 +190,7 @@ private fun ReviewStatsHeader(
             }
 
             LinearProgressIndicator(
-                progress = { if (stats.totalItems > 0) stats.processedCount.toFloat() / stats.totalItems else 0f },
+                progress = if (stats.totalItems > 0) stats.processedCount.toFloat() / stats.totalItems else 0f,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),

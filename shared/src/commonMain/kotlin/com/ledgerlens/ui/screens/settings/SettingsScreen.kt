@@ -40,7 +40,7 @@ fun SettingsScreen(
             item {
                 SettingsSection("Account") {
                     SettingsItem(Icons.Default.Backup, "Backup & Restore", "Export, import, recovery key", onNavigateToBackup)
-                    HorizontalDivider(Modifier.padding(start = 56.dp))
+                    Divider(Modifier.padding(start = 56.dp))
                     SettingsItem(Icons.Default.FileDownload, "Export Data", "Export as CSV", {})
                 }
             }
@@ -48,22 +48,22 @@ fun SettingsScreen(
                 SettingsSection("Security") {
                     SettingsItem(Icons.Default.Lock, "Security Settings", "Passphrase, biometrics", onNavigateToSecurity)
                     if (state.biometricsAvailable) {
-                        HorizontalDivider(Modifier.padding(start = 56.dp))
+                        Divider(Modifier.padding(start = 56.dp))
                         SettingsToggle(Icons.Default.Fingerprint, "Use Biometrics", state.useBiometrics, viewModel::toggleBiometrics)
                     }
                 }
             }
             item {
                 SettingsSection("Appearance") {
-                    SettingsItem(Icons.Default.Palette, "Theme", state.theme.name.lowercase().replaceFirstChar { it.uppercase() }) { showThemeDialog = true }
-                    HorizontalDivider(Modifier.padding(start = 56.dp))
-                    SettingsItem(Icons.Default.AttachMoney, "Default Currency", state.defaultCurrency) { showCurrencyDialog = true }
+                    SettingsItem(Icons.Default.Palette, "Theme", state.theme.name.lowercase().replaceFirstChar { it.uppercase() }, onClick = { showThemeDialog = true })
+                    Divider(Modifier.padding(start = 56.dp))
+                    SettingsItem(Icons.Default.AttachMoney, "Default Currency", state.defaultCurrency, onClick = { showCurrencyDialog = true })
                 }
             }
             item {
                 SettingsSection("About") {
                     SettingsItem(Icons.Default.Info, "Version", "${state.appVersion} (${state.buildNumber})", {}, false)
-                    HorizontalDivider(Modifier.padding(start = 56.dp))
+                    Divider(Modifier.padding(start = 56.dp))
                     SettingsItem(Icons.Default.Description, "Privacy Policy", "How we handle data", {})
                 }
             }

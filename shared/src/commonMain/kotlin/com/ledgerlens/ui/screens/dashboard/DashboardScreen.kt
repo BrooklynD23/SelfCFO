@@ -34,7 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+// PullToRefreshBox removed - not available in all Material3 versions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -130,11 +130,16 @@ private fun DashboardContent(
         }
 
         else -> {
-            PullToRefreshBox(
-                isRefreshing = uiState.isRefreshing,
-                onRefresh = onRefresh,
-                modifier = modifier.fillMaxSize()
-            ) {
+            Box(modifier = modifier.fillMaxSize()) {
+                if (uiState.isRefreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 16.dp)
+                            .size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -198,7 +203,7 @@ private fun DashboardContent(
                         item {
                             EmptyState(
                                 title = "No Transactions Yet",
-                                message = "Import your bank statements to get started",
+                                description = "Import your bank statements to get started",
                                 actionLabel = "Import Transactions",
                                 onAction = onImportClick
                             )
@@ -295,6 +300,7 @@ private fun MonthlySummaryCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickActionsRow(
     pendingReviewCount: Int,

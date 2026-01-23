@@ -1,7 +1,6 @@
 package com.ledgerlens.receipts
 
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 data class ParticipantGroup(
     val id: String,
@@ -24,9 +23,13 @@ data class ParticipantGroup(
         const val MAX_NAME_LENGTH = 50
         const val MAX_PARTICIPANTS = 20
 
-        @OptIn(ExperimentalUuidApi::class)
         fun create(name: String, participantIds: List<String>, icon: String? = null, color: String? = null) =
-            ParticipantGroup(id = Uuid.random().toString(), name = name.trim(), participantIds = participantIds.distinct(), icon = icon, color = color)
+            ParticipantGroup(id = generateId(), name = name.trim(), participantIds = participantIds.distinct(), icon = icon, color = color)
+
+        private fun generateId(): String {
+            val chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+            return (1..16).map { chars[Random.nextInt(chars.length)] }.joinToString("")
+        }
     }
 }
 

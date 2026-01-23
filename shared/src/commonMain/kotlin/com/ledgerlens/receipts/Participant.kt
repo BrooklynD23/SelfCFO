@@ -1,7 +1,6 @@
 package com.ledgerlens.receipts
 
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 data class Participant(
     val id: String,
@@ -34,8 +33,12 @@ data class Participant(
 
         fun createSelf(displayName: String = SELF_DEFAULT_NAME) = Participant(id = SELF_ID, name = displayName, color = DEFAULT_COLORS.first(), isSelf = true, isFavorite = true)
 
-        @OptIn(ExperimentalUuidApi::class)
-        fun quickAdd(name: String, colorIndex: Int = 0) = Participant(id = Uuid.random().toString(), name = name.trim(), color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.size])
+        fun quickAdd(name: String, colorIndex: Int = 0) = Participant(id = generateId(), name = name.trim(), color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.size])
+
+        private fun generateId(): String {
+            val chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+            return (1..16).map { chars[Random.nextInt(chars.length)] }.joinToString("")
+        }
     }
 }
 

@@ -1,10 +1,10 @@
 package com.ledgerlens.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -67,15 +67,15 @@ object LedgerLensIcons {
     val Dashboard: ImageVector = Icons.Filled.Dashboard
     val DashboardOutlined: ImageVector = Icons.Outlined.Dashboard
     val Menu: ImageVector = Icons.Filled.Menu
-    val Back: ImageVector = Icons.AutoMirrored.Filled.ArrowBack
+    val Back: ImageVector = Icons.Filled.ArrowBack
     val ChevronRight: ImageVector = Icons.Filled.ChevronRight
     val Close: ImageVector = Icons.Filled.Close
 
     // Transactions
     val Transaction: ImageVector = Icons.Filled.Receipt
     val TransactionOutlined: ImageVector = Icons.Outlined.Receipt
-    val Income: ImageVector = Icons.AutoMirrored.Filled.TrendingUp
-    val Expense: ImageVector = Icons.AutoMirrored.Filled.TrendingDown
+    val Income: ImageVector = Icons.Filled.TrendingUp
+    val Expense: ImageVector = Icons.Filled.TrendingDown
     val Transfer: ImageVector = Icons.Filled.SwapHoriz
     val ArrowUp: ImageVector = Icons.Filled.ArrowUpward
     val ArrowDown: ImageVector = Icons.Filled.ArrowDownward
@@ -94,7 +94,7 @@ object LedgerLensIcons {
     // Analytics
     val Analytics: ImageVector = Icons.Filled.PieChart
     val AnalyticsOutlined: ImageVector = Icons.Outlined.PieChart
-    val List: ImageVector = Icons.AutoMirrored.Filled.List
+    val List: ImageVector = Icons.Filled.List
 
     // Actions
     val Add: ImageVector = Icons.Filled.Add

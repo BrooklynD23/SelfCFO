@@ -54,8 +54,8 @@ object CategoryMapper {
         return CategoryWithStats(
             category = category,
             transactionCount = summary.transaction_count?.toInt() ?: 0,
-            totalSpentMinorUnits = summary.total_spent_minor ?: 0L,
-            totalIncomeMinorUnits = summary.total_income_minor ?: 0L
+            totalSpentMinorUnits = (summary.total_spent_minor as? Long) ?: (summary.total_spent_minor?.toLong() ?: 0L),
+            totalIncomeMinorUnits = (summary.total_income_minor as? Long) ?: (summary.total_income_minor?.toLong() ?: 0L)
         )
     }
 }

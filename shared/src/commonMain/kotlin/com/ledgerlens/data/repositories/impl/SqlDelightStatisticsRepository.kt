@@ -88,16 +88,16 @@ class SqlDelightStatisticsRepository(
             .asFlow()
             .mapToList(dispatcher)
             .map { rows ->
-                val total = rows.sumOf { it.total_spent_minor ?: 0L }
+                val total = rows.fold(0L) { acc, it -> acc + ((it.total_spent_minor as? Long) ?: it.total_spent_minor?.toLong() ?: 0L) }
                 rows.map { row ->
                     CategorySpendingStats(
                         categoryId = row.category_id,
                         categoryName = row.category_name,
                         categoryColor = row.category_color,
-                        totalSpent = Money(row.total_spent_minor ?: 0L, "USD"),
+                        totalSpent = Money((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L, "USD"),
                         transactionCount = row.transaction_count?.toInt() ?: 0,
                         percentageOfTotal = if (total > 0)
-                            ((row.total_spent_minor ?: 0L) * 100f / total)
+                            (((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L) * 100f / total)
                         else 0f
                     )
                 }
@@ -115,16 +115,16 @@ class SqlDelightStatisticsRepository(
             .asFlow()
             .mapToList(dispatcher)
             .map { rows ->
-                val total = rows.sumOf { it.total_spent_minor ?: 0L }
+                val total = rows.fold(0L) { acc, it -> acc + ((it.total_spent_minor as? Long) ?: it.total_spent_minor?.toLong() ?: 0L) }
                 rows.map { row ->
                     CategorySpendingStats(
                         categoryId = row.category_id,
                         categoryName = row.category_name,
                         categoryColor = row.category_color,
-                        totalSpent = Money(row.total_spent_minor ?: 0L, "USD"),
+                        totalSpent = Money((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L, "USD"),
                         transactionCount = row.transaction_count?.toInt() ?: 0,
                         percentageOfTotal = if (total > 0)
-                            ((row.total_spent_minor ?: 0L) * 100f / total)
+                            (((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L) * 100f / total)
                         else 0f
                     )
                 }
@@ -176,7 +176,7 @@ class SqlDelightStatisticsRepository(
                 rows.map { row ->
                     TopMerchant(
                         merchantName = row.merchant_name ?: "Unknown",
-                        totalSpent = Money(row.total_spent_minor ?: 0L, "USD"),
+                        totalSpent = Money((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L, "USD"),
                         transactionCount = row.transaction_count?.toInt() ?: 0
                     )
                 }
@@ -195,7 +195,7 @@ class SqlDelightStatisticsRepository(
     }
 
     override fun getYearToDateStats(year: Int): Flow<MonthlyStats> {
-        return statisticsQueries.selectYearToDateStats(year.toLong(), year.toLong())
+        return statisticsQueries.selectYearToDateStats(year.toLong())
             .asFlow()
             .mapToOneOrNull(dispatcher)
             .map { row ->

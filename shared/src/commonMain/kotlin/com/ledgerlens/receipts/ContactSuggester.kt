@@ -1,7 +1,6 @@
 package com.ledgerlens.receipts
 
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.random.Random
 
 interface ContactSuggester {
     suspend fun hasPermission(): Boolean
@@ -35,14 +34,18 @@ class StubContactSuggester : ContactSuggester {
     override suspend fun searchContacts(query: String, limit: Int): List<ContactSuggestion> = emptyList()
     override suspend fun getAllContacts(limit: Int?): List<ContactSuggestion> = emptyList()
 
-    @OptIn(ExperimentalUuidApi::class)
     override fun toParticipant(contact: ContactSuggestion) = Participant(
-        id = Uuid.random().toString(),
+        id = generateId(),
         name = contact.name,
         email = contact.email,
         phoneNumber = contact.phoneNumber,
         color = Participant.DEFAULT_COLORS[contact.contactId.hashCode().mod(Participant.DEFAULT_COLORS.size)]
     )
+
+    private fun generateId(): String {
+        val chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..16).map { chars[Random.nextInt(chars.length)] }.joinToString("")
+    }
 }
 
 expect object ContactSuggesterFactory {

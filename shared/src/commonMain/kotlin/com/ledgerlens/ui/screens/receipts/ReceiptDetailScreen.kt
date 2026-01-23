@@ -532,7 +532,7 @@ private fun SplitResultCard(
             
             if (!splitResult.isBalanced) {
                 Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
+                Divider()
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
@@ -641,7 +641,7 @@ private fun TotalsSection(receipt: ExtractedReceipt) {
                 TotalRow(label = "Tip", amount = receipt.tipAmount ?: receipt.calculatedTip)
             }
             
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),

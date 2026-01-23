@@ -44,12 +44,12 @@ class InMemoryCategoryRepository : CategoryRepository {
         updated
     }
 
-    override suspend fun delete(id: String, cascade: Boolean) = mutex.withLock {
+    override suspend fun delete(id: String, cascade: Boolean): Unit = mutex.withLock {
         val cat = categories[id] ?: throw CategoryException("Category '$id' not found")
         if (cat.isSystemDefault) throw CategoryException("Cannot delete system default category")
         val children = categories.values.filter { it.parentId == id }
         if (children.isNotEmpty() && !cascade) throw CategoryException("Has children; use cascade=true")
-        if (cascade) deleteRecursive(id) else categories.remove(id)
+        if (cascade) deleteRecursive(id) else { categories.remove(id); Unit }
     }
 
     private fun deleteRecursive(id: String) {

@@ -53,7 +53,7 @@ object AccountMapper {
         return AccountWithBalance(
             account = toDomain(account),
             transactionCount = balance.transaction_count?.toInt() ?: 0,
-            netBalanceMinorUnits = balance.net_balance_minor ?: 0L,
+            netBalanceMinorUnits = (balance.net_balance_minor as? Long) ?: (balance.net_balance_minor?.toLong() ?: 0L),
             lastTransactionDate = balance.last_transaction_date?.let { millis ->
                 Instant.fromEpochMilliseconds(millis)
                     .toLocalDateTime(TimeZone.currentSystemDefault())

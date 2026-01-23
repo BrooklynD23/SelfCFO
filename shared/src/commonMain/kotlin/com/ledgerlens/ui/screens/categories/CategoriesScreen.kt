@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ledgerlens.categorization.Category
 import com.ledgerlens.ui.viewmodels.categories.CategoriesUiState
 import com.ledgerlens.ui.viewmodels.categories.CategoriesViewModel
 import com.ledgerlens.ui.viewmodels.categories.CategoryUiModel
@@ -313,7 +314,7 @@ private fun CategoryListItem(
                     }
                     
                     if (category.canDelete) {
-                        HorizontalDivider()
+                        Divider()
                         DropdownMenuItem(
                             text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
                             onClick = {
@@ -431,4 +432,123 @@ private fun parseColor(hexColor: String): Color {
     } catch (e: Exception) {
         Color.Gray
     }
+}
+
+/**
+ * Dialog for creating/editing a category.
+ */
+@Composable
+private fun CategoryEditDialog(
+    category: Category?,
+    isCreating: Boolean,
+    availableParents: List<CategoryUiModel>,
+    onNameChange: (String) -> Unit,
+    onIconChange: (String) -> Unit,
+    onColorChange: (String) -> Unit,
+    onParentChange: (String?) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember(category) { mutableStateOf(category?.name ?: "") }
+    var icon by remember(category) { mutableStateOf(category?.icon ?: "") }
+    var color by remember(category) { mutableStateOf(category?.color ?: "#4CAF50") }
+    var selectedParentId by remember(category) { mutableStateOf(category?.parentId) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (isCreating) "Create Category" else "Edit Category") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        onNameChange(it)
+                    },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = icon,
+                    onValueChange = {
+                        icon = it
+                        onIconChange(it)
+                    },
+                    label = { Text("Icon (emoji)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = color,
+                    onValueChange = {
+                        color = it
+                        onColorChange(it)
+                    },
+                    label = { Text("Color (hex)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    leadingIcon = {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(parseColor(color))
+                        )
+                    }
+                )
+
+                if (availableParents.isNotEmpty()) {
+                    Text("Parent Category", style = MaterialTheme.typography.labelMedium)
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedParentId = null; onParentChange(null) }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedParentId == null,
+                                onClick = { selectedParentId = null; onParentChange(null) }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("None (top level)")
+                        }
+                        availableParents.forEach { parent ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectedParentId = parent.id; onParentChange(parent.id) }
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedParentId == parent.id,
+                                    onClick = { selectedParentId = parent.id; onParentChange(parent.id) }
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(parent.name)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSave,
+                enabled = name.isNotBlank()
+            ) {
+                Text(if (isCreating) "Create" else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

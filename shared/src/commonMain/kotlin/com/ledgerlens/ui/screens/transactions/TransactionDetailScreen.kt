@@ -357,7 +357,7 @@ private fun CategorySection(
 
                     if (transaction.categoryConfidence != null) {
                         ConfidenceBadge(
-                            confidence = transaction.categoryConfidence
+                            score = transaction.categoryConfidence!!
                         )
                     }
                 }

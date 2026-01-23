@@ -143,9 +143,22 @@ class CorrectionViewModel(
     }
 
     fun addFromReviewQueue(item: ReviewQueueItem, newCategoryId: String) {
+        // Convert pipeline.TransactionFeatures to categorization.TransactionFeatures
+        val pipelineFeatures = item.features
+        val features = TransactionFeatures(
+            merchantNormalized = pipelineFeatures.merchantNormalized,
+            descriptionRaw = pipelineFeatures.descriptionRaw,
+            descriptionTokens = pipelineFeatures.descriptionTokens,
+            amountCents = pipelineFeatures.amountCents,
+            amountBucket = AmountBucket.fromCents(pipelineFeatures.amountCents),
+            isDebit = pipelineFeatures.isDebit,
+            dayOfWeek = pipelineFeatures.dayOfWeek,
+            dayOfMonth = pipelineFeatures.dayOfMonth,
+            accountId = pipelineFeatures.accountId
+        )
         addPendingCorrection(
             transactionId = item.transactionId,
-            features = item.features,
+            features = features,
             oldCategoryId = item.categoryId,
             newCategoryId = newCategoryId,
             originalConfidence = item.confidence,
@@ -293,9 +306,9 @@ class CorrectionViewModel(
                     val ruleModels = analysis.suggestedRules.map { rule ->
                         SuggestedRuleUiModel(
                             merchantPattern = rule.merchantPattern,
-                            targetCategoryId = rule.targetCategoryId,
-                            targetCategoryName = categories.find { it.id == rule.targetCategoryId }?.name 
-                                ?: rule.targetCategoryId,
+                            targetCategoryId = rule.categoryId,
+                            targetCategoryName = categories.find { it.id == rule.categoryId }?.name
+                                ?: rule.categoryId,
                             supportingCount = rule.supportingCorrections,
                             confidence = rule.confidence,
                             reason = rule.reason

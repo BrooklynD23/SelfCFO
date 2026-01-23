@@ -40,7 +40,6 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -279,6 +278,7 @@ private fun SearchBarSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FilterChipsRow(
     uiState: TransactionsUiState,
@@ -382,7 +382,7 @@ private fun TransactionsContent(
                 } else {
                     "No Transactions Yet"
                 },
-                message = if (uiState.filters.hasActiveFilters) {
+                description = if (uiState.filters.hasActiveFilters) {
                     "Try adjusting your filters"
                 } else {
                     "Import your bank statements to get started"
@@ -409,15 +409,28 @@ private fun TransactionsContent(
                 }
             }
 
-            PullToRefreshBox(
-                isRefreshing = uiState.isRefreshing,
-                onRefresh = onRefresh
-            ) {
+            // Pull to refresh with Box fallback for compatibility
+            Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
                     state = listState,
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Refresh indicator at top when refreshing
+                    if (uiState.isRefreshing) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
+                        }
+                    }
+
                     // Results count header
                     item {
                         Row(

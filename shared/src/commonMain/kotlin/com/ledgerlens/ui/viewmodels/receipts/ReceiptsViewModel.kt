@@ -448,10 +448,10 @@ class ReceiptsViewModel(
 
     // Extension function to map ReceiptWithItems to ExtractedReceipt
     private fun ReceiptWithItems.toExtractedReceipt(): ExtractedReceipt {
-        val productItems = items.map { item ->
-            ProductItem(
-                description = item.name,
-                quantity = item.quantity,
+        val receiptItems = items.map { item ->
+            ReceiptItem(
+                name = item.name,
+                quantity = item.quantity.toDouble(),
                 unitPrice = Money.fromMinorUnits(item.unitPriceMinorUnits, item.currencyCode),
                 totalPrice = Money.fromMinorUnits(
                     item.unitPriceMinorUnits * item.quantity,
@@ -462,18 +462,16 @@ class ReceiptsViewModel(
         }
 
         return ExtractedReceipt(
-            merchantName = receipt.merchantName ?: "Unknown",
-            merchantAddress = null,
-            dateTime = receipt.receiptDate?.toString(),
-            currency = receipt.totalAmount?.currency ?: "USD",
-            productItems = productItems,
+            items = receiptItems,
+            merchant = receipt.merchantName ?: "Unknown",
+            date = receipt.receiptDate?.toString(),
+            currency = receipt.totalAmount?.currencyCode ?: "USD",
             subtotal = null,
             taxAmount = null,
             totalAmount = receipt.totalAmount,
             paymentMethod = null,
-            receiptNumber = null,
             rawText = receipt.ocrText,
-            overallConfidence = receipt.ocrConfidence?.toDouble() ?: 1.0
+            confidence = receipt.ocrConfidence?.toDouble() ?: 1.0
         )
     }
 }

@@ -22,7 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+// HorizontalDivider removed - use Divider instead
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -283,7 +283,7 @@ private fun DetailedStatsCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            HorizontalDivider()
+            Divider()
 
             StatRow(label = "Total in file", value = result.totalTransactions.toString())
             StatRow(label = "Successfully imported", value = result.importedCount.toString())
@@ -302,7 +302,7 @@ private fun DetailedStatsCard(
                 } else null
             )
 
-            HorizontalDivider()
+            Divider()
 
             StatRow(label = "Auto-categorized", value = result.categorizedCount.toString())
             StatRow(

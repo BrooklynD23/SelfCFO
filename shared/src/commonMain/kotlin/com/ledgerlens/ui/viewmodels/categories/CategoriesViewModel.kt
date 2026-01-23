@@ -3,6 +3,8 @@ package com.ledgerlens.ui.viewmodels.categories
 import com.ledgerlens.categorization.Category
 import com.ledgerlens.categorization.CategoryNode
 import com.ledgerlens.categorization.CategoryTree
+import com.ledgerlens.categorization.CategoryValidationResult
+import com.ledgerlens.categorization.validate
 import com.ledgerlens.categorization.rules.*
 import com.ledgerlens.data.repositories.CategoryEntity
 import com.ledgerlens.data.repositories.CategoryRepository
@@ -292,11 +294,12 @@ class CategoriesViewModel(
 
             try {
                 // Validate
-                val validation = category.copy(
+                val categoryToValidate = category.copy(
                     id = if (state.isCreatingNew) generateCategoryId(category.name) else category.id
-                ).let { com.ledgerlens.categorization.validate(it) }
+                )
+                val validation = categoryToValidate.validate()
 
-                if (validation is com.ledgerlens.categorization.CategoryValidationResult.Invalid) {
+                if (validation is CategoryValidationResult.Invalid) {
                     _categoriesState.update { it.copy(error = validation.reason) }
                     return@launch
                 }

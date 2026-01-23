@@ -68,7 +68,7 @@ fun BackupRestoreScreen(
                             Spacer(Modifier.height(16.dp))
                             
                             if (state.isExporting) {
-                                LinearProgressIndicator(progress = { state.exportProgress }, Modifier.fillMaxWidth())
+                                LinearProgressIndicator(progress = state.exportProgress, modifier = Modifier.fillMaxWidth())
                                 Spacer(Modifier.height(8.dp))
                                 Text("Exporting...", style = MaterialTheme.typography.bodySmall)
                             } else {
@@ -96,7 +96,7 @@ fun BackupRestoreScreen(
                             Spacer(Modifier.height(16.dp))
                             
                             if (state.isImporting) {
-                                LinearProgressIndicator(progress = { state.importProgress }, Modifier.fillMaxWidth())
+                                LinearProgressIndicator(progress = state.importProgress, modifier = Modifier.fillMaxWidth())
                                 Spacer(Modifier.height(8.dp))
                                 Text("Importing...", style = MaterialTheme.typography.bodySmall)
                             } else {

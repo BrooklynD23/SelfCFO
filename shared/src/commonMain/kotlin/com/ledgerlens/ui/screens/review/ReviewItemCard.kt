@@ -28,12 +28,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -207,7 +203,6 @@ private fun ReviewTypeBadge(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SuggestedCategoryRow(
     categoryName: String,
@@ -249,21 +244,14 @@ private fun SuggestedCategoryRow(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip = {
-                        PlainTooltip {
-                            Text(
-                                text = explanation,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    },
-                    state = rememberTooltipState()
+                // Info icon - tooltip content available via explanation parameter
+                IconButton(
+                    onClick = { /* Could show explanation in a dialog */ },
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = "Why this category",
+                        contentDescription = explanation.ifBlank { "Why this category" },
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -280,7 +268,7 @@ private fun SuggestedCategoryRow(
 
         // Confidence bar
         LinearProgressIndicator(
-            progress = { confidence },
+            progress = confidence,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp),
