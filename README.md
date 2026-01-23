@@ -74,6 +74,8 @@
 #### Prerequisites
 
 - **JDK 17** (required)
+  - **Windows users**: Run `.\setup-java.ps1` to automatically find and configure Java
+  - **Manual setup**: See [`SETUP_JAVA.md`](./SETUP_JAVA.md) for detailed instructions
 - **Android Studio** (for Android runs) or a configured Android SDK
 
 #### Build & test (all)
