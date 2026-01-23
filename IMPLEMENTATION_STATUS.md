@@ -4,12 +4,13 @@
 
 ---
 
-## Current Sprint: 05 COMPLETE
+## Current Sprint: 06 IN PROGRESS
 
-**Status:** Sprint 05 Data Layer Integration Complete
-**Last Updated:** 2026-01-18
+**Status:** Sprint 06 Testing & Integration Phase
+**Last Updated:** 2026-01-22
 **Current Branch:** `sprint04/integration`
 **Sprint 05 Completion:** All repository implementations, mappers, DI modules, and tests delivered
+**Sprint 06 Phase 4:** ViewModel integration tests complete
 
 ---
 
@@ -23,6 +24,7 @@
 | **03 - Receipt Splitting** | ✅ Complete | 100% |
 | **04 - UI Implementation** | ✅ Complete | 100% |
 | **05 - Data Layer Integration** | ✅ Complete | 100% |
+| **06 - Testing & Integration** | 🔄 Phase 4 Complete | 60% |
 
 ---
 
@@ -364,16 +366,54 @@ All implementations follow:
 
 ---
 
+## Sprint 06: Testing & Integration 🔄
+
+**Sprint 06 Metrics:**
+- **8 ViewModel Tests** - Comprehensive unit test coverage for all ViewModels
+- **6 Fake Repositories** - Complete test infrastructure
+- **TestDataFactory** - Consistent test data generation
+- **~180+ ViewModel Test Cases** - Full behavior coverage
+
+### Phase 4: Testing Infrastructure ✅ (2026-01-22)
+- [x] DashboardViewModelTest (~12 tests)
+- [x] TransactionsViewModelTest (~21 tests)
+- [x] CategoriesViewModelTest (~37 tests)
+- [x] ReceiptsViewModelTest (~17 tests)
+- [x] ReviewViewModelTest (~18 tests)
+- [x] ImportViewModelTest (~21 tests)
+- [x] SettingsViewModelTest (~27 tests)
+- [x] CorrectionViewModelTest (~30 tests)
+
+### Fake Repository Infrastructure ✅
+- [x] FakeTransactionRepository - Transaction CRUD with filtering
+- [x] FakeCategoryRepository - Category tree operations
+- [x] FakeReceiptRepository - Receipt & item allocation
+- [x] FakeImportRepository - Import job tracking
+- [x] FakeRuleRepository - Rule management
+- [x] FakeStatisticsRepository - Statistics queries
+- [x] FakeKeyManager - Security/encryption mocking
+- [x] TestDataFactory - Test fixture generation
+
+### Services Layer (Planned)
+The services layer (`shared/src/commonMain/kotlin/com/ledgerlens/services/`) is designed for:
+- Import Services: PDF/CSV parsing pipelines
+- Categorization Services: ML-based transaction categorization
+- OCR Services: Receipt text extraction
+- Export Services: Report generation
+
+---
+
 ## Next Steps
 
-With Sprint 05 complete, the application now has a fully functional data layer:
+With Sprint 05 data layer and Sprint 06 Phase 4 testing complete:
 
-1. **Merge Sprint 04/05 PR**: All work ready for main branch integration
-2. **Sprint 06 Planning**: End-to-end integration and polish
-   - Wire ViewModels to real repositories (replace fakes)
-   - Platform-specific testing (Android emulator, Desktop JVM)
-   - Performance optimization and profiling
-3. **Pre-release Tasks**:
+1. **Sprint 06 Remaining Tasks**:
+   - [ ] Wire ViewModels to real repositories (replace fakes)
+   - [ ] Platform-specific testing (Android emulator, Desktop JVM)
+   - [ ] Performance optimization and profiling
+   - [ ] Services layer implementation (if needed)
+
+2. **Pre-release Tasks**:
    - Full integration testing
    - UI/UX polish pass
    - Documentation updates
@@ -392,7 +432,8 @@ The data layer is now complete with:
 - **Mapper Layer**: Entity-to-domain object conversion
 - **Dependency Injection**: Koin modules ready for ViewModel integration
 - **Platform Abstraction**: expect/actual pattern for database drivers
+- **Test Infrastructure**: Comprehensive fake repositories and test factories
 
 ---
 
-*Last Updated: 2026-01-18 - Sprint 05 Complete*
+*Last Updated: 2026-01-22 - Sprint 06 Phase 4 Testing Complete*

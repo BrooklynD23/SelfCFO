@@ -1,5 +1,8 @@
 package com.ledgerlens.ui.screens.transactions
 
+import com.ledgerlens.data.repositories.fake.FakeCategoryRepository
+import com.ledgerlens.data.repositories.fake.FakeTransactionRepository
+import com.ledgerlens.data.repositories.fake.TestDataFactory
 import com.ledgerlens.ui.viewmodels.transactions.TransactionFilters
 import com.ledgerlens.ui.viewmodels.transactions.TransactionsEvent
 import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
@@ -23,10 +26,31 @@ import kotlin.test.assertTrue
 class TransactionsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var transactionRepository: FakeTransactionRepository
+    private lateinit var categoryRepository: FakeCategoryRepository
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        transactionRepository = FakeTransactionRepository()
+        categoryRepository = FakeCategoryRepository()
+
+        // Seed test data
+        categoryRepository.setCategories(listOf(
+            TestDataFactory.createCategory(id = "groceries", name = "Groceries"),
+            TestDataFactory.createCategory(id = "dining", name = "Dining"),
+            TestDataFactory.createCategory(id = "food", name = "Food"),
+            TestDataFactory.createCategory(id = "transport", name = "Transport"),
+            TestDataFactory.createCategory(id = "shopping", name = "Shopping")
+        ))
+
+        transactionRepository.setTransactions(listOf(
+            TestDataFactory.createTransaction(id = "1", merchantNormalized = "WALMART", categoryId = "groceries", amountMinorUnits = -5000),
+            TestDataFactory.createTransaction(id = "2", merchantNormalized = "STARBUCKS", categoryId = "dining", amountMinorUnits = -450),
+            TestDataFactory.createTransaction(id = "3", merchantNormalized = "UBER", categoryId = "transport", amountMinorUnits = -1500),
+            TestDataFactory.createTransaction(id = "4", merchantNormalized = "SALARY", categoryId = null, amountMinorUnits = 500000, categoryConfidence = 0.3f),
+            TestDataFactory.createTransaction(id = "5", merchantNormalized = "UNCATEGORIZED", categoryId = null, categoryConfidence = null, isReviewed = false)
+        ))
     }
 
     @AfterTest
@@ -34,16 +58,18 @@ class TransactionsViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel() = TransactionsViewModel(transactionRepository, categoryRepository)
+
     @Test
     fun `initial state should be loading`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         val state = viewModel.uiState.value
         assertTrue(state.isLoading)
     }
 
     @Test
     fun `loadTransactions should populate transactions`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -54,7 +80,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `updateSearchQuery should filter transactions`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.updateSearchQuery("Starbucks")
@@ -70,7 +96,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleCategoryFilter should add and remove category from filters`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val categoryId = "food"
@@ -87,7 +113,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleIncomeFilter should filter income transactions only`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.toggleIncomeFilter()
@@ -101,7 +127,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleExpensesFilter should filter expense transactions only`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.toggleExpensesFilter()
@@ -115,7 +141,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleNeedsReviewFilter should filter transactions needing review`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.toggleNeedsReviewFilter()
@@ -128,7 +154,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `clearAllFilters should reset all filters`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         // Apply some filters
@@ -149,7 +175,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleSelectionMode should enable and disable selection mode`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isSelectionMode)
@@ -163,7 +189,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `toggleTransactionSelection should add and remove transaction from selection`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val transactionId = viewModel.uiState.value.transactions.first().id
@@ -177,7 +203,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `selectAllTransactions should select all visible transactions`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.selectAllTransactions()
@@ -189,7 +215,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `clearSelection should remove all selections`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.selectAllTransactions()
@@ -201,7 +227,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `onTransactionClicked in normal mode should emit NavigateToDetail event`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val transactionId = "test-123"
@@ -214,7 +240,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `onTransactionClicked in selection mode should toggle selection`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.toggleSelectionMode()
@@ -229,7 +255,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `pagination should work correctly`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val initialState = viewModel.uiState.value
@@ -246,7 +272,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `loadTransactionDetail should populate detail state`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val transactionId = viewModel.uiState.value.transactions.first().id
@@ -261,7 +287,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `startEditing and cancelEditing should toggle editing state`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.loadTransactionDetail("1")
@@ -278,7 +304,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `updateTransactionCategory should update category and emit snackbar event`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.loadTransactionDetail("1")
@@ -298,7 +324,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `filters activeFilterCount should count active filters correctly`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertEquals(0, viewModel.uiState.value.filters.activeFilterCount)
@@ -318,7 +344,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `clearEvent should reset event to null`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.onTransactionClicked("test")
@@ -330,7 +356,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `dismissError should clear error from state`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.dismissError()
@@ -339,7 +365,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `setCategoryFilters should set multiple categories at once`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         val categories = setOf("food", "transport", "shopping")
@@ -351,7 +377,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `availableCategories should be populated after load`() = runTest {
-        val viewModel = TransactionsViewModel()
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.availableCategories.isNotEmpty())

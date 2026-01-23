@@ -1,5 +1,6 @@
 package com.ledgerlens.ui.viewmodels.import
 
+import com.ledgerlens.data.repositories.fake.FakeImportRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -18,12 +19,14 @@ import kotlin.test.assertTrue
 class ImportViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var importRepository: FakeImportRepository
     private lateinit var viewModel: ImportViewModel
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = ImportViewModel()
+        importRepository = FakeImportRepository()
+        viewModel = ImportViewModel(importRepository)
     }
 
     @AfterTest

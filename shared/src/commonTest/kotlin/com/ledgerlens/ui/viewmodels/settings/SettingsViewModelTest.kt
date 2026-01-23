@@ -1,5 +1,6 @@
 package com.ledgerlens.ui.viewmodels.settings
 
+import com.ledgerlens.data.repositories.fake.FakeKeyManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -10,16 +11,18 @@ import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
-    
+
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var keyManager: FakeKeyManager
     private lateinit var viewModel: SettingsViewModel
-    
+
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = SettingsViewModel()
+        keyManager = FakeKeyManager()
+        viewModel = SettingsViewModel(keyManager)
     }
-    
+
     @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
