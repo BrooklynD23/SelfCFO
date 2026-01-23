@@ -119,4 +119,5 @@ Write-Host "  2. Add JAVA_HOME = $env:JAVA_HOME" -ForegroundColor White
 Write-Host "  3. Add %JAVA_HOME%\bin to PATH" -ForegroundColor White
 Write-Host ""
 Write-Host "Or run this command in each new PowerShell session:" -ForegroundColor Yellow
-Write-Host "  `$env:JAVA_HOME = `"$env:JAVA_HOME`"" -ForegroundColor White
+$javaHomeCmd = '$env:JAVA_HOME = "' + $env:JAVA_HOME + '"'
+Write-Host "  $javaHomeCmd" -ForegroundColor White
