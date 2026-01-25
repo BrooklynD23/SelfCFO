@@ -6,7 +6,6 @@ import com.ledgerlens.security.BackupBundle
 import com.ledgerlens.security.KeyManager
 import com.ledgerlens.security.RecoveryKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
@@ -34,16 +33,21 @@ class FakeTransactionRepository : TransactionRepository {
 
     override fun getTransactions(filter: TransactionFilter): Flow<List<Transaction>> {
         return transactions.map { map ->
+            val startDate = filter.startDate
+            val endDate = filter.endDate
+            val searchQuery = filter.searchQuery
             map.values.filter { tx ->
                 (filter.accountId == null || tx.accountId == filter.accountId) &&
-                (filter.categoryId == null || tx.categoryId == filter.categoryId) &&
-                (filter.startDate == null || tx.postedDate >= filter.startDate) &&
-                (filter.endDate == null || tx.postedDate <= filter.endDate) &&
-                (filter.searchQuery.isNullOrBlank() ||
-                    tx.descriptionRaw.contains(filter.searchQuery, ignoreCase = true) ||
-                    tx.merchantNormalized.contains(filter.searchQuery, ignoreCase = true)) &&
-                (filter.includeExcluded || !tx.isExcluded) &&
-                (!filter.onlyUnreviewed || !tx.isReviewed)
+                    (filter.categoryId == null || tx.categoryId == filter.categoryId) &&
+                    (startDate == null || tx.postedDate >= startDate) &&
+                    (endDate == null || tx.postedDate <= endDate) &&
+                    (
+                        searchQuery.isNullOrBlank() ||
+                            tx.descriptionRaw.contains(searchQuery, ignoreCase = true) ||
+                            tx.merchantNormalized.contains(searchQuery, ignoreCase = true)
+                        ) &&
+                    (filter.includeExcluded || !tx.isExcluded) &&
+                    (!filter.onlyUnreviewed || !tx.isReviewed)
             }.sortedByDescending { it.postedDate }
         }
     }
@@ -74,8 +78,10 @@ class FakeTransactionRepository : TransactionRepository {
 
     override fun getTransactionsNeedingReview(): Flow<List<Transaction>> {
         return transactions.map { map ->
-            map.values.filter { !it.isReviewed && (it.categoryConfidence == null || it.categoryConfidence < 0.5f) }
-                .sortedByDescending { it.postedDate }
+            map.values.filter { tx ->
+                val confidence = tx.categoryConfidence
+                !tx.isReviewed && (confidence == null || confidence < 0.5f)
+            }.sortedByDescending { it.postedDate }
         }
     }
 
@@ -94,11 +100,13 @@ class FakeTransactionRepository : TransactionRepository {
 
     override suspend fun updateCategory(transactionId: String, categoryId: String, confidence: Float, reason: String) {
         val tx = transactions.value[transactionId] ?: return
-        transactions.value = transactions.value + (transactionId to tx.copy(
-            categoryId = categoryId,
-            categoryConfidence = confidence,
-            categoryReason = reason
-        ))
+        transactions.value = transactions.value + (
+            transactionId to tx.copy(
+                categoryId = categoryId,
+                categoryConfidence = confidence,
+                categoryReason = reason
+            )
+            )
     }
 
     override suspend fun markAsReviewed(transactionId: String) {
@@ -256,7 +264,7 @@ class FakeReceiptRepository : ReceiptRepository {
         return receipts.map { map ->
             map.values.filter { receipt ->
                 receipt.merchantName?.contains(query, ignoreCase = true) == true ||
-                receipt.ocrText?.contains(query, ignoreCase = true) == true
+                    receipt.ocrText?.contains(query, ignoreCase = true) == true
             }
         }
     }
@@ -360,37 +368,45 @@ class FakeImportRepository : ImportRepository {
 
     override suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int) {
         val job = jobs.value[id] ?: return
-        jobs.value = jobs.value + (id to job.copy(
-            importedCount = importedCount,
-            duplicatesSkipped = duplicatesSkipped,
-            errorsCount = errorsCount,
-            status = ImportStatus.IN_PROGRESS
-        ))
+        jobs.value = jobs.value + (
+            id to job.copy(
+                importedCount = importedCount,
+                duplicatesSkipped = duplicatesSkipped,
+                errorsCount = errorsCount,
+                status = ImportStatus.IN_PROGRESS
+            )
+            )
     }
 
     override suspend fun markCompleted(id: String, withErrors: Boolean) {
         val job = jobs.value[id] ?: return
-        jobs.value = jobs.value + (id to job.copy(
-            status = if (withErrors) ImportStatus.COMPLETED_WITH_ERRORS else ImportStatus.COMPLETED,
-            completedAt = Clock.System.now()
-        ))
+        jobs.value = jobs.value + (
+            id to job.copy(
+                status = if (withErrors) ImportStatus.COMPLETED_WITH_ERRORS else ImportStatus.COMPLETED,
+                completedAt = Clock.System.now()
+            )
+            )
     }
 
     override suspend fun markFailed(id: String, errorDetails: String) {
         val job = jobs.value[id] ?: return
-        jobs.value = jobs.value + (id to job.copy(
-            status = ImportStatus.FAILED,
-            errorDetails = errorDetails,
-            completedAt = Clock.System.now()
-        ))
+        jobs.value = jobs.value + (
+            id to job.copy(
+                status = ImportStatus.FAILED,
+                errorDetails = errorDetails,
+                completedAt = Clock.System.now()
+            )
+            )
     }
 
     override suspend fun markCancelled(id: String) {
         val job = jobs.value[id] ?: return
-        jobs.value = jobs.value + (id to job.copy(
-            status = ImportStatus.CANCELLED,
-            completedAt = Clock.System.now()
-        ))
+        jobs.value = jobs.value + (
+            id to job.copy(
+                status = ImportStatus.CANCELLED,
+                completedAt = Clock.System.now()
+            )
+            )
     }
 
     override suspend fun insertSourceFile(file: SourceFileEntity) {
@@ -616,12 +632,16 @@ class FakeKeyManager : KeyManager {
         initialized = true
         currentPassphrase = passphrase
         unlocked = true
-        return Result.success(RecoveryKey(listOf(
-            "abandon", "ability", "able", "about", "above", "absent",
-            "absorb", "abstract", "absurd", "abuse", "access", "accident",
-            "account", "accuse", "achieve", "acid", "acoustic", "acquire",
-            "across", "act", "action", "actor", "actress", "actual"
-        )))
+        return Result.success(
+            RecoveryKey(
+                listOf(
+                    "abandon", "ability", "able", "about", "above", "absent",
+                    "absorb", "abstract", "absurd", "abuse", "access", "accident",
+                    "account", "accuse", "achieve", "acid", "acoustic", "acquire",
+                    "across", "act", "action", "actor", "actress", "actual"
+                )
+            )
+        )
     }
 
     override suspend fun unlock(passphrase: String): Result<Unit> {
@@ -658,11 +678,13 @@ class FakeKeyManager : KeyManager {
     }
 
     override suspend fun exportForBackup(exportPassphrase: String): Result<BackupBundle> {
-        return Result.success(BackupBundle(
-            encryptedKek = ByteArray(32),
-            salt = ByteArray(16),
-            version = 1
-        ))
+        return Result.success(
+            BackupBundle(
+                encryptedKek = ByteArray(32),
+                salt = ByteArray(16),
+                version = 1
+            )
+        )
     }
 
     override suspend fun importFromBackup(
@@ -687,10 +709,7 @@ class FakeKeyManager : KeyManager {
         }
     }
 
-    override suspend fun changePassphrase(
-        currentPassphrase: String,
-        newPassphrase: String
-    ): Result<Unit> {
+    override suspend fun changePassphrase(currentPassphrase: String, newPassphrase: String): Result<Unit> {
         return if (shouldFailChangePassphrase) {
             Result.failure(Exception("Failed to change passphrase"))
         } else if (currentPassphrase != this.currentPassphrase) {
@@ -718,14 +737,16 @@ class FakeStatisticsRepository : StatisticsRepository {
     }
 
     override fun getMonthlyStats(year: Int, month: Int): Flow<MonthlyStats> {
-        return MutableStateFlow(MonthlyStats(
-            year = year,
-            month = month,
-            totalSpending = Money(-100000, "USD"),
-            totalIncome = Money(500000, "USD"),
-            netChange = Money(400000, "USD"),
-            transactionCount = 25
-        ))
+        return MutableStateFlow(
+            MonthlyStats(
+                year = year,
+                month = month,
+                totalSpending = Money(-100000, "USD"),
+                totalIncome = Money(500000, "USD"),
+                netChange = Money(400000, "USD"),
+                transactionCount = 25
+            )
+        )
     }
 
     override fun getMonthlyStatsList(
@@ -734,19 +755,23 @@ class FakeStatisticsRepository : StatisticsRepository {
         endYear: Int,
         endMonth: Int
     ): Flow<List<MonthlyStats>> {
-        return MutableStateFlow(listOf(
-            MonthlyStats(startYear, startMonth, Money(-80000, "USD"), Money(480000, "USD"), Money(400000, "USD"), 20),
-            MonthlyStats(endYear, endMonth, Money(-100000, "USD"), Money(500000, "USD"), Money(400000, "USD"), 25)
-        ))
+        return MutableStateFlow(
+            listOf(
+                MonthlyStats(startYear, startMonth, Money(-80000, "USD"), Money(480000, "USD"), Money(400000, "USD"), 20),
+                MonthlyStats(endYear, endMonth, Money(-100000, "USD"), Money(500000, "USD"), Money(400000, "USD"), 25)
+            )
+        )
     }
 
     override fun getCategoryBreakdown(year: Int, month: Int): Flow<List<CategorySpendingStats>> {
-        return MutableStateFlow(listOf(
-            CategorySpendingStats("groceries", "Groceries", "#4CAF50", Money(-40000, "USD"), 10, 0.4f),
-            CategorySpendingStats("dining", "Dining", "#FF9800", Money(-30000, "USD"), 8, 0.3f),
-            CategorySpendingStats("transportation", "Transportation", "#2196F3", Money(-20000, "USD"), 5, 0.2f),
-            CategorySpendingStats("utilities", "Utilities", "#9C27B0", Money(-10000, "USD"), 2, 0.1f)
-        ))
+        return MutableStateFlow(
+            listOf(
+                CategorySpendingStats("groceries", "Groceries", "#4CAF50", Money(-40000, "USD"), 10, 0.4f),
+                CategorySpendingStats("dining", "Dining", "#FF9800", Money(-30000, "USD"), 8, 0.3f),
+                CategorySpendingStats("transportation", "Transportation", "#2196F3", Money(-20000, "USD"), 5, 0.2f),
+                CategorySpendingStats("utilities", "Utilities", "#9C27B0", Money(-10000, "USD"), 2, 0.1f)
+            )
+        )
     }
 
     override fun getCategoryBreakdownForRange(
@@ -766,12 +791,14 @@ class FakeStatisticsRepository : StatisticsRepository {
             Money(390000, "USD"),
             22
         )
-        return MutableStateFlow(MonthComparison(
-            currentMonth = current,
-            previousMonth = previous,
-            spendingChangePercent = 11.1f,
-            incomeChangePercent = 4.2f
-        ))
+        return MutableStateFlow(
+            MonthComparison(
+                currentMonth = current,
+                previousMonth = previous,
+                spendingChangePercent = 11.1f,
+                incomeChangePercent = 4.2f
+            )
+        )
     }
 
     override fun getTopMerchants(
@@ -779,28 +806,34 @@ class FakeStatisticsRepository : StatisticsRepository {
         startDate: kotlinx.datetime.LocalDate?,
         endDate: kotlinx.datetime.LocalDate?
     ): Flow<List<TopMerchant>> {
-        return MutableStateFlow(listOf(
-            TopMerchant("WALMART", Money(-25000, "USD"), 5),
-            TopMerchant("AMAZON", Money(-20000, "USD"), 8),
-            TopMerchant("STARBUCKS", Money(-15000, "USD"), 12)
-        ))
+        return MutableStateFlow(
+            listOf(
+                TopMerchant("WALMART", Money(-25000, "USD"), 5),
+                TopMerchant("AMAZON", Money(-20000, "USD"), 8),
+                TopMerchant("STARBUCKS", Money(-15000, "USD"), 12)
+            )
+        )
     }
 
     override fun getDailySpending(year: Int, month: Int): Flow<Map<Int, Money>> {
-        return MutableStateFlow((1..28).associateWith { day ->
-            Money((-1000..(-5000)).random().toLong(), "USD")
-        })
+        return MutableStateFlow(
+            (1..28).associateWith { day ->
+                Money((-1000..(-5000)).random().toLong(), "USD")
+            }
+        )
     }
 
     override fun getYearToDateStats(year: Int): Flow<MonthlyStats> {
-        return MutableStateFlow(MonthlyStats(
-            year = year,
-            month = 0, // YTD
-            totalSpending = Money(-1200000, "USD"),
-            totalIncome = Money(6000000, "USD"),
-            netChange = Money(4800000, "USD"),
-            transactionCount = 300
-        ))
+        return MutableStateFlow(
+            MonthlyStats(
+                year = year,
+                month = 0, // YTD
+                totalSpending = Money(-1200000, "USD"),
+                totalIncome = Money(6000000, "USD"),
+                netChange = Money(4800000, "USD"),
+                transactionCount = 300
+            )
+        )
     }
 
     override fun getPendingReviewCount(): Flow<Int> = _pendingReviewCount

@@ -2,14 +2,14 @@ package com.ledgerlens.data.repositories.impl
 
 import app.cash.turbine.test
 import com.ledgerlens.db.LedgerLensDatabase
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 
 class SqlDelightStatisticsRepositoryTest {
     private lateinit var database: LedgerLensDatabase
@@ -72,7 +72,7 @@ class SqlDelightStatisticsRepositoryTest {
             val breakdown = awaitItem()
             // Categories should have percentage calculations
             if (breakdown.isNotEmpty() && breakdown.any { it.totalSpent.minorUnits > 0 }) {
-                val totalPercent = breakdown.sumOf { it.percentageOfTotal }
+                val totalPercent = breakdown.sumOf { it.percentageOfTotal.toDouble() }.toFloat()
                 assertTrue(totalPercent in 99f..101f) // Should sum to ~100%
             }
             cancelAndIgnoreRemainingEvents()

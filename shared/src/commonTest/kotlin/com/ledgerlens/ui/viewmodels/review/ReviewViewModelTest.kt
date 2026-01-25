@@ -3,6 +3,7 @@ package com.ledgerlens.ui.viewmodels.review
 import com.ledgerlens.categorization.pipeline.*
 import com.ledgerlens.data.repositories.fake.FakeTransactionRepository
 import com.ledgerlens.data.repositories.fake.TestDataFactory
+import kotlin.test.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -10,7 +11,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReviewViewModelTest {
@@ -27,11 +27,13 @@ class ReviewViewModelTest {
         transactionRepository = FakeTransactionRepository()
 
         // Seed test transactions
-        transactionRepository.setTransactions(listOf(
-            TestDataFactory.createTransaction(id = "tx-1", merchantNormalized = "WALMART", categoryId = "groceries"),
-            TestDataFactory.createTransaction(id = "tx-2", merchantNormalized = "STARBUCKS", categoryId = "dining"),
-            TestDataFactory.createTransaction(id = "tx-3", merchantNormalized = "UBER", categoryId = "transportation")
-        ))
+        transactionRepository.setTransactions(
+            listOf(
+                TestDataFactory.createTransaction(id = "tx-1", merchantNormalized = "WALMART", categoryId = "groceries"),
+                TestDataFactory.createTransaction(id = "tx-2", merchantNormalized = "STARBUCKS", categoryId = "dining"),
+                TestDataFactory.createTransaction(id = "tx-3", merchantNormalized = "UBER", categoryId = "transportation")
+            )
+        )
 
         // Seed review queue items
         seedReviewQueueItems()
@@ -63,7 +65,7 @@ class ReviewViewModelTest {
             action = CategorizationAction.QUEUE_FOR_REVIEW,
             stageResults = emptyMap(),
             processingTimeMs = 10,
-            usedStage = PipelineStage.ML_CLASSIFIER
+            usedStage = PipelineStage.ML_CLASSIFICATION
         )
 
         val features2 = TransactionFeatures(
@@ -89,7 +91,7 @@ class ReviewViewModelTest {
             action = CategorizationAction.QUEUE_FOR_REVIEW,
             stageResults = emptyMap(),
             processingTimeMs = 10,
-            usedStage = PipelineStage.ML_CLASSIFIER
+            usedStage = PipelineStage.ML_CLASSIFICATION
         )
 
         reviewQueueManager.enqueue("tx-1", features1, result1)
