@@ -21,6 +21,18 @@ data class CategoryCorrection(
      */
     val isActualCorrection: Boolean
         get() = oldCategoryId != newCategoryId
+
+    /**
+     * Returns true if the classifier was highly confident but still wrong.
+     * This indicates a potential systematic issue that may need rule adjustment.
+     */
+    val wasHighConfidenceMiss: Boolean
+        get() = isActualCorrection && confidence >= HIGH_CONFIDENCE_THRESHOLD
+
+    companion object {
+        /** Threshold above which a prediction is considered "high confidence" */
+        const val HIGH_CONFIDENCE_THRESHOLD = 0.85f
+    }
 }
 
 /**

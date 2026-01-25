@@ -1,17 +1,18 @@
 package com.ledgerlens.categorization.pipeline
 
-import com.ledgerlens.categorization.MerchantPriorProvider
-import com.ledgerlens.categorization.MerchantCategoryDistribution
-import com.ledgerlens.categorization.CategoryProbability
 import kotlin.test.*
 
 class CategorizationPipelineTest {
-    private fun createFeatures(merchant: String = "Test", description: String = "Test", amountCents: Long = -2500) = TransactionFeatures(
-        merchant, description, description.lowercase().split(" "), amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, 1, 15
-    )
+    private fun createFeatures(merchant: String = "Test", description: String = "Test", amountCents: Long = -2500) =
+        TransactionFeatures(
+            merchant, description, description.lowercase().split(" "), amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, 1, 15
+        )
 
-    private fun createPipeline(rules: List<ClassificationRule> = emptyList(), merchantPriorProvider: MerchantPriorProvider = EmptyMerchantPriorProvider, config: CategorizationConfig = CategorizationConfig.default()) =
-        CategorizationPipelineImpl(RuleBasedClassifier(rules), FallbackClassifier, merchantPriorProvider, config)
+    private fun createPipeline(
+        rules: List<ClassificationRule> = emptyList(),
+        merchantPriorProvider: MerchantPriorProvider = EmptyMerchantPriorProvider,
+        config: CategorizationConfig = CategorizationConfig.default()
+    ) = CategorizationPipelineImpl(RuleBasedClassifier(rules), FallbackClassifier, merchantPriorProvider, config)
 
     @Test fun `categorize returns unknown when no classifiers match`() {
         val result = createPipeline().categorize(createFeatures(), "tx-1")
@@ -28,7 +29,8 @@ class CategorizationPipelineTest {
 
     @Test fun `categorize uses merchant prior when confidence is high`() {
         val provider = object : MerchantPriorProvider {
-            override fun getDistribution(merchantId: String) = MerchantCategoryDistribution(merchantId, listOf(CategoryProbability("Groceries", 0.9f, 10, 10f)), 10, 10f)
+            override fun getDistribution(merchantId: String) =
+                MerchantCategoryDistribution(merchantId, listOf(CategoryProbability("Groceries", 0.9f, 10, 10f)), 10, 10f)
             override fun updatePrior(merchantId: String, categoryId: String) {}
         }
         val result = createPipeline(merchantPriorProvider = provider).categorize(createFeatures(), "tx-1")
@@ -37,7 +39,8 @@ class CategorizationPipelineTest {
     }
 
     @Test fun `categorize determines action based on confidence`() {
-        val rules = listOf(MerchantContainsRule("h", "C1", listOf("high"), 0.95f), MerchantContainsRule("m", "C2", listOf("med"), 0.7f), MerchantContainsRule("l", "C3", listOf("low"), 0.3f))
+        val rules =
+            listOf(MerchantContainsRule("h", "C1", listOf("high"), 0.95f), MerchantContainsRule("m", "C2", listOf("med"), 0.7f), MerchantContainsRule("l", "C3", listOf("low"), 0.3f))
         val pipeline = createPipeline(rules = rules)
         assertEquals(CategorizationAction.AUTO_APPLY, pipeline.categorize(createFeatures(merchant = "high"), "tx-1").action)
         assertEquals(CategorizationAction.SUGGEST, pipeline.categorize(createFeatures(merchant = "med"), "tx-2").action)
@@ -52,12 +55,15 @@ class CategorizationPipelineTest {
     }
 
     @Test fun `categorizeBatch processes multiple transactions`() {
-        val rules = listOf(MerchantContainsRule("r1", "Groceries", listOf("walmart"), 0.95f), MerchantContainsRule("r2", "Dining", listOf("starbucks"), 0.95f))
-        val results = createPipeline(rules = rules).categorizeBatch(listOf(
-            TransactionInput("tx-1", createFeatures(merchant = "walmart")),
-            TransactionInput("tx-2", createFeatures(merchant = "starbucks")),
-            TransactionInput("tx-3", createFeatures(merchant = "unknown"))
-        ))
+        val rules =
+            listOf(MerchantContainsRule("r1", "Groceries", listOf("walmart"), 0.95f), MerchantContainsRule("r2", "Dining", listOf("starbucks"), 0.95f))
+        val results = createPipeline(rules = rules).categorizeBatch(
+            listOf(
+                TransactionInput("tx-1", createFeatures(merchant = "walmart")),
+                TransactionInput("tx-2", createFeatures(merchant = "starbucks")),
+                TransactionInput("tx-3", createFeatures(merchant = "unknown"))
+            )
+        )
         assertEquals(3, results.size)
         assertEquals("Groceries", results[0].categoryId)
         assertEquals("Dining", results[1].categoryId)
@@ -81,19 +87,28 @@ class CategorizationPipelineTest {
 }
 
 class CategorizationConfigTest {
-    @Test fun `default config has valid thresholds`() { val c = CategorizationConfig.default(); assertTrue(c.highConfidenceThreshold > c.reviewThreshold) }
+    @Test fun `default config has valid thresholds`() {
+        val c = CategorizationConfig.default()
+        assertTrue(c.highConfidenceThreshold > c.reviewThreshold)
+    }
+
     @Test fun `determineAction returns correct action`() {
         val c = CategorizationConfig(highConfidenceThreshold = 0.85f, reviewThreshold = 0.5f)
         assertEquals(CategorizationAction.AUTO_APPLY, c.determineAction(0.9f))
         assertEquals(CategorizationAction.SUGGEST, c.determineAction(0.7f))
         assertEquals(CategorizationAction.QUEUE_FOR_REVIEW, c.determineAction(0.3f))
     }
+
     @Test fun `isStageEnabled returns correct value`() {
         val c = CategorizationConfig(enabledStages = setOf(PipelineStage.USER_RULES))
         assertTrue(c.isStageEnabled(PipelineStage.USER_RULES))
         assertFalse(c.isStageEnabled(PipelineStage.MERCHANT_PRIORS))
     }
-    @Test fun `toStrict increases thresholds`() { val c = CategorizationConfig.default(); assertTrue(c.toStrict().highConfidenceThreshold > c.highConfidenceThreshold) }
+
+    @Test fun `toStrict increases thresholds`() {
+        val c = CategorizationConfig.default()
+        assertTrue(c.toStrict().highConfidenceThreshold > c.highConfidenceThreshold)
+    }
 }
 
 class PipelineStageTest {
