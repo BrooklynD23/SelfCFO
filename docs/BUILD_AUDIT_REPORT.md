@@ -320,14 +320,18 @@ val totalPercent = breakdown.sumOf { it.percentageOfTotal.toDouble() }.toFloat()
 
 **Completed:** January 25, 2026
 
-### Phase 3: Structural Changes (Higher Complexity)
+### Phase 3: Structural Changes (Higher Complexity) ✅ COMPLETED
 
-| Priority | Issue | File | Fix |
-|----------|-------|------|-----|
-| 6 | T1 | TestDatabaseHelper.kt | Create expect/actual pattern |
-| 7 | T5 | FeedbackLoopTest.kt | Implement stub classes or skip tests |
+| Priority | Issue | File | Fix | Status |
+|----------|-------|------|-----|--------|
+| 6 | T1 | TestDatabaseHelper.kt | Create expect/actual pattern for JVM driver | ✅ Done |
+| 7 | T5 | FeedbackLoopTest.kt | Add stub classes + @Ignore annotation | ✅ Done |
 
-**Estimated Time:** 2-4 hours
+**Completed:** January 25, 2026
+
+**Notes:**
+- T1: Created `expect` declaration in commonTest, `actual` implementation in desktopTest
+- T5: Created `FeedbackLoopStubs.kt` with minimal stub implementations to allow compilation. Tests are @Ignored until real implementations are added.
 
 ---
 

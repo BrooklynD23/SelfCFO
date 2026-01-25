@@ -1,20 +1,16 @@
 package com.ledgerlens.data.repositories.impl
 
-import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.ledgerlens.db.LedgerLensDatabase
 
 /**
  * Helper class for creating in-memory test databases.
+ * Platform-specific implementations provide the actual driver.
  */
-object TestDatabaseHelper {
+expect object TestDatabaseHelper {
     /**
      * Creates an in-memory LedgerLensDatabase for testing.
      */
-    fun createInMemoryDatabase(): LedgerLensDatabase {
-        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        LedgerLensDatabase.Schema.create(driver)
-        return LedgerLensDatabase(driver)
-    }
+    fun createInMemoryDatabase(): LedgerLensDatabase
 }
 
 /**
