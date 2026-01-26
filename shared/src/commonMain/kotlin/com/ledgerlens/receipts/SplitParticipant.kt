@@ -16,7 +16,11 @@ data class SplitParticipant(
 
     fun settle(amount: Long = allocatedAmount): SplitParticipant {
         val newPaidAmount = paidAmount + amount
-        val newStatus = when { newPaidAmount >= allocatedAmount -> SettlementStatus.SETTLED; newPaidAmount > 0 -> SettlementStatus.PARTIAL; else -> SettlementStatus.PENDING }
+        val newStatus = when {
+            newPaidAmount >= allocatedAmount -> SettlementStatus.SETTLED
+            newPaidAmount > 0 -> SettlementStatus.PARTIAL
+            else -> SettlementStatus.PENDING
+        }
         return copy(paidAmount = newPaidAmount, status = newStatus)
     }
 
@@ -26,7 +30,11 @@ data class SplitParticipant(
         fun create(participant: Participant, amount: Long, currencyCode: String = "USD") =
             SplitParticipant(participantId = participant.id, participant = participant, allocatedAmount = amount, currencyCode = currencyCode)
 
-        fun equalSplit(participants: List<Participant>, totalAmount: Long, currencyCode: String = "USD"): List<SplitParticipant> {
+        fun equalSplit(
+            participants: List<Participant>,
+            totalAmount: Long,
+            currencyCode: String = "USD"
+        ): List<SplitParticipant> {
             if (participants.isEmpty()) return emptyList()
             val baseAmount = totalAmount / participants.size
             val remainder = totalAmount % participants.size

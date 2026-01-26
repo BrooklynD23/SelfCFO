@@ -20,10 +20,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
@@ -36,7 +34,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -48,10 +45,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ledgerlens.ui.components.EmptyState
 import com.ledgerlens.ui.components.ErrorState
@@ -67,6 +62,7 @@ import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
 @Composable
 fun TransactionsScreen(
     viewModel: TransactionsViewModel,
+    showBackButton: Boolean = false,
     onNavigateBack: () -> Unit = {},
     onNavigateToDetail: (String) -> Unit = {}
 ) {
@@ -84,6 +80,7 @@ fun TransactionsScreen(
                 )
             } else {
                 TransactionsTopBar(
+                    showBackButton = showBackButton,
                     onNavigateBack = onNavigateBack,
                     onSearchClick = { showSearchBar = true },
                     onFilterClick = { /* TODO: Show filter dialog */ },
@@ -143,6 +140,7 @@ fun TransactionsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TransactionsTopBar(
+    showBackButton: Boolean,
     onNavigateBack: () -> Unit,
     onSearchClick: () -> Unit,
     onFilterClick: () -> Unit,
@@ -151,13 +149,17 @@ private fun TransactionsTopBar(
 ) {
     TopAppBar(
         title = { Text("Transactions") },
-        navigationIcon = {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
-                )
+        navigationIcon = if (showBackButton) {
+            {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
             }
+        } else {
+            {}
         },
         actions = {
             IconButton(onClick = onSearchClick) {
@@ -231,11 +233,7 @@ private fun SelectionModeTopBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchBarSection(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClose: () -> Unit
-) {
+private fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

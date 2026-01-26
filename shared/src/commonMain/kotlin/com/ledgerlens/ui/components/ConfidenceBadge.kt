@@ -100,10 +100,7 @@ fun ConfidenceBadge(
 }
 
 @Composable
-private fun ConfidenceDot(
-    color: Color,
-    modifier: Modifier = Modifier
-) {
+private fun ConfidenceDot(color: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(8.dp)
@@ -131,7 +128,7 @@ private fun ConfidencePill(
         verticalAlignment = Alignment.CenterVertically
     ) {
         ConfidenceDot(color = color)
-        
+
         if (showLabel) {
             Text(
                 text = confidenceLevel.displayName,
@@ -143,11 +140,7 @@ private fun ConfidencePill(
 }
 
 @Composable
-private fun ConfidenceText(
-    confidenceLevel: ConfidenceLevel,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
+private fun ConfidenceText(confidenceLevel: ConfidenceLevel, color: Color, modifier: Modifier = Modifier) {
     Text(
         text = confidenceLevel.displayName,
         modifier = modifier,
@@ -157,11 +150,7 @@ private fun ConfidenceText(
 }
 
 @Composable
-private fun ConfidenceFull(
-    confidenceLevel: ConfidenceLevel,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
+private fun ConfidenceFull(confidenceLevel: ConfidenceLevel, color: Color, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(ShapePatterns.chip)
@@ -174,7 +163,7 @@ private fun ConfidenceFull(
         verticalAlignment = Alignment.CenterVertically
     ) {
         ConfidenceBar(confidenceLevel = confidenceLevel, color = color)
-        
+
         Text(
             text = "${confidenceLevel.displayName} (${(confidenceLevel.minScore * 100).toInt()}%+)",
             style = LedgerLensTheme.typography.labelMedium,
@@ -184,11 +173,7 @@ private fun ConfidenceFull(
 }
 
 @Composable
-private fun ConfidenceBar(
-    confidenceLevel: ConfidenceLevel,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
+private fun ConfidenceBar(confidenceLevel: ConfidenceLevel, color: Color, modifier: Modifier = Modifier) {
     val segments = when (confidenceLevel) {
         ConfidenceLevel.VERY_HIGH -> 5
         ConfidenceLevel.HIGH -> 4

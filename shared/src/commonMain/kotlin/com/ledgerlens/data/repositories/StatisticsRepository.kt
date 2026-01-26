@@ -59,12 +59,7 @@ interface StatisticsRepository {
     /**
      * Get statistics for a range of months.
      */
-    fun getMonthlyStatsList(
-        startYear: Int,
-        startMonth: Int,
-        endYear: Int,
-        endMonth: Int
-    ): Flow<List<MonthlyStats>>
+    fun getMonthlyStatsList(startYear: Int, startMonth: Int, endYear: Int, endMonth: Int): Flow<List<MonthlyStats>>
 
     /**
      * Get category spending breakdown for a month.
@@ -74,10 +69,7 @@ interface StatisticsRepository {
     /**
      * Get category spending breakdown for a date range.
      */
-    fun getCategoryBreakdownForRange(
-        startDate: LocalDate,
-        endDate: LocalDate
-    ): Flow<List<CategorySpendingStats>>
+    fun getCategoryBreakdownForRange(startDate: LocalDate, endDate: LocalDate): Flow<List<CategorySpendingStats>>
 
     /**
      * Get month-over-month comparison.

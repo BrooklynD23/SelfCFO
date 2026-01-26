@@ -104,21 +104,17 @@ class SqlDelightImportRepository(
         job.id
     }
 
-    override suspend fun updateProgress(
-        id: String,
-        importedCount: Int,
-        duplicatesSkipped: Int,
-        errorsCount: Int
-    ) = withContext(dispatcher) {
-        val total = importedCount + duplicatesSkipped + errorsCount
-        importJobQueries.updateCounts(
-            transactions_found = total.toLong(),
-            transactions_new = importedCount.toLong(),
-            transactions_dupe = duplicatesSkipped.toLong(),
-            transactions_error = errorsCount.toLong(),
-            id = id
-        )
-    }
+    override suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int) =
+        withContext(dispatcher) {
+            val total = importedCount + duplicatesSkipped + errorsCount
+            importJobQueries.updateCounts(
+                transactions_found = total.toLong(),
+                transactions_new = importedCount.toLong(),
+                transactions_dupe = duplicatesSkipped.toLong(),
+                transactions_error = errorsCount.toLong(),
+                id = id
+            )
+        }
 
     override suspend fun markCompleted(id: String, withErrors: Boolean) = withContext(dispatcher) {
         val now = Clock.System.now().toEpochMilliseconds()

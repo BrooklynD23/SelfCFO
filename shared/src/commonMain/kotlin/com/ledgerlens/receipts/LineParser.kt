@@ -1,8 +1,8 @@
 package com.ledgerlens.receipts
 
+import com.ledgerlens.domain.CurrencyMetadata
 import com.ledgerlens.domain.Money
 import com.ledgerlens.domain.MoneyParser
-import com.ledgerlens.domain.CurrencyMetadata
 
 /**
  * Parses individual receipt lines into item candidates.
@@ -10,7 +10,14 @@ import com.ledgerlens.domain.CurrencyMetadata
 object LineParser {
 
     sealed class ParseResult {
-        data class Item(val name: String, val quantity: Double, val unitPrice: Money?, val totalPrice: Money, val type: ReceiptItemType, val confidence: Double) : ParseResult()
+        data class Item(
+            val name: String,
+            val quantity: Double,
+            val unitPrice: Money?,
+            val totalPrice: Money,
+            val type: ReceiptItemType,
+            val confidence: Double
+        ) : ParseResult()
         data class PartialItem(val name: String?, val price: Money?, val possibleType: ReceiptItemType?) : ParseResult()
         object Empty : ParseResult()
         object Unparseable : ParseResult()
@@ -19,7 +26,8 @@ object LineParser {
     private val QUANTITY_AT_PRICE = Regex("""(\d+(?:\.\d+)?)\s*[@xX×]\s*\$?(\d+(?:\.\d{1,2})?)""")
     private val NAME_PRICE = Regex("""^(.+?)\s{2,}([−\-]?\$?\d+(?:\.\d{1,2})?)$""")
     private val PRICE_NAME = Regex("""^([−\-]?\$?\d+(?:\.\d{1,2})?)\s{2,}(.+?)$""")
-    private val FULL_LINE_ITEM = Regex("""^(\d+(?:\.\d+)?)\s+(.+?)\s*[@xX×]\s*\$?(\d+(?:\.\d{1,2})?)\s*[=]?\s*\$?(\d+(?:\.\d{1,2})?)$""")
+    private val FULL_LINE_ITEM =
+        Regex("""^(\d+(?:\.\d+)?)\s+(.+?)\s*[@xX×]\s*\$?(\d+(?:\.\d{1,2})?)\s*[=]?\s*\$?(\d+(?:\.\d{1,2})?)$""")
     private val PRICE_ONLY = Regex("""^\s*[−\-]?\$?\d+(?:\.\d{1,2})?\s*$""")
     private val PRICE_PATTERN = Regex("""[−\-]?\$?(\d{1,3}(?:,\d{3})*|\d+)(?:\.(\d{1,2}))?""")
 
@@ -31,7 +39,9 @@ object LineParser {
             val scale = CurrencyMetadata.getScale(currency)
             val minorUnits = MoneyParser.parseToMinorUnits(digits, scale)
             Money.fromMinorUnits(if (negative) -minorUnits else minorUnits, currency)
-        } catch (e: Exception) { null }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun extractPrices(text: String, currency: String): List<Money> =
@@ -39,7 +49,12 @@ object LineParser {
 
     fun parseLine(line: String, lineNumber: Int? = null, currency: String = "USD"): ParseResult {
         val trimmed = line.trim()
-        if (trimmed.isEmpty() || trimmed.length < 2 || trimmed.all { it == '-' || it == '=' || it == '*' || it == '_' }) return ParseResult.Empty
+        if (trimmed.isEmpty() || trimmed.length < 2 || trimmed.all {
+                it == '-' || it == '=' || it == '*' || it == '_'
+            }
+        ) {
+            return ParseResult.Empty
+        }
 
         FULL_LINE_ITEM.find(trimmed)?.let { match ->
             val (qty, name, unitPrice, totalPrice) = match.destructured
@@ -99,8 +114,9 @@ object LineParser {
                     results.add(ReceiptItem(finalName, result.quantity, result.unitPrice, result.totalPrice, result.type, null, result.confidence, line, lineNumber))
                 }
                 is ParseResult.PartialItem -> {
-                    if (result.name != null && result.price == null) pendingName = result.name
-                    else if (result.price != null && pendingName != null) {
+                    if (result.name != null && result.price == null) {
+                        pendingName = result.name
+                    } else if (result.price != null && pendingName != null) {
                         results.add(ReceiptItem(pendingName, 1.0, null, result.price, result.possibleType ?: ReceiptItemType.PRODUCT, null, 0.5, line, lineNumber))
                         pendingName = null
                     }

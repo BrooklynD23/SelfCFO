@@ -6,13 +6,6 @@ import com.ledgerlens.data.repositories.fake.TestDataFactory
 import com.ledgerlens.ui.viewmodels.transactions.TransactionFilters
 import com.ledgerlens.ui.viewmodels.transactions.TransactionsEvent
 import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,6 +14,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TransactionsViewModelTest {
@@ -36,21 +36,25 @@ class TransactionsViewModelTest {
         categoryRepository = FakeCategoryRepository()
 
         // Seed test data
-        categoryRepository.setCategories(listOf(
-            TestDataFactory.createCategory(id = "groceries", name = "Groceries"),
-            TestDataFactory.createCategory(id = "dining", name = "Dining"),
-            TestDataFactory.createCategory(id = "food", name = "Food"),
-            TestDataFactory.createCategory(id = "transport", name = "Transport"),
-            TestDataFactory.createCategory(id = "shopping", name = "Shopping")
-        ))
+        categoryRepository.setCategories(
+            listOf(
+                TestDataFactory.createCategory(id = "groceries", name = "Groceries"),
+                TestDataFactory.createCategory(id = "dining", name = "Dining"),
+                TestDataFactory.createCategory(id = "food", name = "Food"),
+                TestDataFactory.createCategory(id = "transport", name = "Transport"),
+                TestDataFactory.createCategory(id = "shopping", name = "Shopping")
+            )
+        )
 
-        transactionRepository.setTransactions(listOf(
-            TestDataFactory.createTransaction(id = "1", merchantNormalized = "WALMART", categoryId = "groceries", amountMinorUnits = -5000),
-            TestDataFactory.createTransaction(id = "2", merchantNormalized = "STARBUCKS", categoryId = "dining", amountMinorUnits = -450),
-            TestDataFactory.createTransaction(id = "3", merchantNormalized = "UBER", categoryId = "transport", amountMinorUnits = -1500),
-            TestDataFactory.createTransaction(id = "4", merchantNormalized = "SALARY", categoryId = null, amountMinorUnits = 500000, categoryConfidence = 0.3f),
-            TestDataFactory.createTransaction(id = "5", merchantNormalized = "UNCATEGORIZED", categoryId = null, categoryConfidence = null, isReviewed = false)
-        ))
+        transactionRepository.setTransactions(
+            listOf(
+                TestDataFactory.createTransaction(id = "1", merchantNormalized = "WALMART", categoryId = "groceries", amountMinorUnits = -5000),
+                TestDataFactory.createTransaction(id = "2", merchantNormalized = "STARBUCKS", categoryId = "dining", amountMinorUnits = -450),
+                TestDataFactory.createTransaction(id = "3", merchantNormalized = "UBER", categoryId = "transport", amountMinorUnits = -1500),
+                TestDataFactory.createTransaction(id = "4", merchantNormalized = "SALARY", categoryId = null, amountMinorUnits = 500000, categoryConfidence = 0.3f),
+                TestDataFactory.createTransaction(id = "5", merchantNormalized = "UNCATEGORIZED", categoryId = null, categoryConfidence = null, isReviewed = false)
+            )
+        )
     }
 
     @AfterTest
@@ -88,10 +92,12 @@ class TransactionsViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals("Starbucks", state.filters.searchQuery)
-        assertTrue(state.transactions.all {
-            it.displayMerchant.contains("Starbucks", ignoreCase = true) ||
-            it.description.contains("Starbucks", ignoreCase = true)
-        })
+        assertTrue(
+            state.transactions.all {
+                it.displayMerchant.contains("Starbucks", ignoreCase = true) ||
+                    it.description.contains("Starbucks", ignoreCase = true)
+            }
+        )
     }
 
     @Test

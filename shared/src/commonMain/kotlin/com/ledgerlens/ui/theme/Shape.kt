@@ -29,22 +29,32 @@ data class LedgerLensShapes(
 object ShapePatterns {
     val card: Shape = RoundedCornerShape(12.dp)
     val cardSmall: Shape = RoundedCornerShape(8.dp)
-    
+
     val button: Shape = RoundedCornerShape(8.dp)
     val buttonLarge: Shape = RoundedCornerShape(12.dp)
-    
+
     val chip: Shape = RoundedCornerShape(8.dp)
     val chipSmall: Shape = RoundedCornerShape(4.dp)
-    
+
     val textField: Shape = RoundedCornerShape(8.dp)
     val searchBar: Shape = RoundedCornerShape(24.dp)
-    
+
     val dialog: Shape = RoundedCornerShape(16.dp)
     val bottomSheet: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-    
+
     val avatar: Shape = RoundedCornerShape(percent = 50)
     val badge: Shape = RoundedCornerShape(4.dp)
-    
+
     val fab: Shape = RoundedCornerShape(16.dp)
     val fabSmall: Shape = RoundedCornerShape(12.dp)
+
+    // StitchUI-specific shapes
+    val insightCard: Shape = RoundedCornerShape(20.dp)
+    val pillarCard: Shape = RoundedCornerShape(16.dp)
+    val receiptCard: Shape = RoundedCornerShape(12.dp)
+    val riskBadge: Shape = RoundedCornerShape(4.dp)
+    val comparisonCard: Shape = RoundedCornerShape(16.dp)
+    val timeRangeButton: Shape = RoundedCornerShape(8.dp)
+    val chartContainer: Shape = RoundedCornerShape(16.dp)
+    val activityItem: Shape = RoundedCornerShape(12.dp)
 }

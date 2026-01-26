@@ -35,13 +35,10 @@ import com.ledgerlens.ui.viewmodels.receipts.SplitReceiptUiState
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SplitReceiptSheet(
-    viewModel: ReceiptsViewModel,
-    onDismiss: () -> Unit
-) {
+fun SplitReceiptSheet(viewModel: ReceiptsViewModel, onDismiss: () -> Unit) {
     val state by viewModel.splitState.collectAsState()
     var showAddParticipantDialog by remember { mutableStateOf(false) }
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -65,31 +62,31 @@ fun SplitReceiptSheet(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Close")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Participants section
             ParticipantsSection(
                 participants = state.participants,
                 onAddParticipant = { showAddParticipantDialog = true },
                 onRemoveParticipant = viewModel::removeParticipant
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Split type selector
             SplitTypeSelector(
                 selectedType = state.splitType,
                 onTypeSelected = viewModel::setSplitType
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Content based on split type
             when (state.splitType) {
                 SplitType.BY_ITEM -> {
@@ -114,14 +111,14 @@ fun SplitReceiptSheet(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Split summary
             SplitSummary(state = state)
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -133,7 +130,7 @@ fun SplitReceiptSheet(
                 ) {
                     Text("Cancel")
                 }
-                
+
                 Button(
                     onClick = viewModel::confirmSplit,
                     modifier = Modifier.weight(1f),
@@ -144,7 +141,7 @@ fun SplitReceiptSheet(
             }
         }
     }
-    
+
     // Add participant dialog
     if (showAddParticipantDialog) {
         AddParticipantDialog(
@@ -175,7 +172,7 @@ private fun ParticipantsSection(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
-            
+
             TextButton(onClick = onAddParticipant) {
                 Icon(
                     Icons.Default.PersonAdd,
@@ -186,9 +183,9 @@ private fun ParticipantsSection(
                 Text("Add")
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         if (participants.isEmpty()) {
             // TODO: Replace with LedgerLensCard
             Card(
@@ -233,10 +230,7 @@ private fun ParticipantsSection(
 }
 
 @Composable
-private fun ParticipantChip(
-    participant: Participant,
-    onRemove: () -> Unit
-) {
+private fun ParticipantChip(participant: Participant, onRemove: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = parseColor(participant.color).copy(alpha = 0.15f),
@@ -261,19 +255,19 @@ private fun ParticipantChip(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             Text(
                 text = participant.name,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             if (!participant.isSelf) {
                 Spacer(modifier = Modifier.width(4.dp))
-                
+
                 IconButton(
                     onClick = onRemove,
                     modifier = Modifier.size(20.dp)
@@ -291,19 +285,16 @@ private fun ParticipantChip(
 }
 
 @Composable
-private fun SplitTypeSelector(
-    selectedType: SplitType,
-    onTypeSelected: (SplitType) -> Unit
-) {
+private fun SplitTypeSelector(selectedType: SplitType, onTypeSelected: (SplitType) -> Unit) {
     Column {
         Text(
             text = "Split Method",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -315,7 +306,7 @@ private fun SplitTypeSelector(
                 onClick = { onTypeSelected(SplitType.BY_ITEM) },
                 modifier = Modifier.weight(1f)
             )
-            
+
             SplitTypeChip(
                 label = "Equal",
                 icon = Icons.Default.Balance,
@@ -323,7 +314,7 @@ private fun SplitTypeSelector(
                 onClick = { onTypeSelected(SplitType.EQUAL) },
                 modifier = Modifier.weight(1f)
             )
-            
+
             SplitTypeChip(
                 label = "Custom",
                 icon = Icons.Default.Edit,
@@ -347,9 +338,11 @@ private fun SplitTypeChip(
         modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        border = if (selected) 
-            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) 
-        else null
+        border = if (selected) {
+            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            null
+        }
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -371,13 +364,10 @@ private fun SplitTypeChip(
 }
 
 @Composable
-private fun ItemAssignmentList(
-    state: SplitReceiptUiState,
-    onToggleAssignment: (Int, String) -> Unit
-) {
+private fun ItemAssignmentList(state: SplitReceiptUiState, onToggleAssignment: (Int, String) -> Unit) {
     val receipt = state.receipt ?: return
     val items = receipt.productItems
-    
+
     if (items.isEmpty()) {
         Text(
             text = "No items to split",
@@ -386,16 +376,16 @@ private fun ItemAssignmentList(
         )
         return
     }
-    
+
     Column {
         Text(
             text = "Assign items to participants",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         LazyColumn(
             modifier = Modifier.heightIn(max = 300.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -440,7 +430,7 @@ private fun ItemAssignmentRow(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 // TODO: Replace with MoneyText
                 Text(
                     text = formatMoney(item.totalPrice),
@@ -448,32 +438,34 @@ private fun ItemAssignmentRow(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             if (participants.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     participants.forEach { participant ->
                         val isAssigned = participant.id in assignedParticipants
-                        
+
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isAssigned)
+                                    if (isAssigned) {
                                         parseColor(participant.color)
-                                    else
+                                    } else {
                                         MaterialTheme.colorScheme.surfaceVariant
+                                    }
                                 )
                                 .border(
                                     width = 2.dp,
-                                    color = if (isAssigned)
+                                    color = if (isAssigned) {
                                         parseColor(participant.color)
-                                    else
-                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                    } else {
+                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                    },
                                     shape = CircleShape
                                 )
                                 .clickable { onToggle(participant.id) },
@@ -498,7 +490,7 @@ private fun EqualSplitInfo(state: SplitReceiptUiState) {
     val receipt = state.receipt ?: return
     val total = receipt.totalAmount?.minorUnits ?: receipt.calculatedTotal.minorUnits
     val participantCount = state.participants.size
-    
+
     if (participantCount == 0) {
         Text(
             text = "Add participants to see the split",
@@ -507,10 +499,10 @@ private fun EqualSplitInfo(state: SplitReceiptUiState) {
         )
         return
     }
-    
+
     val perPerson = total / participantCount
     val remainder = total % participantCount
-    
+
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -526,9 +518,9 @@ private fun EqualSplitInfo(state: SplitReceiptUiState) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // TODO: Replace with MoneyText
             Text(
                 text = "$${perPerson / 100}.${(perPerson % 100).toString().padStart(2, '0')}",
@@ -536,11 +528,11 @@ private fun EqualSplitInfo(state: SplitReceiptUiState) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             if (remainder > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Remainder: ${remainder}¢ (assigned to first ${remainder} participants)",
+                    text = "Remainder: $remainder¢ (assigned to first $remainder participants)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -550,10 +542,7 @@ private fun EqualSplitInfo(state: SplitReceiptUiState) {
 }
 
 @Composable
-private fun CustomAmountsList(
-    state: SplitReceiptUiState,
-    onAmountChange: (String, Long) -> Unit
-) {
+private fun CustomAmountsList(state: SplitReceiptUiState, onAmountChange: (String, Long) -> Unit) {
     if (state.participants.isEmpty()) {
         Text(
             text = "Add participants to assign custom amounts",
@@ -562,25 +551,25 @@ private fun CustomAmountsList(
         )
         return
     }
-    
+
     Column {
         Text(
             text = "Enter custom amounts",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         state.participants.forEach { participant ->
-            var amountText by remember(participant.id) { 
+            var amountText by remember(participant.id) {
                 mutableStateOf(
-                    state.customAmounts[participant.id]?.let { 
-                        "%.2f".format(it / 100.0) 
+                    state.customAmounts[participant.id]?.let {
+                        "%.2f".format(it / 100.0)
                     } ?: ""
                 )
             }
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -602,15 +591,15 @@ private fun CustomAmountsList(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = participant.name,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { newValue ->
@@ -633,13 +622,10 @@ private fun CustomAmountsList(
 }
 
 @Composable
-private fun PercentageSplitList(
-    state: SplitReceiptUiState,
-    onPercentageChange: (String, Long) -> Unit
-) {
+private fun PercentageSplitList(state: SplitReceiptUiState, onPercentageChange: (String, Long) -> Unit) {
     val receipt = state.receipt ?: return
     val total = receipt.totalAmount?.minorUnits ?: receipt.calculatedTotal.minorUnits
-    
+
     if (state.participants.isEmpty()) {
         Text(
             text = "Add participants to set percentages",
@@ -648,22 +634,22 @@ private fun PercentageSplitList(
         )
         return
     }
-    
+
     Column {
         Text(
             text = "Set percentages",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         state.participants.forEach { participant ->
             val currentAmount = state.customAmounts[participant.id] ?: 0L
             val percentage = if (total > 0) (currentAmount * 100.0 / total).toInt() else 0
-            
+
             var sliderValue by remember(participant.id) { mutableStateOf(percentage.toFloat()) }
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -689,22 +675,22 @@ private fun PercentageSplitList(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         Text(
                             text = participant.name,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                    
+
                     Text(
                         text = "${sliderValue.toInt()}%",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Slider(
                     value = sliderValue,
                     onValueChange = { newValue ->
@@ -727,16 +713,17 @@ private fun SplitSummary(state: SplitReceiptUiState) {
     val total = receipt.totalAmount?.minorUnits ?: receipt.calculatedTotal.minorUnits
     val allocated = state.participants.sumOf { state.getParticipantTotal(it.id) }
     val remaining = total - allocated
-    
+
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (remaining == 0L)
+            containerColor = if (remaining == 0L) {
                 Color(0xFF4CAF50).copy(alpha = 0.1f)
-            else
+            } else {
                 MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            }
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -754,7 +741,7 @@ private fun SplitSummary(state: SplitReceiptUiState) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -769,9 +756,9 @@ private fun SplitSummary(state: SplitReceiptUiState) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            
+
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -782,7 +769,7 @@ private fun SplitSummary(state: SplitReceiptUiState) {
                     fontWeight = FontWeight.Medium,
                     color = if (remaining == 0L) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                 )
-                
+
                 if (remaining != 0L) {
                     Text(
                         text = "$${kotlin.math.abs(remaining) / 100}.${(kotlin.math.abs(remaining) % 100).toString().padStart(2, '0')}",
@@ -804,7 +791,7 @@ private fun AddParticipantDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var selectedColorIndex by remember { mutableStateOf(existingParticipants.size % Participant.DEFAULT_COLORS.size) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Participant") },
@@ -817,17 +804,17 @@ private fun AddParticipantDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Text(
                     text = "Color",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -847,9 +834,9 @@ private fun AddParticipantDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -909,5 +896,5 @@ private fun parseColor(hexColor: String): Color {
 private fun formatMoney(money: com.ledgerlens.domain.Money): String {
     val dollars = money.minorUnits / 100
     val cents = (money.minorUnits % 100).toString().padStart(2, '0')
-    return "$${dollars}.${cents}"
+    return "$$dollars.$cents"
 }

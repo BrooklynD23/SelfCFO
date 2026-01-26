@@ -72,9 +72,7 @@ object NavGraph {
  * Composable that observes navigation state and provides the current screen.
  */
 @Composable
-fun rememberNavigationState(
-    controller: NavigationController
-): NavigationState {
+fun rememberNavigationState(controller: NavigationController): NavigationState {
     var state by remember { mutableStateOf(controller.state) }
 
     DisposableEffect(controller) {
@@ -92,15 +90,12 @@ fun rememberNavigationState(
 
 /**
  * Navigation host composable that renders the current screen.
- * 
+ *
  * @param controller The navigation controller managing navigation state
  * @param screenContent Lambda that provides the content for each screen
  */
 @Composable
-fun NavHost(
-    controller: NavigationController,
-    screenContent: @Composable (Screen, NavigationActions) -> Unit
-) {
+fun NavHost(controller: NavigationController, screenContent: @Composable (Screen, NavigationActions) -> Unit) {
     val navState = rememberNavigationState(controller)
     val currentScreen = navState.currentScreen ?: Screen.Dashboard
 
@@ -121,10 +116,7 @@ data class NavDestination(
 class NavGraphBuilder {
     private val destinations = mutableMapOf<String, NavDestination>()
 
-    fun composable(
-        screen: Screen,
-        content: @Composable (NavigationActions) -> Unit
-    ) {
+    fun composable(screen: Screen, content: @Composable (NavigationActions) -> Unit) {
         destinations[screen.route] = NavDestination(screen, content)
     }
 

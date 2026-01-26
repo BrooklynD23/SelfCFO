@@ -17,11 +17,7 @@ object MoneyParser {
      * NOTE: If more fractional digits are provided than the currency `scale`,
      * apply `roundingMode` deterministically.
      */
-    fun parseToMinorUnits(
-        amountString: String,
-        scale: Int,
-        roundingMode: RoundingMode = RoundingMode.HALF_UP
-    ): Long {
+    fun parseToMinorUnits(amountString: String, scale: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): Long {
         require(scale >= 0) { "scale must be non-negative" }
 
         var text = amountString.trim()

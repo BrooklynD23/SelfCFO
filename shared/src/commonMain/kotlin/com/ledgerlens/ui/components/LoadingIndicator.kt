@@ -121,10 +121,7 @@ fun LoadingOverlay(
  * Inline loading indicator for buttons and small spaces.
  */
 @Composable
-fun LoadingIndicatorInline(
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onPrimary
-) {
+fun LoadingIndicatorInline(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.onPrimary) {
     CircularProgressIndicator(
         modifier = modifier.size(16.dp),
         color = color,
@@ -136,10 +133,7 @@ fun LoadingIndicatorInline(
  * Loading placeholder for content (skeleton).
  */
 @Composable
-fun LoadingPlaceholder(
-    modifier: Modifier = Modifier,
-    height: Dp = 20.dp
-) {
+fun LoadingPlaceholder(modifier: Modifier = Modifier, height: Dp = 20.dp) {
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -161,10 +155,7 @@ fun LoadingPlaceholder(
 }
 
 @Composable
-private fun CircularLoading(
-    size: LoadingSize,
-    color: Color
-) {
+private fun CircularLoading(size: LoadingSize, color: Color) {
     val (indicatorSize, strokeWidth) = when (size) {
         LoadingSize.SMALL -> 20.dp to 2.dp
         LoadingSize.MEDIUM -> 36.dp to 3.dp
@@ -179,9 +170,7 @@ private fun CircularLoading(
 }
 
 @Composable
-private fun LinearLoading(
-    color: Color
-) {
+private fun LinearLoading(color: Color) {
     LinearProgressIndicator(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,10 +180,7 @@ private fun LinearLoading(
 }
 
 @Composable
-private fun DotsLoading(
-    size: LoadingSize,
-    color: Color
-) {
+private fun DotsLoading(size: LoadingSize, color: Color) {
     val dotSize = when (size) {
         LoadingSize.SMALL -> 6.dp
         LoadingSize.MEDIUM -> 8.dp
@@ -202,7 +188,7 @@ private fun DotsLoading(
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "dots")
-    
+
     val delays = listOf(0, 150, 300)
     val alphas = delays.map { delay ->
         infiniteTransition.animateFloat(
@@ -236,10 +222,7 @@ private fun DotsLoading(
 }
 
 @Composable
-private fun PulsingLoading(
-    size: LoadingSize,
-    color: Color
-) {
+private fun PulsingLoading(size: LoadingSize, color: Color) {
     val circleSize = when (size) {
         LoadingSize.SMALL -> 24.dp
         LoadingSize.MEDIUM -> 40.dp

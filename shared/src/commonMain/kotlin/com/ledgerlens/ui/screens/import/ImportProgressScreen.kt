@@ -102,11 +102,7 @@ fun ImportProgressScreen(
 }
 
 @Composable
-private fun ImportProgressContent(
-    state: ImportUiState.Importing,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun ImportProgressContent(state: ImportUiState.Importing, onCancel: () -> Unit, modifier: Modifier = Modifier) {
     val animatedProgress by animateFloatAsState(
         targetValue = state.progress,
         animationSpec = tween(durationMillis = 300),
@@ -140,7 +136,7 @@ private fun ImportProgressContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
 
         // Percentage and status
@@ -189,11 +185,7 @@ private fun ImportProgressContent(
 }
 
 @Composable
-private fun ProgressStatCard(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
+private fun ProgressStatCard(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(

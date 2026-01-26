@@ -3,8 +3,8 @@ package com.ledgerlens.ui.app
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -216,10 +216,7 @@ private fun CenteredTopAppBar(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SimpleTopAppBar(
-    title: String,
-    modifier: Modifier = Modifier
-) {
+fun SimpleTopAppBar(title: String, modifier: Modifier = Modifier) {
     TopAppBar(
         title = {
             Text(

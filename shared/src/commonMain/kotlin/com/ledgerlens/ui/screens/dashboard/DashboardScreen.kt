@@ -1,5 +1,6 @@
 package com.ledgerlens.ui.screens.dashboard
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,51 +16,44 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-// PullToRefreshBox removed - not available in all Material3 versions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ledgerlens.ui.components.CategoryChip
-import com.ledgerlens.ui.components.CategoryChipSize
+import com.ledgerlens.ui.components.ActivityItem
+import com.ledgerlens.ui.components.ActivityItemData
+import com.ledgerlens.ui.components.ActivitySectionHeader
+import com.ledgerlens.ui.components.Avatar
+import com.ledgerlens.ui.components.AvatarSize
 import com.ledgerlens.ui.components.EmptyState
 import com.ledgerlens.ui.components.ErrorState
-import com.ledgerlens.ui.components.LedgerLensCard
-import com.ledgerlens.ui.components.LedgerLensElevatedCard
 import com.ledgerlens.ui.components.LoadingIndicator
-import com.ledgerlens.ui.components.MoneyText
-import com.ledgerlens.ui.components.MoneyTextLarge
-import com.ledgerlens.ui.components.MoneyTextSize
-import com.ledgerlens.ui.screens.transactions.TransactionItem
+import com.ledgerlens.ui.components.TimeRangeSelector
+import com.ledgerlens.ui.components.cards.PillarCard
+import com.ledgerlens.ui.components.cards.WeeklyInsightCard
+import com.ledgerlens.ui.components.charts.LineChart
+import com.ledgerlens.ui.components.charts.TimeRange
+import com.ledgerlens.ui.components.getEmojiForCategory
+import com.ledgerlens.ui.theme.LedgerLensTheme
 import com.ledgerlens.ui.viewmodels.dashboard.DashboardUiState
 import com.ledgerlens.ui.viewmodels.dashboard.DashboardViewModel
 
 /**
- * Dashboard screen showing monthly spending summary, recent transactions,
- * category breakdown, and quick actions.
+ * Dashboard screen with StitchUI design.
+ * Shows greeting, weekly insight, net worth chart, pillars, and recent activity.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,17 +63,12 @@ fun DashboardScreen(
     onNavigateToReview: () -> Unit = {},
     onNavigateToTransactions: () -> Unit = {},
     onNavigateToTransactionDetail: (String) -> Unit = {},
-    onNavigateToCategory: (String) -> Unit = {}
+    onNavigateToCategory: (String) -> Unit = {},
+    onNavigateToResources: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Dashboard") }
-            )
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         DashboardContent(
             uiState = uiState,
             onRefresh = viewModel::refreshData,
@@ -88,6 +77,7 @@ fun DashboardScreen(
             onViewAllTransactionsClick = onNavigateToTransactions,
             onTransactionClick = onNavigateToTransactionDetail,
             onCategoryClick = onNavigateToCategory,
+            onTimeRangeSelected = viewModel::selectTimeRange,
             onRetry = viewModel::loadDashboardData,
             onDismissError = viewModel::dismissError,
             modifier = Modifier.padding(paddingValues)
@@ -105,10 +95,15 @@ private fun DashboardContent(
     onViewAllTransactionsClick: () -> Unit,
     onTransactionClick: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
+    onTimeRangeSelected: (TimeRange) -> Unit,
     onRetry: () -> Unit,
     onDismissError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LedgerLensTheme.colors
+    val typography = LedgerLensTheme.typography
+    val spacing = LedgerLensTheme.spacing
+
     when {
         uiState.isLoading -> {
             Box(
@@ -140,65 +135,66 @@ private fun DashboardContent(
                         strokeWidth = 2.dp
                     )
                 }
+
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    // Monthly Summary Card
+                    // 1. Greeting Section
                     item {
-                        MonthlySummaryCard(
-                            monthLabel = uiState.currentMonthLabel,
-                            totalSpending = uiState.totalSpendingThisMonth,
-                            totalIncome = uiState.totalIncomeThisMonth,
-                            netChange = uiState.netChangeThisMonth
+                        GreetingSection(
+                            greeting = uiState.greeting,
+                            userName = uiState.userName
                         )
                     }
 
-                    // Quick Actions
-                    item {
-                        QuickActionsRow(
-                            pendingReviewCount = uiState.pendingReviewCount,
-                            uncategorizedCount = uiState.uncategorizedCount,
-                            onImportClick = onImportClick,
-                            onReviewClick = onReviewClick
-                        )
-                    }
-
-                    // Category Breakdown
-                    if (uiState.categoryBreakdown.isNotEmpty()) {
+                    // 2. Weekly Insight Card
+                    uiState.weeklyInsight?.let { insight ->
                         item {
-                            CategoryBreakdownSection(
-                                categories = uiState.categoryBreakdown,
-                                onCategoryClick = onCategoryClick
+                            WeeklyInsightCard(
+                                insight = insight,
+                                onClick = onReviewClick
                             )
                         }
                     }
 
-                    // Recent Transactions Header
+                    // 3. Net Worth Section
                     item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Recent Transactions",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                        NetWorthSection(
+                            totalNetWorth = uiState.totalNetWorth.formatted(),
+                            netWorthHistory = uiState.netWorthHistory,
+                            selectedTimeRange = uiState.selectedTimeRange,
+                            onTimeRangeSelected = onTimeRangeSelected
+                        )
+                    }
+
+                    // 4. Pillars Section
+                    if (uiState.pillars.isNotEmpty()) {
+                        item {
+                            PillarsSection(
+                                pillars = uiState.pillars
                             )
-                            TextButton(onClick = onViewAllTransactionsClick) {
-                                Text("View All")
-                                Spacer(Modifier.width(4.dp))
-                                Icon(
-                                    imageVector = Icons.Default.ArrowForward,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
                         }
                     }
 
-                    // Recent Transactions List
+                    // 5. Recent Activity Section
+                    item {
+                        ActivitySectionHeader(
+                            title = "Recent Activity",
+                            action = {
+                                TextButton(onClick = onViewAllTransactionsClick) {
+                                    Text("View All")
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForward,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        )
+                    }
+
                     if (uiState.recentTransactions.isEmpty()) {
                         item {
                             EmptyState(
@@ -213,16 +209,25 @@ private fun DashboardContent(
                             items = uiState.recentTransactions,
                             key = { it.id }
                         ) { transaction ->
-                            TransactionItem(
-                                transaction = transaction,
+                            val activityData = ActivityItemData(
+                                id = transaction.id,
+                                emoji = getEmojiForCategory(transaction.category?.name ?: "unknown"),
+                                title = transaction.normalizedMerchant ?: transaction.merchantName,
+                                subtitle = transaction.category?.name ?: "Uncategorized",
+                                amount = transaction.amount.formatted(),
+                                isPositive = transaction.amount.isPositive,
+                                timestamp = transaction.date
+                            )
+                            ActivityItem(
+                                data = activityData,
                                 onClick = { onTransactionClick(transaction.id) }
                             )
                         }
                     }
 
-                    // Bottom spacing
+                    // Bottom spacing for bottom nav
                     item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }
@@ -231,235 +236,137 @@ private fun DashboardContent(
 }
 
 @Composable
-private fun MonthlySummaryCard(
-    monthLabel: String,
-    totalSpending: com.ledgerlens.domain.Money,
-    totalIncome: com.ledgerlens.domain.Money,
-    netChange: com.ledgerlens.domain.Money,
+private fun GreetingSection(
+    greeting: String,
+    userName: String,
     modifier: Modifier = Modifier
 ) {
-    LedgerLensElevatedCard(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = monthLabel,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    val colors = LedgerLensTheme.colors
+    val typography = LedgerLensTheme.typography
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Spending
-            Column {
-                Text(
-                    text = "Spent",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                MoneyTextLarge(
-                    money = totalSpending.abs(),
-                    colored = false
-                )
-            }
-
-            // Income
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "Income",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                MoneyTextLarge(
-                    money = totalIncome,
-                    colored = true
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Net Change
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Net: ",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            MoneyText(
-                money = netChange,
-                size = MoneyTextSize.LARGE,
-                showSign = true
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun QuickActionsRow(
-    pendingReviewCount: Int,
-    uncategorizedCount: Int,
-    onImportClick: () -> Unit,
-    onReviewClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Import Button
-        Button(
-            onClick = onImportClick,
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text("Import")
-        }
-
-        // Review Button with badge
-        val totalPending = pendingReviewCount + uncategorizedCount
-        if (totalPending > 0) {
-            BadgedBox(
-                badge = {
-                    Badge {
-                        Text(totalPending.toString())
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                FilledTonalButton(
-                    onClick = onReviewClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Review")
-                }
-            }
-        } else {
-            OutlinedButton(
-                onClick = onReviewClick,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("All Clear")
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryBreakdownSection(
-    categories: List<CategoryBreakdownUiModel>,
-    onCategoryClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = "Spending by Category",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Category chips in horizontal scroll
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(
-                items = categories,
-                key = { it.category.id }
-            ) { breakdown ->
-                CategoryBreakdownChip(
-                    breakdown = breakdown,
-                    onClick = { onCategoryClick(breakdown.category.id) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Simple bar representation
-        LedgerLensCard(modifier = Modifier.fillMaxWidth()) {
-            categories.forEach { breakdown ->
-                CategoryProgressRow(breakdown = breakdown)
-                if (breakdown != categories.last()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryBreakdownChip(
-    breakdown: CategoryBreakdownUiModel,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    CategoryChip(
-        category = breakdown.category,
-        size = CategoryChipSize.MEDIUM,
-        onClick = onClick,
-        modifier = modifier
-    )
-}
-
-@Composable
-private fun CategoryProgressRow(
-    breakdown: CategoryBreakdownUiModel,
-    modifier: Modifier = Modifier
-) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
+        Column {
             Text(
-                text = breakdown.category.name,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                text = "$greeting,",
+                style = typography.titleMedium,
+                color = colors.onSurfaceVariant
             )
             Text(
-                text = "${(breakdown.percentage * 100).toInt()}%",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = userName,
+                style = typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.onSurface
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        MoneyText(
-            money = breakdown.amount.abs(),
-            size = MoneyTextSize.SMALL
+        Avatar(
+            name = userName,
+            size = AvatarSize.LARGE
         )
     }
 }
+
+@Composable
+private fun NetWorthSection(
+    totalNetWorth: String,
+    netWorthHistory: List<com.ledgerlens.ui.components.charts.ChartDataPoint>,
+    selectedTimeRange: TimeRange,
+    onTimeRangeSelected: (TimeRange) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LedgerLensTheme.colors
+    val typography = LedgerLensTheme.typography
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Header with amount and time range selector
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column {
+                Text(
+                    text = "Net Worth",
+                    style = typography.labelLarge,
+                    color = colors.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = totalNetWorth,
+                    style = typography.dataLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.onSurface
+                )
+            }
+
+            TimeRangeSelector(
+                selectedRange = selectedTimeRange,
+                onRangeSelected = onTimeRangeSelected
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Chart
+        if (netWorthHistory.isNotEmpty()) {
+            LineChart(
+                dataPoints = netWorthHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PillarsSection(
+    pillars: List<com.ledgerlens.ui.components.cards.PillarData>,
+    modifier: Modifier = Modifier
+) {
+    val typography = LedgerLensTheme.typography
+    val colors = LedgerLensTheme.colors
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Financial Pillars",
+            style = typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            pillars.forEach { pillar ->
+                PillarCard(data = pillar)
+            }
+        }
+    }
+}
+
+// Keep legacy models for backward compatibility
+data class TransactionUiModel(
+    val id: String,
+    val date: String,
+    val merchantName: String,
+    val normalizedMerchant: String?,
+    val description: String?,
+    val amount: com.ledgerlens.domain.Money,
+    val category: com.ledgerlens.categorization.Category?,
+    val categoryConfidence: Float
+)
+
+data class CategoryBreakdownUiModel(
+    val category: com.ledgerlens.categorization.Category,
+    val amount: com.ledgerlens.domain.Money,
+    val transactionCount: Int,
+    val percentage: Float
+)

@@ -8,7 +8,6 @@ import com.ledgerlens.data.repositories.Transaction
 import com.ledgerlens.data.repositories.TransactionFilter
 import com.ledgerlens.data.repositories.TransactionRepository
 import com.ledgerlens.db.LedgerLensDatabase
-import com.ledgerlens.domain.Money
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -106,10 +105,7 @@ class SqlDelightTransactionRepository(
             .map { list -> list.map(TransactionMapper::toDomain) }
     }
 
-    override fun getTransactionsByDateRange(
-        startDate: LocalDate,
-        endDate: LocalDate
-    ): Flow<List<Transaction>> {
+    override fun getTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Transaction>> {
         val startMillis = TransactionMapper.localDateToEpochMillis(startDate)
         val endMillis = TransactionMapper.localDateToEpochMillis(endDate) + (24 * 60 * 60 * 1000 - 1)
         return viewsQueries.selectByDateRange(startMillis, endMillis)
@@ -145,8 +141,11 @@ class SqlDelightTransactionRepository(
         transactionOverrideQueries.upsert(
             transaction_id = transaction.id,
             category_id = transaction.categoryId,
-            merchant_override = if (transaction.merchantDisplay != transaction.merchantNormalized)
-                transaction.merchantDisplay else null,
+            merchant_override = if (transaction.merchantDisplay != transaction.merchantNormalized) {
+                transaction.merchantDisplay
+            } else {
+                null
+            },
             notes = transaction.notes.takeIf { it.isNotBlank() },
             tags = TransactionMapper.tagsToJson(transaction.tags),
             is_excluded = if (transaction.isExcluded) 1L else 0L,
@@ -163,17 +162,13 @@ class SqlDelightTransactionRepository(
         markAsExcluded(id, true)
     }
 
-    override suspend fun updateCategory(
-        transactionId: String,
-        categoryId: String,
-        confidence: Float,
-        reason: String
-    ) = withContext(dispatcher) {
-        val now = Clock.System.now().toEpochMilliseconds()
-        // First ensure override record exists, then update category
-        ensureOverrideExists(transactionId, now)
-        transactionOverrideQueries.updateCategory(categoryId, now, transactionId)
-    }
+    override suspend fun updateCategory(transactionId: String, categoryId: String, confidence: Float, reason: String) =
+        withContext(dispatcher) {
+            val now = Clock.System.now().toEpochMilliseconds()
+            // First ensure override record exists, then update category
+            ensureOverrideExists(transactionId, now)
+            transactionOverrideQueries.updateCategory(categoryId, now, transactionId)
+        }
 
     override suspend fun markAsReviewed(transactionId: String) = withContext(dispatcher) {
         val now = Clock.System.now().toEpochMilliseconds()

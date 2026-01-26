@@ -76,7 +76,7 @@ class FactorCollection(
     factors: List<ExplanationFactor> = emptyList()
 ) {
     private val _factors = factors.toMutableList()
-    
+
     val factors: List<ExplanationFactor> get() = _factors.toList()
     val size: Int get() = _factors.size
     val isEmpty: Boolean get() = _factors.isEmpty()
@@ -134,14 +134,12 @@ class FactorCollection(
     /**
      * Filter factors by reason type.
      */
-    fun filterByReason(reason: ExplanationReason): List<ExplanationFactor> =
-        _factors.filter { it.reason == reason }
+    fun filterByReason(reason: ExplanationReason): List<ExplanationFactor> = _factors.filter { it.reason == reason }
 
     /**
      * Check if collection contains a specific reason type.
      */
-    fun hasReason(reason: ExplanationReason): Boolean =
-        _factors.any { it.reason == reason }
+    fun hasReason(reason: ExplanationReason): Boolean = _factors.any { it.reason == reason }
 
     companion object {
         fun of(vararg factors: ExplanationFactor) = FactorCollection(factors.toList())

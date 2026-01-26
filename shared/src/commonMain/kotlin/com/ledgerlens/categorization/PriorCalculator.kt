@@ -1,7 +1,7 @@
 package com.ledgerlens.categorization
 
-import kotlin.math.ln
 import kotlin.math.exp
+import kotlin.math.ln
 
 /**
  * Calculates Bayesian priors and probability distributions for categories.
@@ -53,12 +53,9 @@ class PriorCalculator(
     /**
      * Calculate log-probabilities for numerical stability in classification.
      */
-    fun calculateLogProbabilities(
-        prior: MerchantPrior,
-        allCategoryIds: Set<String>? = null
-    ): Map<String, Double> {
+    fun calculateLogProbabilities(prior: MerchantPrior, allCategoryIds: Set<String>? = null): Map<String, Double> {
         val distribution = calculateProbabilities(prior, allCategoryIds)
-        return distribution.probabilities.associate { 
+        return distribution.probabilities.associate {
             it.categoryId to ln(it.probability.toDouble().coerceAtLeast(1e-10))
         }
     }
@@ -71,16 +68,13 @@ class PriorCalculator(
      * @param currentTimeMs Current time for decay calculation
      * @return Combined prior
      */
-    fun combinePriors(
-        priors: List<MerchantPrior>,
-        currentTimeMs: Long = System.currentTimeMillis()
-    ): MerchantPrior? {
+    fun combinePriors(priors: List<MerchantPrior>, currentTimeMs: Long = System.currentTimeMillis()): MerchantPrior? {
         if (priors.isEmpty()) return null
         if (priors.size == 1) return priors.first()
 
         val merchantId = priors.first().merchantId
-        require(priors.all { it.merchantId == merchantId }) { 
-            "All priors must be for the same merchant" 
+        require(priors.all { it.merchantId == merchantId }) {
+            "All priors must be for the same merchant"
         }
 
         val combinedCounts = mutableMapOf<String, Int>()
@@ -91,7 +85,9 @@ class PriorCalculator(
         for (prior in priors) {
             val weight = if (decayFactor < 1.0f) {
                 calculateDecayWeight(prior.lastUpdatedMs, currentTimeMs)
-            } else 1.0f
+            } else {
+                1.0f
+            }
 
             for ((categoryId, count) in prior.categoryCounts) {
                 val weightedCount = (count * weight).toInt().coerceAtLeast(if (count > 0) 1 else 0)
@@ -131,7 +127,7 @@ class PriorCalculator(
         }
 
         val mostLikely = distribution.mostLikelyCategory ?: return 0.0f
-        
+
         // Factor 1: Raw probability
         val probFactor = mostLikely.probability
 
@@ -143,7 +139,9 @@ class PriorCalculator(
         val maxEntropy = ln(distribution.probabilities.size.toFloat().coerceAtLeast(2f))
         val entropyFactor = if (maxEntropy > 0) {
             1 - (distribution.entropy / maxEntropy).coerceIn(0f, 1f)
-        } else 1f
+        } else {
+            1f
+        }
 
         return (probFactor * 0.5f + obsFactor * 0.25f + entropyFactor * 0.25f)
             .coerceIn(0f, 1f)

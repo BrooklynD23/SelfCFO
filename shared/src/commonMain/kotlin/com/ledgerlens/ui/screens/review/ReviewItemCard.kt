@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -179,10 +178,7 @@ fun ReviewItemCard(
 }
 
 @Composable
-private fun ReviewTypeBadge(
-    reviewType: ReviewType,
-    modifier: Modifier = Modifier
-) {
+private fun ReviewTypeBadge(reviewType: ReviewType, modifier: Modifier = Modifier) {
     val (text, color) = when (reviewType) {
         ReviewType.LOW_CONFIDENCE -> "Low Confidence" to Color(0xFFFFA726) // TODO: Use theme
         ReviewType.POSSIBLE_DUPLICATE -> "Duplicate?" to Color(0xFFE57373) // TODO: Use theme
@@ -273,17 +269,13 @@ private fun SuggestedCategoryRow(
                 .fillMaxWidth()
                 .height(4.dp),
             color = confidenceColor,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 }
 
 @Composable
-private fun DuplicateWarning(
-    similarity: Int,
-    existingDate: String,
-    modifier: Modifier = Modifier
-) {
+private fun DuplicateWarning(similarity: Int, existingDate: String, modifier: Modifier = Modifier) {
     Surface(
         color = Color(0xFFFFF3E0), // TODO: Use theme warningContainer
         shape = MaterialTheme.shapes.small,
@@ -310,10 +302,7 @@ private fun DuplicateWarning(
 }
 
 @Composable
-private fun ProcessedStatusRow(
-    status: ReviewItemStatus,
-    modifier: Modifier = Modifier
-) {
+private fun ProcessedStatusRow(status: ReviewItemStatus, modifier: Modifier = Modifier) {
     val (text, color) = when (status) {
         ReviewItemStatus.ACCEPTED -> "Accepted" to Color(0xFF4CAF50)
         ReviewItemStatus.REJECTED -> "Rejected" to MaterialTheme.colorScheme.error

@@ -55,21 +55,25 @@ class CategoryTreeTest {
 
     @Test
     fun `findById returns correct node`() {
-        val tree = CategoryTree.build(listOf(
-            Category(id = "food", name = "Food", parentId = null),
-            Category(id = "groceries", name = "Groceries", parentId = "food")
-        ))
+        val tree = CategoryTree.build(
+            listOf(
+                Category(id = "food", name = "Food", parentId = null),
+                Category(id = "groceries", name = "Groceries", parentId = "food")
+            )
+        )
         assertNotNull(tree.findById("groceries"))
         assertNull(tree.findById("nonexistent"))
     }
 
     @Test
     fun `getPath returns correct path`() {
-        val tree = CategoryTree.build(listOf(
-            Category(id = "exp", name = "Expenses", parentId = null),
-            Category(id = "food", name = "Food", parentId = "exp"),
-            Category(id = "groc", name = "Groceries", parentId = "food")
-        ))
+        val tree = CategoryTree.build(
+            listOf(
+                Category(id = "exp", name = "Expenses", parentId = null),
+                Category(id = "food", name = "Food", parentId = "exp"),
+                Category(id = "groc", name = "Groceries", parentId = "food")
+            )
+        )
         val path = tree.getPath("groc")
         assertEquals(3, path.size)
         assertEquals("exp", path[0].id)
@@ -78,10 +82,12 @@ class CategoryTreeTest {
 
     @Test
     fun `getLeafCategories returns only leaves`() {
-        val tree = CategoryTree.build(listOf(
-            Category(id = "food", name = "Food", parentId = null),
-            Category(id = "groc", name = "Groceries", parentId = "food")
-        ))
+        val tree = CategoryTree.build(
+            listOf(
+                Category(id = "food", name = "Food", parentId = null),
+                Category(id = "groc", name = "Groceries", parentId = "food")
+            )
+        )
         val leaves = tree.getLeafCategories()
         assertEquals(1, leaves.size)
         assertEquals("groc", leaves[0].id)
@@ -89,11 +95,13 @@ class CategoryTreeTest {
 
     @Test
     fun `canAddChild respects max depth`() {
-        val tree = CategoryTree.build(listOf(
-            Category(id = "l0", name = "L0", parentId = null),
-            Category(id = "l1", name = "L1", parentId = "l0"),
-            Category(id = "l2", name = "L2", parentId = "l1")
-        ))
+        val tree = CategoryTree.build(
+            listOf(
+                Category(id = "l0", name = "L0", parentId = null),
+                Category(id = "l1", name = "L1", parentId = "l0"),
+                Category(id = "l2", name = "L2", parentId = "l1")
+            )
+        )
         assertFalse(tree.canAddChild("l2"))
         assertTrue(tree.canAddChild("l1"))
     }

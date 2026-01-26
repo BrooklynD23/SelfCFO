@@ -23,7 +23,16 @@ class ParticipantException(message: String, cause: Throwable? = null) : Exceptio
 sealed class ParticipantResult<out T> {
     data class Success<T>(val value: T) : ParticipantResult<T>()
     data class Failure(val error: ParticipantException) : ParticipantResult<Nothing>()
-    inline fun <R> map(transform: (T) -> R): ParticipantResult<R> = when (this) { is Success -> Success(transform(value)); is Failure -> this }
-    fun getOrNull(): T? = when (this) { is Success -> value; is Failure -> null }
-    fun getOrThrow(): T = when (this) { is Success -> value; is Failure -> throw error }
+    inline fun <R> map(transform: (T) -> R): ParticipantResult<R> = when (this) {
+        is Success -> Success(transform(value))
+        is Failure -> this
+    }
+    fun getOrNull(): T? = when (this) {
+        is Success -> value
+        is Failure -> null
+    }
+    fun getOrThrow(): T = when (this) {
+        is Success -> value
+        is Failure -> throw error
+    }
 }

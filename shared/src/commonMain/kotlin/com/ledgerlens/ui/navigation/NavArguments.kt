@@ -13,6 +13,7 @@ object NavArgs {
     const val SEARCH_QUERY = "searchQuery"
     const val DATE_RANGE_START = "dateRangeStart"
     const val DATE_RANGE_END = "dateRangeEnd"
+    const val CONCEPT_ID = "conceptId"
 }
 
 /**

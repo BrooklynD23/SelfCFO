@@ -46,14 +46,23 @@ data class ReceiptItem(
         get() = if (type.isDeduction) -totalPrice.abs() else totalPrice
 
     companion object {
-        fun product(name: String, price: Money, quantity: Double = 1.0, unitPrice: Money? = null, category: String? = null) =
+        fun product(
+            name: String,
+            price: Money,
+            quantity: Double = 1.0,
+            unitPrice: Money? = null,
+            category: String? = null
+        ) =
             ReceiptItem(name = name, quantity = quantity, unitPrice = unitPrice, totalPrice = price, type = ReceiptItemType.PRODUCT, category = category)
 
         fun tax(name: String, amount: Money) = ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.TAX)
         fun tip(name: String, amount: Money) = ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.TIP)
-        fun discount(name: String, amount: Money) = ReceiptItem(name = name, totalPrice = amount.abs(), type = ReceiptItemType.DISCOUNT)
+        fun discount(name: String, amount: Money) =
+            ReceiptItem(name = name, totalPrice = amount.abs(), type = ReceiptItemType.DISCOUNT)
         fun fee(name: String, amount: Money) = ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.FEE)
-        fun subtotal(amount: Money, name: String = "Subtotal") = ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.SUBTOTAL)
-        fun total(amount: Money, name: String = "Total") = ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.TOTAL)
+        fun subtotal(amount: Money, name: String = "Subtotal") =
+            ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.SUBTOTAL)
+        fun total(amount: Money, name: String = "Total") =
+            ReceiptItem(name = name, totalPrice = amount, type = ReceiptItemType.TOTAL)
     }
 }

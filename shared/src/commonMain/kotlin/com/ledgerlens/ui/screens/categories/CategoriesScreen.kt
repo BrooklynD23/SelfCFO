@@ -1,8 +1,5 @@
 package com.ledgerlens.ui.screens.categories
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ledgerlens.categorization.Category
-import com.ledgerlens.ui.viewmodels.categories.CategoriesUiState
 import com.ledgerlens.ui.viewmodels.categories.CategoriesViewModel
 import com.ledgerlens.ui.viewmodels.categories.CategoryUiModel
 
@@ -31,13 +27,9 @@ import com.ledgerlens.ui.viewmodels.categories.CategoryUiModel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoriesScreen(
-    viewModel: CategoriesViewModel,
-    onNavigateToRules: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun CategoriesScreen(viewModel: CategoriesViewModel, onNavigateToRules: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.categoriesState.collectAsState()
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -102,7 +94,7 @@ fun CategoriesScreen(
                 }
             }
         }
-        
+
         // Edit/Create dialog
         if (state.showEditDialog) {
             CategoryEditDialog(
@@ -146,7 +138,7 @@ private fun CategoriesList(
                 onAddSubcategory = { onAddSubcategory(category.id) }
             )
         }
-        
+
         // Bottom spacer for FAB
         item {
             Spacer(modifier = Modifier.height(80.dp))
@@ -166,7 +158,7 @@ private fun CategoryListItem(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val indentDp = (category.depth * 24).dp
-    
+
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier
@@ -174,10 +166,11 @@ private fun CategoryListItem(
             .padding(start = indentDp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
+            containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else 
+            } else {
                 MaterialTheme.colorScheme.surface
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
     ) {
@@ -203,14 +196,14 @@ private fun CategoryListItem(
             } else {
                 Spacer(modifier = Modifier.width(32.dp))
             }
-            
+
             // Category icon/color
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(
-                        category.color?.let { parseColor(it) } 
+                        category.color?.let { parseColor(it) }
                             ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                     ),
                 contentAlignment = Alignment.Center
@@ -230,9 +223,9 @@ private fun CategoryListItem(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             // Category info
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -243,7 +236,7 @@ private fun CategoryListItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     if (category.isSystemDefault) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
@@ -259,7 +252,7 @@ private fun CategoryListItem(
                         }
                     }
                 }
-                
+
                 // Usage stats
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -269,7 +262,7 @@ private fun CategoryListItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     if (category.totalAmount > 0) {
                         Text(
                             text = "$${category.totalAmount / 100}",
@@ -279,7 +272,7 @@ private fun CategoryListItem(
                     }
                 }
             }
-            
+
             // Menu
             Box {
                 IconButton(onClick = { showMenu = true }) {
@@ -288,7 +281,7 @@ private fun CategoryListItem(
                         contentDescription = "More options"
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -301,7 +294,7 @@ private fun CategoryListItem(
                         },
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
                     )
-                    
+
                     if (category.canAddChild) {
                         DropdownMenuItem(
                             text = { Text("Add subcategory") },
@@ -312,7 +305,7 @@ private fun CategoryListItem(
                             leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
                         )
                     }
-                    
+
                     if (category.canDelete) {
                         Divider()
                         DropdownMenuItem(
@@ -321,7 +314,7 @@ private fun CategoryListItem(
                                 showMenu = false
                                 onDelete()
                             },
-                            leadingIcon = { 
+                            leadingIcon = {
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = null,
@@ -337,9 +330,7 @@ private fun CategoryListItem(
 }
 
 @Composable
-private fun EmptyCategoriesContent(
-    onAddCategory: () -> Unit
-) {
+private fun EmptyCategoriesContent(onAddCategory: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -353,25 +344,25 @@ private fun EmptyCategoriesContent(
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "No categories yet",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = "Create categories to organize your transactions",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Button(onClick = onAddCategory) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
@@ -381,11 +372,7 @@ private fun EmptyCategoriesContent(
 }
 
 @Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit
-) {
+private fun ErrorContent(error: String, onRetry: () -> Unit, onDismiss: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -399,17 +386,17 @@ private fun ErrorContent(
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.error
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = error,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onDismiss) {
                 Text("Dismiss")
@@ -506,13 +493,19 @@ private fun CategoryEditDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedParentId = null; onParentChange(null) }
+                                .clickable {
+                                    selectedParentId = null
+                                    onParentChange(null)
+                                }
                                 .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = selectedParentId == null,
-                                onClick = { selectedParentId = null; onParentChange(null) }
+                                onClick = {
+                                    selectedParentId = null
+                                    onParentChange(null)
+                                }
                             )
                             Spacer(Modifier.width(8.dp))
                             Text("None (top level)")
@@ -521,13 +514,19 @@ private fun CategoryEditDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { selectedParentId = parent.id; onParentChange(parent.id) }
+                                    .clickable {
+                                        selectedParentId = parent.id
+                                        onParentChange(parent.id)
+                                    }
                                     .padding(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
                                     selected = selectedParentId == parent.id,
-                                    onClick = { selectedParentId = parent.id; onParentChange(parent.id) }
+                                    onClick = {
+                                        selectedParentId = parent.id
+                                        onParentChange(parent.id)
+                                    }
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(parent.name)

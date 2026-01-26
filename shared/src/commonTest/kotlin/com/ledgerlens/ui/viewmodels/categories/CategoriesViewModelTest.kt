@@ -4,6 +4,7 @@ import com.ledgerlens.categorization.rules.MerchantContains
 import com.ledgerlens.data.repositories.fake.FakeCategoryRepository
 import com.ledgerlens.data.repositories.fake.FakeRuleRepository
 import com.ledgerlens.data.repositories.fake.TestDataFactory
+import kotlin.test.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -11,7 +12,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CategoriesViewModelTest {
@@ -28,17 +28,21 @@ class CategoriesViewModelTest {
         ruleRepository = FakeRuleRepository()
 
         // Seed test data
-        categoryRepository.setCategories(listOf(
-            TestDataFactory.createCategory(id = "groceries", name = "Groceries", isSystemDefault = true),
-            TestDataFactory.createCategory(id = "dining", name = "Dining", isSystemDefault = true),
-            TestDataFactory.createCategory(id = "fast-food", name = "Fast Food", parentId = "dining"),
-            TestDataFactory.createCategory(id = "restaurants", name = "Restaurants", parentId = "dining")
-        ))
+        categoryRepository.setCategories(
+            listOf(
+                TestDataFactory.createCategory(id = "groceries", name = "Groceries", isSystemDefault = true),
+                TestDataFactory.createCategory(id = "dining", name = "Dining", isSystemDefault = true),
+                TestDataFactory.createCategory(id = "fast-food", name = "Fast Food", parentId = "dining"),
+                TestDataFactory.createCategory(id = "restaurants", name = "Restaurants", parentId = "dining")
+            )
+        )
 
-        ruleRepository.setRules(listOf(
-            TestDataFactory.createRule(id = "rule-1", name = "Starbucks", targetCategoryId = "dining"),
-            TestDataFactory.createRule(id = "rule-2", name = "Walmart", targetCategoryId = "groceries")
-        ))
+        ruleRepository.setRules(
+            listOf(
+                TestDataFactory.createRule(id = "rule-1", name = "Starbucks", targetCategoryId = "dining"),
+                TestDataFactory.createRule(id = "rule-2", name = "Walmart", targetCategoryId = "groceries")
+            )
+        )
 
         viewModel = CategoriesViewModel(categoryRepository, ruleRepository)
     }

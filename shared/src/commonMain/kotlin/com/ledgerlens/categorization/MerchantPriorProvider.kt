@@ -8,7 +8,7 @@ interface MerchantPriorProvider {
 
     /**
      * Get the category probability distribution for a merchant.
-     * 
+     *
      * @param merchantId Normalized merchant identifier
      * @return Category distribution, or empty distribution if no history
      */
@@ -16,17 +16,15 @@ interface MerchantPriorProvider {
 
     /**
      * Get category distributions for multiple merchants in batch.
-     * 
+     *
      * @param merchantIds List of normalized merchant identifiers
      * @return Map of merchantId to category distribution
      */
-    suspend fun getCategoryDistributions(
-        merchantIds: List<String>
-    ): Map<String, MerchantCategoryDistribution>
+    suspend fun getCategoryDistributions(merchantIds: List<String>): Map<String, MerchantCategoryDistribution>
 
     /**
      * Check if a merchant has sufficient history for reliable priors.
-     * 
+     *
      * @param merchantId Normalized merchant identifier
      * @return true if the merchant has reliable category history
      */
@@ -34,7 +32,7 @@ interface MerchantPriorProvider {
 
     /**
      * Get the most likely category for a merchant based on history.
-     * 
+     *
      * @param merchantId Normalized merchant identifier
      * @return The most likely category ID and probability, or null if no history
      */
@@ -43,7 +41,7 @@ interface MerchantPriorProvider {
     /**
      * Notify the provider that a category was assigned to a merchant.
      * This allows the provider to update its internal state.
-     * 
+     *
      * @param merchantId Normalized merchant identifier
      * @param categoryId Assigned category
      * @param transactionDateMs Transaction date in milliseconds
@@ -57,7 +55,7 @@ interface MerchantPriorProvider {
     /**
      * Trigger a batch recalculation of priors.
      * Useful after user corrections or bulk imports.
-     * 
+     *
      * @param merchantIds Specific merchants to recalculate, or null for all
      */
     suspend fun recalculatePriors(merchantIds: List<String>? = null)
@@ -112,11 +110,7 @@ class DefaultMerchantPriorProvider(
         return mostLikely.categoryId to mostLikely.probability
     }
 
-    override suspend fun recordAssignment(
-        merchantId: String,
-        categoryId: String,
-        transactionDateMs: Long
-    ) {
+    override suspend fun recordAssignment(merchantId: String, categoryId: String, transactionDateMs: Long) {
         repository.recordCategoryAssignment(merchantId, categoryId, transactionDateMs)
     }
 

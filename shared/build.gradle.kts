@@ -83,6 +83,9 @@ kotlin {
                 implementation(libs.sqldelight.android.driver)
                 // SQLCipher for encrypted database
                 implementation(libs.sqlcipher.android)
+                // ML Kit OCR (Android)
+                implementation(libs.mlkit.vision.common)
+                implementation(libs.mlkit.text.recognition.gms)
                 // AndroidX Security for EncryptedSharedPreferences
                 implementation(libs.androidx.security.crypto)
                 // Koin Android
@@ -95,6 +98,8 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.kotlin.test.junit)
+                // JDBC SQLite driver for unit tests (runs on host JVM, not device)
+                implementation(libs.sqldelight.sqlite.driver)
             }
         }
 

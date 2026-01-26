@@ -4,6 +4,17 @@
 
 Implement the categorization review interface for handling low-confidence predictions, duplicates, and parse errors.
 
+## Repo status note (2026-01-25)
+
+This file is an **implementation plan**. The repository currently contains a working `ReviewInboxScreen` / `ReviewDetailScreen`, but there are important integration gaps:
+
+- The Review UI currently loads from an **in-memory** `ReviewQueueManager` and will be empty unless items are explicitly enqueued.
+- The current Import flow (`ImportViewModel`) is **simulated** and does not generate persisted “needs review” items.
+- OCR “needs review” is modeled in SQLDelight schema via `parse_status = 'needs_review'`, but there is no screen/query that surfaces these records for review yet.
+- On Desktop, the Review screen previously showed “Coming Soon” because `Screen.Review` wasn’t registered in the desktop screen registry; this has been fixed.
+
+See: `docs/audits/2026-01-25-REVIEW-INBOX-IMPORT-REVIEW-AUDIT.md`
+
 ---
 
 ## Implementation Steps

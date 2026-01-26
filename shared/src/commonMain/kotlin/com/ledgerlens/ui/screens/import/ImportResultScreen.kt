@@ -170,10 +170,7 @@ private fun ImportResultContent(
 }
 
 @Composable
-private fun ResultHeader(
-    result: ImportResult,
-    modifier: Modifier = Modifier
-) {
+private fun ResultHeader(result: ImportResult, modifier: Modifier = Modifier) {
     val (icon, color, title, subtitle) = when {
         result.isFullySuccessful -> ResultHeaderData(
             icon = Icons.Default.CheckCircle,
@@ -228,10 +225,7 @@ private data class ResultHeaderData(
 )
 
 @Composable
-private fun MainStatsCard(
-    result: ImportResult,
-    modifier: Modifier = Modifier
-) {
+private fun MainStatsCard(result: ImportResult, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -264,10 +258,7 @@ private fun MainStatsCard(
 }
 
 @Composable
-private fun DetailedStatsCard(
-    result: ImportResult,
-    modifier: Modifier = Modifier
-) {
+private fun DetailedStatsCard(result: ImportResult, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -292,14 +283,18 @@ private fun DetailedStatsCard(
                 value = result.duplicatesSkipped.toString(),
                 valueColor = if (result.duplicatesSkipped > 0) {
                     MaterialTheme.colorScheme.onSurfaceVariant
-                } else null
+                } else {
+                    null
+                }
             )
             StatRow(
                 label = "Possible duplicates",
                 value = result.duplicatesPossible.toString(),
                 valueColor = if (result.duplicatesPossible > 0) {
                     Color(0xFFFFA726) // TODO: Replace with LedgerLensTheme.colors.warning
-                } else null
+                } else {
+                    null
+                }
             )
 
             Divider()
@@ -310,19 +305,16 @@ private fun DetailedStatsCard(
                 value = result.uncategorizedCount.toString(),
                 valueColor = if (result.uncategorizedCount > 0) {
                     Color(0xFFFFA726) // TODO: Replace with LedgerLensTheme.colors.warning
-                } else null
+                } else {
+                    null
+                }
             )
         }
     }
 }
 
 @Composable
-private fun StatRow(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    valueColor: Color? = null
-) {
+private fun StatRow(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color? = null) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -395,10 +387,7 @@ private fun ReviewNoticeCard(
 }
 
 @Composable
-private fun ErrorsCard(
-    errors: List<com.ledgerlens.ui.viewmodels.import.ImportError>,
-    modifier: Modifier = Modifier
-) {
+private fun ErrorsCard(errors: List<com.ledgerlens.ui.viewmodels.import.ImportError>, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(

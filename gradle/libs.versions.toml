@@ -21,6 +21,13 @@ sqldelight = "2.0.1"
 # Later SQLCipher releases exist, but this legacy Android artifact is deprecated/upstream-distribution-limited.
 sqlcipher = "4.5.4"
 
+# ML Kit (Android)
+# Versions based on publicly documented release notes:
+# - vision-common: 17.3.0
+# - play-services-mlkit-text-recognition: 19.0.1
+mlkit-vision-common = "17.3.0"
+mlkit-text-recognition-gms = "19.0.1"
+
 # Dependency Injection
 koin = "3.5.3"
 
@@ -59,6 +66,10 @@ sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", versi
 # SQLCipher
 sqlcipher-android = { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlcipher" }
 # Note: Desktop SQLCipher deferred - no readily available JDBC library
+
+# ML Kit - Text recognition (Play Services / unbundled) + common vision types
+mlkit-vision-common = { module = "com.google.mlkit:vision-common", version.ref = "mlkit-vision-common" }
+mlkit-text-recognition-gms = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version.ref = "mlkit-text-recognition-gms" }
 
 # Koin - Dependency Injection
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }

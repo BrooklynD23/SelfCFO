@@ -3,6 +3,10 @@ package com.ledgerlens.data.di
 import android.content.Context
 import com.ledgerlens.data.DatabaseDriverFactory
 import com.ledgerlens.db.LedgerLensDatabase
+import com.ledgerlens.security.AesGcmFileEncryption
+import com.ledgerlens.security.AndroidPlatformKeystore
+import com.ledgerlens.security.FileEncryption
+import com.ledgerlens.security.PlatformKeystore
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -40,6 +44,10 @@ fun createAndroidDatabaseModule(context: Context): Module = module {
         val driverFactory: DatabaseDriverFactory = get()
         LedgerLensDatabase(driverFactory.createDriver())
     }
+
+    // Security primitives (needed by KeyManagerImpl)
+    single<PlatformKeystore> { AndroidPlatformKeystore(context) }
+    single<FileEncryption> { AesGcmFileEncryption() }
 }
 
 /**
@@ -49,10 +57,7 @@ fun createAndroidDatabaseModule(context: Context): Module = module {
  * @param encryptionKey 32-byte AES-256 encryption key
  * @return Koin module providing encrypted database
  */
-fun createAndroidEncryptedDatabaseModule(
-    context: Context,
-    encryptionKey: ByteArray
-): Module = module {
+fun createAndroidEncryptedDatabaseModule(context: Context, encryptionKey: ByteArray): Module = module {
     single { DatabaseDriverFactory(context) }
     single {
         val driverFactory: DatabaseDriverFactory = get()
@@ -79,10 +84,7 @@ fun getAndroidModules(context: Context): List<Module> = listOf(
  * @param encryptionKey 32-byte AES-256 encryption key
  * @return List of Koin modules
  */
-fun getAndroidEncryptedModules(
-    context: Context,
-    encryptionKey: ByteArray
-): List<Module> = listOf(
+fun getAndroidEncryptedModules(context: Context, encryptionKey: ByteArray): List<Module> = listOf(
     createAndroidEncryptedDatabaseModule(context, encryptionKey),
     repositoryModule
 )

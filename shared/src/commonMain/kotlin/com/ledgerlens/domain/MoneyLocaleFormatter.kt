@@ -10,5 +10,4 @@ expect object MoneyLocaleFormatter {
 /**
  * Convenience for app/UI code.
  */
-fun Money.formatForDisplay(showCurrency: Boolean = true): String =
-    MoneyLocaleFormatter.format(this, showCurrency)
+fun Money.formatForDisplay(showCurrency: Boolean = true): String = MoneyLocaleFormatter.format(this, showCurrency)

@@ -4,6 +4,11 @@
 
 Implement the encryption strategy per [ADR-003](../../PRDs/13-architecture-decision-records.md#adr-003-encryption-strategy) with SQLCipher for database encryption and envelope encryption for attachments.
 
+### Planned follow-up (maintenance)
+
+- **SQLCipher Android dependency migration**: The legacy `android-database-sqlcipher` artifact is deprecated and not consistently published for newer versions.
+  Track the migration plan here: [07-sqlcipher-android-migration.md](./07-sqlcipher-android-migration.md)
+
 ---
 
 ## Key Hierarchy

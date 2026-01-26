@@ -88,10 +88,7 @@ data class Money(
      * Multiply by a fixed-point rate expressed in basis points (1/10,000).
      * Example: 8.5% = 850 bps.
      */
-    fun multiplyByBasisPoints(
-        basisPoints: Int,
-        roundingMode: RoundingMode = RoundingMode.HALF_UP
-    ): Money {
+    fun multiplyByBasisPoints(basisPoints: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): Money {
         require(basisPoints >= 0) { "basisPoints must be non-negative" }
 
         val numerator = minorUnits * basisPoints.toLong()
@@ -122,10 +119,7 @@ data class Money(
     /**
      * Divide with remainder handling for splits.
      */
-    fun divideWithRemainder(
-        divisor: Int,
-        roundingMode: RoundingMode = RoundingMode.HALF_UP
-    ): Pair<Money, Money> {
+    fun divideWithRemainder(divisor: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): Pair<Money, Money> {
         val quotient = minorUnits / divisor
         val remainder = minorUnits % divisor
         return Pair(
@@ -161,9 +155,9 @@ data class Money(
 }
 
 enum class RoundingMode {
-    HALF_UP,      // Standard rounding (0.5 rounds up)
-    HALF_DOWN,    // 0.5 rounds down
-    HALF_EVEN,    // Banker's rounding
-    DOWN,         // Truncate toward zero
-    UP            // Always round away from zero
+    HALF_UP, // Standard rounding (0.5 rounds up)
+    HALF_DOWN, // 0.5 rounds down
+    HALF_EVEN, // Banker's rounding
+    DOWN, // Truncate toward zero
+    UP // Always round away from zero
 }

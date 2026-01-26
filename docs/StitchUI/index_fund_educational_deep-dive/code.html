@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Index Fund Deep Dive</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b7cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2530",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased transition-colors duration-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-2xl bg-surface-light dark:bg-surface-dark text-[#111418] dark:text-white">
+<!-- Sticky Navigation -->
+<div class="sticky top-0 z-50 flex items-center bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md p-4 pb-2 justify-between border-b border-gray-100 dark:border-gray-800">
+<div class="text-[#111418] dark:text-white flex size-12 shrink-0 items-center justify-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</div>
+<!-- Hidden on load, could appear on scroll via JS (simulated here as hidden for clean editorial look) -->
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-tight opacity-0">Index Funds</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex size-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-[#111418] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Content -->
+<main class="flex flex-col flex-1 pb-24">
+<!-- Hero Section -->
+<div class="px-6 pt-6 pb-2">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+<span class="material-symbols-outlined text-[18px]">school</span>
+<span class="font-body">Deep Dive</span>
+</div>
+<h1 class="text-4xl md:text-5xl font-medium italic tracking-tight leading-[1.15] mb-4 text-[#111418] dark:text-white">
+                    Understanding <span class="text-primary not-italic font-bold">Index Funds</span>
+</h1>
+<p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-normal border-l-2 border-primary/30 pl-4 my-6">
+                    Why buying the whole basket is often better than trying to pick the perfect apple.
+                </p>
+</div>
+<!-- Abstract Illustration / Divider -->
+<div class="w-full h-48 bg-cover bg-center mb-10 relative" data-alt="Abstract gradient waves representing financial flow and stability" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtj23ie3LRAruT94jHSgLGGj3ElSkor-MYueVMotsV7zuBrBcUqWDWXh1lMhlOY5aznuh24E0IR-EunNR5zFgNozrY92E54AVh1CuXRijKaXyZpVS4_7q4g0eOP9ltGTy1j0mSplv7Miu7ww4ZijHja43EKS_8J9-YnTIBjpFK-RE8I3N7tQL0r8hqHJEv9ykhS9htN7TpUGSsZCkfAWDlVQXJ3ClBSoP9Y_7J9dbursugwhhPpSLoU70q7Z4BICsduHkehOI53MI');">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-light dark:to-surface-dark"></div>
+</div>
+<!-- Section: How it Works -->
+<div class="px-6 mb-12">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    How it Works
+                </h2>
+<div class="bg-background-light dark:bg-background-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800">
+<p class="text-base font-body text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                        Instead of buying stock in one company (like Apple or Tesla), you buy a tiny slice of hundreds of companies at once. This strategy minimizes risk through <span class="font-bold text-primary">diversification</span>.
+                    </p>
+<!-- Simplified Graphic Representation -->
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col items-center justify-center p-4 bg-white dark:bg-surface-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+<div class="size-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3 text-red-600 dark:text-red-400">
+<span class="material-symbols-outlined">show_chart</span>
+</div>
+<span class="text-sm font-bold font-body">Single Stock</span>
+<span class="text-xs text-gray-500 mt-1">High Volatility</span>
+</div>
+<div class="flex flex-col items-center justify-center p-4 bg-primary/5 dark:bg-primary/10 rounded-lg shadow-sm border border-primary/20 text-center relative overflow-hidden">
+<div class="absolute top-0 right-0 p-1">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+</div>
+<div class="size-12 rounded-full bg-primary/20 flex items-center justify-center mb-3 text-primary">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+<span class="text-sm font-bold font-body">Index Fund</span>
+<span class="text-xs text-gray-500 mt-1">Balanced Growth</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Historical Performance -->
+<div class="px-6 mb-12">
+<div class="flex items-baseline justify-between mb-4">
+<h2 class="text-2xl font-bold">Historical Performance</h2>
+<span class="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">S&amp;P 500</span>
+</div>
+<div class="relative w-full h-64 bg-background-light dark:bg-background-dark rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+<!-- Y-Axis Labels -->
+<div class="absolute left-4 top-4 bottom-8 flex flex-col justify-between text-xs text-gray-400 font-body">
+<span>+400%</span>
+<span>+200%</span>
+<span>0%</span>
+</div>
+<!-- Chart Line Visual (CSS Only) -->
+<svg class="absolute inset-0 w-full h-full p-4 pl-12 pb-8 overflow-visible" viewbox="0 0 300 150">
+<!-- Grid Lines -->
+<line class="text-gray-200 dark:text-gray-700" stroke="currentColor" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="300" y1="0" y2="0"></line>
+<line class="text-gray-200 dark:text-gray-700" stroke="currentColor" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="300" y1="75" y2="75"></line>
+<line class="text-gray-300 dark:text-gray-600" stroke="currentColor" stroke-width="1" x1="0" x2="300" y1="150" y2="150"></line>
+<!-- Trend Line -->
+<path class="drop-shadow-md" d="M0 140 C 40 130, 60 145, 100 100 C 140 55, 180 80, 220 40 C 260 0, 280 20, 300 10" fill="none" stroke="#2b7cee" stroke-linecap="round" stroke-width="3"></path>
+<!-- Area Under Curve -->
+<path class="fill-primary/5 dark:fill-primary/10" d="M0 140 C 40 130, 60 145, 100 100 C 140 55, 180 80, 220 40 C 260 0, 280 20, 300 10 V 150 H 0 Z"></path>
+<!-- Interactive Dot (Simulated) -->
+<circle class="fill-white stroke-primary stroke-[3px]" cx="220" cy="40" r="4"></circle>
+<rect class="fill-gray-900 dark:fill-white opacity-80" height="24" rx="4" width="80" x="180" y="5"></rect>
+<text class="dark:fill-black font-bold" fill="white" font-family="Noto Sans, sans-serif" font-size="10" text-anchor="middle" x="220" y="21">Market High</text>
+</svg>
+<!-- X-Axis Labels -->
+<div class="absolute left-12 right-4 bottom-2 flex justify-between text-xs text-gray-400 font-body">
+<span>2000</span>
+<span>2010</span>
+<span>2020</span>
+<span>2024</span>
+</div>
+</div>
+<p class="mt-3 text-xs text-gray-400 dark:text-gray-500 italic text-center">
+                    Past performance is not indicative of future results. Market data for illustrative purposes only.
+                </p>
+</div>
+<!-- Section: Pros & Cons -->
+<div class="px-6 mb-8">
+<h2 class="text-2xl font-bold mb-6">Is it right for you?</h2>
+<div class="space-y-6">
+<!-- Pros -->
+<div>
+<h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 font-body">The Upside</h3>
+<ul class="space-y-3">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-green-600 mt-0.5 shrink-0">check_circle</span>
+<div>
+<span class="font-bold block text-base">Low Fees</span>
+<span class="text-sm text-gray-600 dark:text-gray-400 font-body">Since they are passively managed, expense ratios are typically very low.</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-green-600 mt-0.5 shrink-0">check_circle</span>
+<div>
+<span class="font-bold block text-base">Instant Diversification</span>
+<span class="text-sm text-gray-600 dark:text-gray-400 font-body">Own hundreds of stocks with a single purchase.</span>
+</div>
+</li>
+</ul>
+</div>
+<!-- Divider -->
+<div class="h-px bg-gray-100 dark:bg-gray-800 w-full"></div>
+<!-- Cons -->
+<div>
+<h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 font-body">The Downside</h3>
+<ul class="space-y-3">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-gray-400 mt-0.5 shrink-0">cancel</span>
+<div>
+<span class="font-bold block text-base">Average Returns</span>
+<span class="text-sm text-gray-600 dark:text-gray-400 font-body">You won't "beat the market" because you own the market.</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-gray-400 mt-0.5 shrink-0">cancel</span>
+<div>
+<span class="font-bold block text-base">Lack of Control</span>
+<span class="text-sm text-gray-600 dark:text-gray-400 font-body">You can't exclude specific companies from the index.</span>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Footer Action Area -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 flex justify-center max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-blue-600 text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span>View Market Resources</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

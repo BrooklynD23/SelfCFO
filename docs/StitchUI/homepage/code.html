@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EdgerLens Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1E293B", // Deep Navy/Charcoal
+              "primary-accent": "#3B82F6", // Blue for interactive elements
+              "background-light": "#F8FAFC", // Slate-50
+              "background-dark": "#0F172A", // Slate-900
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#1E293B",
+              "text-main-light": "#0F172A", // Slate-900
+              "text-main-dark": "#F1F5F9", // Slate-100
+              "text-sub-light": "#64748B", // Slate-500
+              "text-sub-dark": "#94A3B8", // Slate-400
+              "success-light": "#10B981",
+              "success-dark": "#34D399",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+              sans: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.75rem", // 12px
+              xl: "1rem", // 16px
+              '2xl': "1.5rem", // 24px
+            },
+            boxShadow: {
+                'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)',
+                'card-dark': '0 0 0 1px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.2)',
+            }
+          },
+        },
+      };
+    </script>
+<style>.hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }@keyframes drawLine {
+            from { stroke-dashoffset: 1000; }
+            to { stroke-dashoffset: 0; }
+        }
+        .animate-draw {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease-out forwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-sans text-text-main-light dark:text-text-main-dark antialiased transition-colors duration-200">
+<div class="max-w-md mx-auto min-h-screen relative flex flex-col pb-24 overflow-hidden bg-background-light dark:bg-background-dark shadow-2xl">
+<div class="h-12 w-full flex items-center justify-between px-6 pt-2 z-20">
+<span class="text-sm font-semibold tracking-wide">9:41</span>
+<div class="flex items-center space-x-2">
+<span class="material-icons-round text-sm">signal_cellular_alt</span>
+<span class="material-icons-round text-sm">wifi</span>
+<span class="material-icons-round text-sm transform rotate-90">battery_full</span>
+</div>
+</div>
+<header class="px-6 pt-4 pb-2 flex justify-between items-end">
+<div>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm font-medium mb-1">Good morning,</p>
+<h1 class="text-3xl font-bold tracking-tight text-primary dark:text-white">Alex</h1>
+</div>
+<button class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-accent">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBX2kdCy6zRVdMB2TmjkTsdVj0-vSS9yGr8xi_-mCrOxCYgGGYOmyU2Uz8gADKMDExyo2wt4B_ZfGf5wsqNelXh8oHY5KAZ8lBwB5EXQUkdkv8Db-9Jalbk6s2SKADapteIVmKJTaz_H0D1ubjFUNS-_9PL11YemwZh6ISMVA__7BMpFg9qlGlhiJDg8LWxdQqhR1R9WTux9pTT0hSS1RC6Sm_O5m30UcSbCvBxfWzyzhSWNB2XH_B3O_w9ndezJ7oyAjYsxXnkkpE"/>
+</button>
+</header>
+<section class="px-6 mt-6">
+<div class="bg-primary dark:bg-surface-dark text-white rounded-2xl p-6 shadow-soft relative overflow-hidden group cursor-pointer transition-transform transform active:scale-95">
+<div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl"></div>
+<div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 bg-primary-accent opacity-20 rounded-full blur-xl"></div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div class="flex items-start justify-between">
+<div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+<span class="material-icons-round text-green-300">trending_up</span>
+</div>
+<span class="bg-green-400/20 text-green-300 text-xs font-semibold px-2 py-1 rounded-full">Weekly Insight</span>
+</div>
+<div class="mt-4">
+<h2 class="text-2xl font-semibold leading-tight mb-2">You're <span class="text-green-300">$200</span> under budget this week.</h2>
+<p class="text-gray-300 text-sm">Great job keeping expenses low. Consider moving the surplus to savings.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="mt-8 px-6">
+<div class="flex items-baseline justify-between mb-4">
+<div>
+<p class="text-text-sub-light dark:text-text-sub-dark text-xs font-semibold uppercase tracking-wider">Net Worth</p>
+<div class="flex items-baseline space-x-2">
+<h3 class="text-3xl font-bold tracking-tight text-primary dark:text-white">$142,893.00</h3>
+<span class="text-success-light dark:text-success-dark text-sm font-medium bg-success-light/10 px-1.5 py-0.5 rounded flex items-center">
+<span class="material-icons-round text-[14px] mr-0.5">arrow_upward</span> 2.4%
+                        </span>
+</div>
+</div>
+<div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-semibold rounded bg-white dark:bg-gray-700 text-primary dark:text-white shadow-sm">1W</button>
+<button class="px-3 py-1 text-xs font-medium text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-white transition-colors">1M</button>
+<button class="px-3 py-1 text-xs font-medium text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-white transition-colors">1Y</button>
+</div>
+</div>
+<div class="h-48 w-full relative group">
+<div class="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-2 opacity-100 transition-opacity z-20 pointer-events-none">
+<div class="bg-primary dark:bg-white text-white dark:text-primary text-xs font-semibold py-1 px-3 rounded shadow-lg flex flex-col items-center">
+<span>$142,500</span>
+<span class="text-[10px] opacity-70 font-normal">Oct 24</span>
+</div>
+<div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary dark:border-t-white mx-auto"></div>
+</div>
+<div class="absolute left-1/2 top-6 bottom-0 w-[1px] bg-primary-accent/50 dark:bg-primary-accent/50 border-r border-dashed border-gray-400 z-0 h-full"></div>
+<div class="absolute left-1/2 top-[30%] transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white dark:bg-primary border-2 border-primary-accent rounded-full z-10 shadow-sm"></div>
+<svg class="w-full h-full overflow-visible" viewBox="0 0 350 150">
+<defs>
+<linearGradient id="gradientArea" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#3B82F6" stop-opacity="0.15"></stop>
+<stop offset="100%" stop-color="#3B82F6" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path class="dark:opacity-40" d="M0,120 C40,110 80,130 120,80 C160,30 200,50 240,40 C280,30 320,10 350,5 V150 H0 Z" fill="url(#gradientArea)"></path>
+<path class="animate-draw" d="M0,120 C40,110 80,130 120,80 C160,30 200,50 240,40 C280,30 320,10 350,5" fill="none" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+<div class="flex justify-between text-[10px] text-text-sub-light dark:text-text-sub-dark mt-2 font-medium uppercase tracking-wider">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</section>
+<section class="mt-8 mb-4">
+<div class="px-6 mb-3 flex justify-between items-center">
+<h3 class="text-lg font-bold text-primary dark:text-white">Pillars</h3>
+<button class="text-primary-accent text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">View all</button>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar px-6 pb-4 space-x-4">
+<div class="min-w-[160px] p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-card dark:shadow-card-dark flex flex-col justify-between h-40 group hover:border-primary-accent/30 dark:hover:border-primary-accent/30 border border-transparent transition-all">
+<div class="flex justify-between items-start">
+<div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+<span class="material-icons-round text-xl">savings</span>
+</div>
+<span class="material-icons-round text-gray-300 dark:text-gray-600 text-base">more_horiz</span>
+</div>
+<div>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark font-medium mb-1">Savings</p>
+<p class="text-lg font-bold text-primary dark:text-white">$12,400</p>
+<div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-blue-500 h-full rounded-full w-[65%]"></div>
+</div>
+</div>
+</div>
+<div class="min-w-[160px] p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-card dark:shadow-card-dark flex flex-col justify-between h-40 group hover:border-primary-accent/30 dark:hover:border-primary-accent/30 border border-transparent transition-all">
+<div class="flex justify-between items-start">
+<div class="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg text-orange-600 dark:text-orange-400">
+<span class="material-icons-round text-xl">receipt_long</span>
+</div>
+<span class="material-icons-round text-gray-300 dark:text-gray-600 text-base">more_horiz</span>
+</div>
+<div>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark font-medium mb-1">Expenses</p>
+<p class="text-lg font-bold text-primary dark:text-white">$2,140</p>
+<p class="text-[10px] text-text-sub-light dark:text-text-sub-dark mt-1">
+<span class="text-red-500 font-medium">+12%</span> vs last month
+                        </p>
+</div>
+</div>
+<div class="min-w-[160px] p-4 bg-surface-light dark:bg-surface-dark rounded-xl shadow-card dark:shadow-card-dark flex flex-col justify-between h-40 group hover:border-primary-accent/30 dark:hover:border-primary-accent/30 border border-transparent transition-all">
+<div class="flex justify-between items-start">
+<div class="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg text-purple-600 dark:text-purple-400">
+<span class="material-icons-round text-xl">show_chart</span>
+</div>
+<span class="material-icons-round text-gray-300 dark:text-gray-600 text-base">more_horiz</span>
+</div>
+<div>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark font-medium mb-1">Investments</p>
+<p class="text-lg font-bold text-primary dark:text-white">$128,353</p>
+<div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-purple-500 h-full rounded-full w-[88%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="px-6 mt-2">
+<h3 class="text-lg font-bold text-primary dark:text-white mb-3">Recent Activity</h3>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-card dark:shadow-card-dark overflow-hidden">
+<div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl">🍎</div>
+<div>
+<p class="text-sm font-semibold text-primary dark:text-white">Whole Foods Market</p>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark">Groceries • Today</p>
+</div>
+</div>
+<p class="text-sm font-bold text-primary dark:text-white">-$84.20</p>
+</div>
+<div class="p-4 flex justify-between items-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
+<span class="material-icons-round">bolt</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-primary dark:text-white">Electric Company</p>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark">Utilities • Yesterday</p>
+</div>
+</div>
+<p class="text-sm font-bold text-primary dark:text-white">-$112.50</p>
+</div>
+</div>
+</section>
+<nav class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 pb-safe pt-2 z-50">
+<div class="flex justify-around items-center h-16 max-w-md mx-auto">
+<button class="flex flex-col items-center justify-center w-full h-full text-primary dark:text-white space-y-1">
+<span class="material-icons-round text-2xl">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-white transition-colors space-y-1">
+<span class="material-icons-round text-2xl">pie_chart</span>
+<span class="text-[10px] font-medium">Budget</span>
+</button>
+<div class="relative -top-5">
+<button class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-accent transition-colors">
+<span class="material-icons-round text-2xl">add</span>
+</button>
+</div>
+<button class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-white transition-colors space-y-1">
+<span class="material-icons-round text-2xl">account_balance_wallet</span>
+<span class="text-[10px] font-medium">Assets</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-white transition-colors space-y-1">
+<span class="material-icons-round text-2xl">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+<div class="h-6 w-full"></div>
+</nav>
+</div>
+
+</body></html>

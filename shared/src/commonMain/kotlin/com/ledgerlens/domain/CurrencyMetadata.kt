@@ -32,7 +32,7 @@ object CurrencyMetadata {
         "BTC" to 8,
         "ETH" to 18,
         "USDC" to 6,
-        "USDT" to 6,
+        "USDT" to 6
     )
 
     private val symbols = mapOf(
@@ -42,7 +42,7 @@ object CurrencyMetadata {
         "JPY" to "¥",
         "CNY" to "¥",
         "INR" to "₹",
-        "BTC" to "₿",
+        "BTC" to "₿"
     )
 
     fun getScale(currencyCode: String): Int {

@@ -2,7 +2,6 @@ package com.ledgerlens.ui.viewmodels.corrections
 
 import com.ledgerlens.categorization.*
 import com.ledgerlens.categorization.pipeline.ReviewQueueItem
-import com.ledgerlens.categorization.pipeline.ReviewStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -135,7 +134,7 @@ class CorrectionViewModel(
             classifierUsed = classifierUsed
         )
         pendingQueue.add(pending)
-        
+
         val uiModel = pending.toUiModel("pending_${nextId++}", _uiState.value.availableCategories)
         _uiState.update { state ->
             state.copy(pendingCorrections = state.pendingCorrections + uiModel)
@@ -185,10 +184,10 @@ class CorrectionViewModel(
             val old = pendingQueue[index]
             pendingQueue[index] = old.copy(newCategoryId = newCategoryId)
         }
-        
+
         val categories = _uiState.value.availableCategories
         val category = categories.find { it.id == newCategoryId }
-        
+
         _uiState.update { state ->
             state.copy(
                 pendingCorrections = state.pendingCorrections.map { correction ->
@@ -197,7 +196,9 @@ class CorrectionViewModel(
                             newCategoryId = newCategoryId,
                             newCategoryName = category?.name ?: newCategoryId
                         )
-                    } else correction
+                    } else {
+                        correction
+                    }
                 }
             )
         }
@@ -211,22 +212,25 @@ class CorrectionViewModel(
     fun processSelectedCorrections() {
         val selected = _uiState.value.selectedCorrections
         if (selected.isEmpty()) return
-        
+
         val toProcess = pendingQueue.filterIndexed { index, _ ->
-            "pending_$index" in selected || _uiState.value.pendingCorrections.any { 
-                it.id in selected && it.transactionId == pendingQueue.getOrNull(index)?.transactionId 
+            "pending_$index" in selected || _uiState.value.pendingCorrections.any {
+                it.id in selected && it.transactionId == pendingQueue.getOrNull(index)?.transactionId
             }
         }
         processBatch(toProcess)
     }
 
     private fun processBatch(corrections: List<PendingCorrection>) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(
+        // Update state synchronously before launching coroutine for immediate UI feedback
+        _uiState.update {
+            it.copy(
                 isBatchProcessing = true,
                 batchProgress = BatchProgressState(corrections.size, 0, 0, 0)
-            )}
+            )
+        }
 
+        viewModelScope.launch {
             var succeeded = 0
             var failed = 0
 
@@ -247,36 +251,42 @@ class CorrectionViewModel(
                 } catch (e: Exception) {
                     failed++
                 }
-                
-                _uiState.update { it.copy(
-                    batchProgress = BatchProgressState(corrections.size, index + 1, succeeded, failed)
-                )}
+
+                _uiState.update {
+                    it.copy(
+                        batchProgress = BatchProgressState(corrections.size, index + 1, succeeded, failed)
+                    )
+                }
                 delay(50) // Brief delay for UI feedback
             }
 
             val uiModels = pendingQueue.mapIndexed { idx, pending ->
                 pending.toUiModel("pending_$idx", _uiState.value.availableCategories)
             }
-            
-            _uiState.update { it.copy(
-                isBatchProcessing = false,
-                batchProgress = null,
-                pendingCorrections = uiModels,
-                selectedCorrections = emptySet(),
-                isSelectionMode = false,
-                successMessage = "Processed $succeeded corrections" + if (failed > 0) " ($failed failed)" else ""
-            )}
-            
+
+            _uiState.update {
+                it.copy(
+                    isBatchProcessing = false,
+                    batchProgress = null,
+                    pendingCorrections = uiModels,
+                    selectedCorrections = emptySet(),
+                    isSelectionMode = false,
+                    successMessage = "Processed $succeeded corrections" + if (failed > 0) " ($failed failed)" else ""
+                )
+            }
+
             _events.value = CorrectionEvent.BatchProcessingComplete
             loadSuggestedRules()
         }
     }
 
     fun toggleSelectionMode() {
-        _uiState.update { it.copy(
-            isSelectionMode = !it.isSelectionMode,
-            selectedCorrections = emptySet()
-        )}
+        _uiState.update {
+            it.copy(
+                isSelectionMode = !it.isSelectionMode,
+                selectedCorrections = emptySet()
+            )
+        }
     }
 
     fun toggleCorrectionSelection(id: String) {
@@ -302,7 +312,7 @@ class CorrectionViewModel(
                 if (correctionProcessor != null) {
                     val analysis = correctionProcessor.analyzeCorrections()
                     val categories = _uiState.value.availableCategories
-                    
+
                     val ruleModels = analysis.suggestedRules.map { rule ->
                         SuggestedRuleUiModel(
                             merchantPattern = rule.merchantPattern,
@@ -367,7 +377,7 @@ class CorrectionViewModel(
     private fun PendingCorrection.toUiModel(id: String, categories: List<Category>): PendingCorrectionUiModel {
         val oldCategory = categories.find { it.id == oldCategoryId }
         val newCategory = categories.find { it.id == newCategoryId }
-        
+
         return PendingCorrectionUiModel(
             id = id,
             transactionId = transactionId,

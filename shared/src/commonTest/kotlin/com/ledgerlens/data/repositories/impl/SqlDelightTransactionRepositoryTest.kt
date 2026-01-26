@@ -3,12 +3,12 @@ package com.ledgerlens.data.repositories.impl
 import app.cash.turbine.test
 import com.ledgerlens.data.repositories.TransactionFilter
 import com.ledgerlens.db.LedgerLensDatabase
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 
 class SqlDelightTransactionRepositoryTest {
     private lateinit var database: LedgerLensDatabase
@@ -90,7 +90,7 @@ class SqlDelightTransactionRepositoryTest {
             transactions.forEach { txn ->
                 assertTrue(
                     txn.merchantDisplay.contains("Coffee", ignoreCase = true) ||
-                    txn.descriptionRaw.contains("Coffee", ignoreCase = true)
+                        txn.descriptionRaw.contains("Coffee", ignoreCase = true)
                 )
             }
             cancelAndIgnoreRemainingEvents()

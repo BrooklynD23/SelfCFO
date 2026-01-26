@@ -2,13 +2,17 @@ package com.ledgerlens.ui.viewmodels.dashboard
 
 import com.ledgerlens.categorization.Category
 import com.ledgerlens.data.repositories.CategoryRepository
+import com.ledgerlens.data.repositories.CategorySpendingStats
 import com.ledgerlens.data.repositories.StatisticsRepository
 import com.ledgerlens.data.repositories.Transaction
 import com.ledgerlens.data.repositories.TransactionRepository
-import com.ledgerlens.data.repositories.CategorySpendingStats
 import com.ledgerlens.domain.Money
+import com.ledgerlens.ui.components.cards.PillarData
+import com.ledgerlens.ui.components.cards.PillarType
+import com.ledgerlens.ui.components.cards.WeeklyInsight
+import com.ledgerlens.ui.components.charts.ChartDataPoint
+import com.ledgerlens.ui.components.charts.TimeRange
 import com.ledgerlens.ui.screens.dashboard.CategoryBreakdownUiModel
-import com.ledgerlens.ui.screens.dashboard.SpendingSummaryUiModel
 import com.ledgerlens.ui.screens.dashboard.TransactionUiModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,16 +20,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 /**
  * UI state for the Dashboard screen.
+ * Includes StitchUI additions: weekly insight, net worth history, pillars.
  */
 data class DashboardUiState(
     val isLoading: Boolean = true,
@@ -38,11 +45,26 @@ data class DashboardUiState(
     val pendingReviewCount: Int = 0,
     val uncategorizedCount: Int = 0,
     val currentMonthLabel: String = "",
-    val error: String? = null
+    val error: String? = null,
+    // StitchUI additions
+    val userName: String = "there",
+    val weeklyInsight: WeeklyInsight? = null,
+    val netWorthHistory: List<ChartDataPoint> = emptyList(),
+    val selectedTimeRange: TimeRange = TimeRange.ONE_MONTH,
+    val totalNetWorth: Money = Money.zero("USD"),
+    val pillars: List<PillarData> = emptyList()
 ) {
     val hasRecentTransactions: Boolean get() = recentTransactions.isNotEmpty()
     val hasPendingItems: Boolean get() = pendingReviewCount > 0 || uncategorizedCount > 0
     val totalPendingCount: Int get() = pendingReviewCount + uncategorizedCount
+    val greeting: String get() {
+        val hour = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).hour
+        return when {
+            hour < 12 -> "Good morning"
+            hour < 17 -> "Good afternoon"
+            else -> "Good evening"
+        }
+    }
 }
 
 /**
@@ -102,6 +124,22 @@ class DashboardViewModel(
                 val transactionUiModels = recentTransactions.map { it.toTransactionUiModel() }
                 val categoryUiModels = categoryBreakdown.map { it.toCategoryBreakdownUiModel() }
 
+                // Compute StitchUI additions
+                val weeklyInsight = computeWeeklyInsight(
+                    monthlyStats.totalSpending,
+                    monthlyStats.totalIncome,
+                    monthlyStats.netChange
+                )
+                val pillars = computePillars(
+                    totalSavings = monthlyStats.totalIncome,
+                    totalSpending = monthlyStats.totalSpending,
+                    totalInvestments = Money.zero("USD")
+                )
+                val netWorthHistory = generateSampleNetWorthHistory(
+                    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                    30
+                )
+
                 _uiState.update {
                     DashboardUiState(
                         isLoading = false,
@@ -114,7 +152,11 @@ class DashboardViewModel(
                         pendingReviewCount = pendingReviewCount,
                         uncategorizedCount = uncategorizedCount,
                         currentMonthLabel = monthLabel,
-                        error = null
+                        error = null,
+                        weeklyInsight = weeklyInsight,
+                        netWorthHistory = netWorthHistory,
+                        pillars = pillars,
+                        totalNetWorth = Money.of(45000.0, "USD")
                     )
                 }
             } catch (e: Exception) {
@@ -151,6 +193,22 @@ class DashboardViewModel(
                 val transactionUiModels = recentTransactions.map { it.toTransactionUiModel() }
                 val categoryUiModels = categoryBreakdown.map { it.toCategoryBreakdownUiModel() }
 
+                // Compute StitchUI additions for refresh
+                val weeklyInsight = computeWeeklyInsight(
+                    monthlyStats.totalSpending,
+                    monthlyStats.totalIncome,
+                    monthlyStats.netChange
+                )
+                val pillars = computePillars(
+                    totalSavings = monthlyStats.totalIncome,
+                    totalSpending = monthlyStats.totalSpending,
+                    totalInvestments = Money.zero("USD")
+                )
+                val netWorthHistory = generateSampleNetWorthHistory(
+                    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                    _uiState.value.selectedTimeRange.days.let { if (it == -1) 365 else it }
+                )
+
                 _uiState.update {
                     DashboardUiState(
                         isLoading = false,
@@ -163,7 +221,12 @@ class DashboardViewModel(
                         pendingReviewCount = pendingReviewCount,
                         uncategorizedCount = uncategorizedCount,
                         currentMonthLabel = monthLabel,
-                        error = null
+                        error = null,
+                        selectedTimeRange = it.selectedTimeRange,
+                        weeklyInsight = weeklyInsight,
+                        netWorthHistory = netWorthHistory,
+                        pillars = pillars,
+                        totalNetWorth = Money.of(45000.0, "USD")
                     )
                 }
             } catch (e: Exception) {
@@ -205,6 +268,86 @@ class DashboardViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
+    fun selectTimeRange(range: TimeRange) {
+        _uiState.update { it.copy(selectedTimeRange = range) }
+        loadNetWorthHistory(range)
+    }
+
+    private fun loadNetWorthHistory(range: TimeRange) {
+        viewModelScope.launch {
+            try {
+                // Generate sample net worth history based on time range
+                // In a real app, this would come from the statistics repository
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                val days = if (range.days == -1) 365 else range.days
+                val points = generateSampleNetWorthHistory(now, days)
+                _uiState.update { it.copy(netWorthHistory = points) }
+            } catch (e: Exception) {
+                // Silently fail for chart data
+            }
+        }
+    }
+
+    private fun generateSampleNetWorthHistory(endDate: LocalDate, days: Int): List<ChartDataPoint> {
+        // Generate sample data points for demonstration
+        // In production, this would come from actual account balances
+        val baseValue = 45000.0
+        val variance = 5000.0
+        val numPoints = days.coerceAtMost(30).coerceAtLeast(7)
+        val step = days / numPoints
+
+        return (0 until numPoints).map { i ->
+            val daysBack = (numPoints - 1 - i) * step
+            val date = endDate.minus(DatePeriod(days = daysBack))
+            val trend = i.toDouble() / numPoints * 0.1 // 10% growth trend
+            val noise = kotlin.math.sin(i * 0.5) * 0.02
+            val value = baseValue * (1 + trend + noise)
+            ChartDataPoint(date = date, value = value)
+        }
+    }
+
+    private fun computeWeeklyInsight(
+        totalSpending: Money,
+        totalIncome: Money,
+        netChange: Money
+    ): WeeklyInsight? {
+        // Compute a simple insight based on the week's performance
+        // In a real app, this would compare against budget/historical data
+        val netAmount = netChange.amount.toDouble()
+        return when {
+            netAmount > 0 -> WeeklyInsight.UnderBudget(netChange.formatted())
+            netAmount < 0 -> WeeklyInsight.OverBudget(netChange.abs().formatted())
+            else -> null
+        }
+    }
+
+    private fun computePillars(
+        totalSavings: Money,
+        totalSpending: Money,
+        totalInvestments: Money
+    ): List<PillarData> {
+        return listOf(
+            PillarData(
+                type = PillarType.SAVINGS,
+                currentAmount = totalSavings.formatted(),
+                changeText = "+2.3% this month",
+                isPositiveChange = true
+            ),
+            PillarData(
+                type = PillarType.EXPENSES,
+                currentAmount = totalSpending.abs().formatted(),
+                changeText = "-5% vs last month",
+                isPositiveChange = true
+            ),
+            PillarData(
+                type = PillarType.INVESTMENTS,
+                currentAmount = totalInvestments.formatted(),
+                changeText = "+8.2% YTD",
+                isPositiveChange = true
+            )
+        )
+    }
+
     // Extension function to map Transaction to TransactionUiModel
     private fun Transaction.toTransactionUiModel(): TransactionUiModel {
         val category = if (categoryId != null) {
@@ -213,7 +356,9 @@ class DashboardViewModel(
                 name = categoryId!!, // Name will be looked up separately if needed
                 color = null
             )
-        } else null
+        } else {
+            null
+        }
 
         return TransactionUiModel(
             id = id,

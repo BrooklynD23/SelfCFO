@@ -1,0 +1,113 @@
+CREATE TABLE review_queue (
+    transaction_id TEXT NOT NULL PRIMARY KEY REFERENCES imported_transaction(id),
+    -- Transaction features (stored as JSON)
+    features_json TEXT NOT NULL,
+    -- Classification result
+    suggested_category_id TEXT NOT NULL,
+    suggested_confidence REAL NOT NULL,
+    explanation_classifier TEXT NOT NULL,
+    explanation_reason TEXT NOT NULL,
+    -- Alternatives (stored as JSON array)
+    alternatives_json TEXT NOT NULL DEFAULT '[]',
+    -- Priority and status
+    priority REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    -- Timestamps
+    enqueued_at INTEGER NOT NULL,
+    reviewed_at INTEGER,
+    -- Metadata (stored as JSON)
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'DEFERRED'))
+);
+
+CREATE INDEX idx_review_queue_status ON review_queue(status);
+CREATE INDEX idx_review_queue_priority ON review_queue(priority DESC);
+CREATE INDEX idx_review_queue_enqueued ON review_queue(enqueued_at);
+CREATE INDEX idx_review_queue_category ON review_queue(suggested_category_id);
+
+-- Insert or replace a review queue item
+insert:
+INSERT OR REPLACE INTO review_queue(
+    transaction_id,
+    features_json,
+    suggested_category_id,
+    suggested_confidence,
+    explanation_classifier,
+    explanation_reason,
+    alternatives_json,
+    priority,
+    status,
+    enqueued_at,
+    reviewed_at,
+    metadata_json
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Select all pending items ordered by priority
+selectPending:
+SELECT * FROM review_queue
+WHERE status = 'PENDING'
+ORDER BY priority DESC, enqueued_at ASC;
+
+-- Select all items (for filtering)
+selectAll:
+SELECT * FROM review_queue
+ORDER BY priority DESC, enqueued_at DESC;
+
+-- Select by transaction ID
+selectByTransactionId:
+SELECT * FROM review_queue WHERE transaction_id = ?;
+
+-- Select by status
+selectByStatus:
+SELECT * FROM review_queue
+WHERE status = ?
+ORDER BY priority DESC, enqueued_at DESC;
+
+-- Update status (for recordDecision)
+updateStatus:
+UPDATE review_queue
+SET status = ?, reviewed_at = ?
+WHERE transaction_id = ?;
+
+-- Delete a review queue item
+delete:
+DELETE FROM review_queue WHERE transaction_id = ?;
+
+-- Count pending items
+countPending:
+SELECT COUNT(*) FROM review_queue WHERE status = 'PENDING';
+
+-- Count by status
+countByStatus:
+SELECT COUNT(*) FROM review_queue WHERE status = ?;
+
+-- Get stats (total, pending, accepted, rejected, deferred, avg priority, oldest pending)
+stats:
+SELECT 
+    COUNT(*) AS total_items,
+    SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count,
+    SUM(CASE WHEN status = 'ACCEPTED' THEN 1 ELSE 0 END) AS accepted_count,
+    SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected_count,
+    SUM(CASE WHEN status = 'DEFERRED' THEN 1 ELSE 0 END) AS deferred_count,
+    AVG(priority) AS avg_priority,
+    MIN(CASE WHEN status = 'PENDING' THEN enqueued_at ELSE NULL END) AS oldest_pending_at
+FROM review_queue;
+
+-- Get next item for review (highest priority pending)
+selectNextForReview:
+SELECT * FROM review_queue
+WHERE status = 'PENDING'
+ORDER BY priority DESC, enqueued_at ASC
+LIMIT 1;
+
+-- Get batch for review (top N pending by priority)
+selectBatchForReview:
+SELECT * FROM review_queue
+WHERE status = 'PENDING'
+ORDER BY priority DESC, enqueued_at ASC
+LIMIT ?;
+
+-- Clear all items (for testing/cleanup)
+clear:
+DELETE FROM review_queue;

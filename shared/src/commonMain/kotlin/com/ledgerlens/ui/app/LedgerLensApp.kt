@@ -12,7 +12,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.ledgerlens.ui.navigation.NavGraph
 import com.ledgerlens.ui.navigation.NavHost
 import com.ledgerlens.ui.navigation.NavigationActions
 import com.ledgerlens.ui.navigation.NavigationController

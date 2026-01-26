@@ -2,6 +2,10 @@ package com.ledgerlens.data.di
 
 import com.ledgerlens.data.DatabaseDriverFactory
 import com.ledgerlens.db.LedgerLensDatabase
+import com.ledgerlens.security.AesGcmFileEncryption
+import com.ledgerlens.security.FileEncryption
+import com.ledgerlens.security.DesktopPlatformKeystore
+import com.ledgerlens.security.PlatformKeystore
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -36,6 +40,10 @@ fun createDesktopDatabaseModule(): Module = module {
         val driverFactory: DatabaseDriverFactory = get()
         LedgerLensDatabase(driverFactory.createDriver())
     }
+
+    // Security primitives (needed by KeyManagerImpl)
+    single<PlatformKeystore> { DesktopPlatformKeystore() }
+    single<FileEncryption> { AesGcmFileEncryption() }
 }
 
 /**

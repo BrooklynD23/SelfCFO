@@ -53,7 +53,10 @@ class InMemoryCorrectionRepository : CorrectionRepository {
         corrections.values.count { it.features.merchantNormalized.lowercase() == normalized }
     }
 
-    override suspend fun delete(id: String) = mutex.withLock { corrections.remove(id); Unit }
+    override suspend fun delete(id: String) = mutex.withLock {
+        corrections.remove(id)
+        Unit
+    }
 
     override suspend fun deleteOlderThan(timestamp: Instant): Int = mutex.withLock {
         val toDelete = corrections.filter { it.value.timestamp < timestamp }.keys
@@ -69,7 +72,7 @@ class InMemoryCorrectionRepository : CorrectionRepository {
  */
 class InMemoryPredictionStatsRepository : PredictionStatsRepository {
     private val mutex = Mutex()
-    
+
     private data class StatsAccumulator(
         var totalPredictions: Int = 0,
         var totalCorrections: Int = 0,
@@ -78,7 +81,7 @@ class InMemoryPredictionStatsRepository : PredictionStatsRepository {
         var mostCommonCorrectionTo: String? = null,
         var mostCommonCorrectionCount: Int = 0
     )
-    
+
     private val merchantStats = mutableMapOf<String, StatsAccumulator>()
     private val categoryStats = mutableMapOf<String, StatsAccumulator>()
 
@@ -92,7 +95,7 @@ class InMemoryPredictionStatsRepository : PredictionStatsRepository {
         val mStats = merchantStats.getOrPut(normalizedMerchant) { StatsAccumulator() }
         mStats.totalPredictions++
         if (!wasCorrect) mStats.totalCorrections++
-        
+
         val cStats = categoryStats.getOrPut(categoryId) { StatsAccumulator() }
         cStats.totalPredictions++
         if (!wasCorrect) cStats.totalCorrections++
@@ -130,13 +133,15 @@ class InMemoryPredictionStatsRepository : PredictionStatsRepository {
         merchantStats.clear()
         categoryStats.clear()
     }
-    
+
     private fun StatsAccumulator.toCorrectionStats(): CorrectionStats = CorrectionStats(
         totalPredictions = totalPredictions,
         totalCorrections = totalCorrections,
         correctionsByCategory = correctionsByCategory.toMap(),
         mostCommonCorrection = if (mostCommonCorrectionFrom != null && mostCommonCorrectionTo != null) {
             mostCommonCorrectionFrom!! to mostCommonCorrectionTo!!
-        } else null
+        } else {
+            null
+        }
     )
 }

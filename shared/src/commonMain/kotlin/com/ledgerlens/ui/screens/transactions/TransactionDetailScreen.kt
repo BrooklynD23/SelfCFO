@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,9 +19,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,11 +57,7 @@ import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionDetailScreen(
-    viewModel: TransactionsViewModel,
-    transactionId: String,
-    onNavigateBack: () -> Unit = {}
-) {
+fun TransactionDetailScreen(viewModel: TransactionsViewModel, transactionId: String, onNavigateBack: () -> Unit = {}) {
     val uiState by viewModel.detailState.collectAsState()
 
     LaunchedEffect(transactionId) {
@@ -172,10 +165,7 @@ private fun TransactionDetailContent(
 }
 
 @Composable
-private fun AmountHeader(
-    transaction: TransactionUiModel,
-    modifier: Modifier = Modifier
-) {
+private fun AmountHeader(transaction: TransactionUiModel, modifier: Modifier = Modifier) {
     LedgerLensElevatedCard(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -198,10 +188,7 @@ private fun AmountHeader(
 }
 
 @Composable
-private fun MerchantInfoCard(
-    transaction: TransactionUiModel,
-    modifier: Modifier = Modifier
-) {
+private fun MerchantInfoCard(transaction: TransactionUiModel, modifier: Modifier = Modifier) {
     LedgerLensCard(modifier = modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             DetailRow(
@@ -367,10 +354,7 @@ private fun CategorySection(
 }
 
 @Composable
-private fun AdditionalDetailsCard(
-    transaction: TransactionUiModel,
-    modifier: Modifier = Modifier
-) {
+private fun AdditionalDetailsCard(transaction: TransactionUiModel, modifier: Modifier = Modifier) {
     if (transaction.tags.isEmpty()) return
 
     LedgerLensCard(modifier = modifier.fillMaxWidth()) {
@@ -399,9 +383,7 @@ private fun AdditionalDetailsCard(
 }
 
 @Composable
-private fun ReceiptSection(
-    modifier: Modifier = Modifier
-) {
+private fun ReceiptSection(modifier: Modifier = Modifier) {
     LedgerLensCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -432,12 +414,7 @@ private fun ReceiptSection(
 }
 
 @Composable
-private fun DetailRow(
-    label: String,
-    value: String,
-    isSecondary: Boolean = false,
-    modifier: Modifier = Modifier
-) {
+private fun DetailRow(label: String, value: String, isSecondary: Boolean = false, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween

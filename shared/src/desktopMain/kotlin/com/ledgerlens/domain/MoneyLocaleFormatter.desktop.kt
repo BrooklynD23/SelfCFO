@@ -26,23 +26,23 @@ actual object MoneyLocaleFormatter {
                 maximumFractionDigits = money.scale
             }
         }
-        
+
         val divisor = (1..money.scale).fold(1.0) { acc, _ -> acc * 10.0 }
         val majorUnits = money.minorUnits.toDouble() / divisor
-        
+
         return formatter.format(majorUnits)
     }
-    
+
     private fun formatWithSymbol(money: Money): String {
         val symbol = CurrencyMetadata.getSymbol(money.currencyCode)
         val formatter = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
             minimumFractionDigits = money.scale
             maximumFractionDigits = money.scale
         }
-        
+
         val divisor = (1..money.scale).fold(1.0) { acc, _ -> acc * 10.0 }
         val majorUnits = money.minorUnits.toDouble() / divisor
-        
+
         return "$symbol${formatter.format(majorUnits)}"
     }
 }

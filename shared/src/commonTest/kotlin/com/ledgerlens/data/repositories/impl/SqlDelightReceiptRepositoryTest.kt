@@ -1,20 +1,19 @@
 package com.ledgerlens.data.repositories.impl
 
 import app.cash.turbine.test
-import com.ledgerlens.data.repositories.ItemAllocationEntity
 import com.ledgerlens.data.repositories.ReceiptEntity
 import com.ledgerlens.data.repositories.ReceiptItemEntity
 import com.ledgerlens.db.LedgerLensDatabase
 import com.ledgerlens.domain.Money
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 
 class SqlDelightReceiptRepositoryTest {
     private lateinit var database: LedgerLensDatabase
@@ -27,10 +26,7 @@ class SqlDelightReceiptRepositoryTest {
         repository = SqlDelightReceiptRepository(database, testDispatcher)
     }
 
-    private fun createTestReceipt(
-        id: String = "receipt-1",
-        merchantName: String = "Test Store"
-    ) = ReceiptEntity(
+    private fun createTestReceipt(id: String = "receipt-1", merchantName: String = "Test Store") = ReceiptEntity(
         id = id,
         imagePath = "/path/to/image.jpg",
         thumbnailPath = null,

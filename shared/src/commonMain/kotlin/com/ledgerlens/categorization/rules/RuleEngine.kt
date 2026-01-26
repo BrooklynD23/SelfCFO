@@ -53,12 +53,21 @@ class RuleEngine(private val matcher: RuleMatcher = RuleMatcher()) {
         )
     }
 
-    fun findMatchingRules(rules: List<CategoryRule>, features: TransactionFeatures, transactionDate: LocalDate? = null): List<CategoryRule> {
-        return rules.filter { it.enabled }.filter { matcher.evaluate(it, features, transactionDate).matched }.sortedByDescending { it.priority }
+    fun findMatchingRules(
+        rules: List<CategoryRule>,
+        features: TransactionFeatures,
+        transactionDate: LocalDate? = null
+    ): List<CategoryRule> {
+        return rules.filter {
+            it.enabled
+        }.filter { matcher.evaluate(it, features, transactionDate).matched }.sortedByDescending { it.priority }
     }
 
-    fun testRule(rule: CategoryRule, features: TransactionFeatures, transactionDate: LocalDate? = null): RuleMatchResult =
-        matcher.evaluate(rule, features, transactionDate)
+    fun testRule(
+        rule: CategoryRule,
+        features: TransactionFeatures,
+        transactionDate: LocalDate? = null
+    ): RuleMatchResult = matcher.evaluate(rule, features, transactionDate)
 
     private fun mergeActions(actions: List<RuleAction>): List<RuleAction> {
         val result = mutableListOf<RuleAction>()
@@ -73,13 +82,28 @@ class RuleEngine(private val matcher: RuleMatcher = RuleMatcher()) {
             val appendNotes = setNotes.filter { it.appendMode }
             val replaceNote = setNotes.firstOrNull { !it.appendMode }
             if (replaceNote != null) {
-                val combinedNote = buildString { append(replaceNote.note); appendNotes.forEach { append("\n${it.note}") } }
+                val combinedNote =
+                    buildString {
+                        append(replaceNote.note)
+                        appendNotes.forEach { append("\n${it.note}") }
+                    }
                 result.add(SetNote(combinedNote))
-            } else if (appendNotes.isNotEmpty()) result.add(SetNote(appendNotes.joinToString("\n") { it.note }, appendMode = true))
+            } else if (appendNotes.isNotEmpty()) {
+                result.add(SetNote(appendNotes.joinToString("\n") { it.note }, appendMode = true))
+            }
         }
         actions.filterIsInstance<FlagForReview>().firstOrNull()?.let { result.add(it) }
         val excludes = actions.filterIsInstance<ExcludeFromReports>()
-        if (excludes.isNotEmpty()) result.add(ExcludeFromReports(excludes.any { it.excludeFromBudget }, excludes.any { it.excludeFromStats }))
+        if (excludes.isNotEmpty()) {
+            result.add(
+                ExcludeFromReports(
+                    excludes.any {
+                        it.excludeFromBudget
+                    },
+                    excludes.any { it.excludeFromStats }
+                )
+            )
+        }
         actions.filterIsInstance<Split>().firstOrNull()?.let { result.add(it) }
         result.addAll(actions.filterIsInstance<LinkTransaction>())
         return result
@@ -119,5 +143,7 @@ data class RuleEngineResult(
     val categoryId: String? get() = primaryCategoryRule?.categoryId
     val confidence: Float get() = primaryCategoryRule?.confidence ?: 0f
     val matchedRuleIds: List<String> get() = matchedRules.map { it.rule.id }
-    companion object { val EMPTY = RuleEngineResult(emptyList(), null, emptyList(), false) }
+    companion object {
+        val EMPTY = RuleEngineResult(emptyList(), null, emptyList(), false)
+    }
 }

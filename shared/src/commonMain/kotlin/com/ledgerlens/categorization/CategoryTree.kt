@@ -35,19 +35,16 @@ class CategoryTree private constructor(
         return path
     }
 
-    fun getLeafCategories(): List<Category> =
-        nodeIndex.values.filter { it.isLeaf }.map { it.category }
+    fun getLeafCategories(): List<Category> = nodeIndex.values.filter { it.isLeaf }.map { it.category }
 
-    fun getAllCategories(): List<Category> =
-        nodeIndex.values.map { it.category }
+    fun getAllCategories(): List<Category> = nodeIndex.values.map { it.category }
 
     fun canAddChild(parentId: String): Boolean {
         val node = nodeIndex[parentId] ?: return false
         return node.depth < Category.MAX_HIERARCHY_DEPTH - 1
     }
 
-    fun getDepth(categoryId: String): Int =
-        nodeIndex[categoryId]?.depth ?: -1
+    fun getDepth(categoryId: String): Int = nodeIndex[categoryId]?.depth ?: -1
 
     fun getSubtree(categoryId: String): List<Category> {
         val node = nodeIndex[categoryId] ?: return emptyList()

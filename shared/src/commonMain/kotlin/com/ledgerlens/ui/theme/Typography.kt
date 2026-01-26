@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.sp
 /**
  * LedgerLens typography scale based on Material3.
  * Uses system default fonts for cross-platform consistency.
+ * StitchUI additions: editorial styles for Financial Resources, data display styles.
  */
 @Immutable
 data class LedgerLensTypography(
@@ -29,7 +30,19 @@ data class LedgerLensTypography(
     val labelSmall: TextStyle,
     val moneyLarge: TextStyle,
     val moneyMedium: TextStyle,
-    val moneySmall: TextStyle
+    val moneySmall: TextStyle,
+    // StitchUI Editorial styles (for Financial Resources deep-dives)
+    val editorialHeadline: TextStyle,
+    val editorialSubheadline: TextStyle,
+    val editorialBody: TextStyle,
+    val editorialCaption: TextStyle,
+    // StitchUI Data display styles (for dashboard)
+    val dataLarge: TextStyle,
+    val dataMedium: TextStyle,
+    val dataSmall: TextStyle,
+    // StitchUI Insight card styles
+    val insightHeadline: TextStyle,
+    val insightBody: TextStyle
 )
 
 val DefaultTypography = LedgerLensTypography(
@@ -158,5 +171,71 @@ val DefaultTypography = LedgerLensTypography(
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.sp
+    ),
+    // StitchUI Editorial styles (serif for Financial Resources)
+    editorialHeadline = TextStyle(
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.5).sp
+    ),
+    editorialSubheadline = TextStyle(
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+        letterSpacing = (-0.25).sp
+    ),
+    editorialBody = TextStyle(
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 17.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    editorialCaption = TextStyle(
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.sp
+    ),
+    // StitchUI Data display styles (large numeric displays)
+    dataLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-1).sp
+    ),
+    dataMedium = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.5).sp
+    ),
+    dataSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    // StitchUI Insight card styles
+    insightHeadline = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.sp
+    ),
+    insightBody = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
     )
 )

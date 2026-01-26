@@ -11,7 +11,15 @@ import kotlin.test.assertTrue
 class RuleEngineTest {
     private val engine = RuleEngine()
 
-    private fun createFeatures(merchant: String = "Test Merchant", description: String = "Test description", amountCents: Long = -1000, dayOfWeek: Int = 0, dayOfMonth: Int = 15, accountId: String? = null) = TransactionFeatures(merchant, description, description.lowercase().split(" "), amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, dayOfWeek, dayOfMonth, accountId)
+    private fun createFeatures(
+        merchant: String = "Test Merchant",
+        description: String = "Test description",
+        amountCents: Long = -1000,
+        dayOfWeek: Int = 0,
+        dayOfMonth: Int = 15,
+        accountId: String? = null
+    ) =
+        TransactionFeatures(merchant, description, description.lowercase().split(" "), amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, dayOfWeek, dayOfMonth, accountId)
 
     @Test fun evaluate_higherPriorityRuleWins() {
         val features = createFeatures(merchant = "STARBUCKS")

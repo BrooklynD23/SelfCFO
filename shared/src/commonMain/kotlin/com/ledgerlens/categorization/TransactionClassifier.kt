@@ -58,7 +58,7 @@ class ClassifierChain(
     private val classifiers: List<TransactionClassifier>,
     private val defaultCategoryId: String = Category.UNCATEGORIZED_ID
 ) : TransactionClassifier {
-    
+
     override val name: String = "classifier-chain"
     override val priority: Int = 0
 
@@ -85,8 +85,7 @@ class ClassifierChain(
         )
     }
 
-    override fun canClassify(features: TransactionFeatures): Boolean =
-        classifiers.any { it.canClassify(features) }
+    override fun canClassify(features: TransactionFeatures): Boolean = classifiers.any { it.canClassify(features) }
 
     override suspend fun train(features: TransactionFeatures, categoryId: String): Boolean {
         var anyTrained = false
@@ -104,8 +103,7 @@ class ClassifierChain(
         }
     }
 
-    fun getClassifier(name: String): TransactionClassifier? =
-        classifiers.find { it.name == name }
+    fun getClassifier(name: String): TransactionClassifier? = classifiers.find { it.name == name }
 }
 
 /**
@@ -115,7 +113,7 @@ class MerchantPriorClassifier(
     private val priorProvider: MerchantPriorProvider,
     override val minConfidence: Float = DEFAULT_MIN_CONFIDENCE
 ) : TransactionClassifier {
-    
+
     override val name: String = "merchant-prior"
     override val priority: Int = 10 // High priority - check merchant history first
 
@@ -145,8 +143,7 @@ class MerchantPriorClassifier(
         )
     }
 
-    override fun canClassify(features: TransactionFeatures): Boolean =
-        features.merchantNormalized.isNotBlank()
+    override fun canClassify(features: TransactionFeatures): Boolean = features.merchantNormalized.isNotBlank()
 
     override suspend fun train(features: TransactionFeatures, categoryId: String): Boolean {
         if (features.merchantNormalized.isBlank()) return false
@@ -166,7 +163,7 @@ class EnsembleClassifier(
     private val classifiers: List<TransactionClassifier>,
     private val weights: Map<String, Float> = emptyMap()
 ) : TransactionClassifier {
-    
+
     override val name: String = "ensemble"
     override val priority: Int = 50
 
@@ -188,13 +185,13 @@ class EnsembleClassifier(
 
         for ((result, weight) in results) {
             val weightedScore = result.confidence * weight
-            categoryScores[result.categoryId] = 
+            categoryScores[result.categoryId] =
                 (categoryScores[result.categoryId] ?: 0f) + weightedScore
             totalWeight += weight
 
             for (alt in result.alternatives) {
                 val altWeightedScore = alt.score * weight * 0.5f // Discount alternatives
-                categoryScores[alt.categoryId] = 
+                categoryScores[alt.categoryId] =
                     (categoryScores[alt.categoryId] ?: 0f) + altWeightedScore
             }
         }
@@ -206,8 +203,8 @@ class EnsembleClassifier(
         val sorted = normalizedScores.entries.sortedByDescending { it.value }
         val best = sorted.first()
 
-        val alternatives = sorted.drop(1).take(3).map { 
-            CategoryScore(it.key, it.value) 
+        val alternatives = sorted.drop(1).take(3).map {
+            CategoryScore(it.key, it.value)
         }
 
         val classifiersUsed = results.map { it.first.explanation.classifierUsed }.distinct()

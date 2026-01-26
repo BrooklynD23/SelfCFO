@@ -15,7 +15,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 
@@ -96,9 +95,11 @@ class SqlDelightStatisticsRepository(
                         categoryColor = row.category_color,
                         totalSpent = Money((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L, "USD"),
                         transactionCount = row.transaction_count?.toInt() ?: 0,
-                        percentageOfTotal = if (total > 0)
+                        percentageOfTotal = if (total > 0) {
                             (((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L) * 100f / total)
-                        else 0f
+                        } else {
+                            0f
+                        }
                     )
                 }
             }
@@ -123,9 +124,11 @@ class SqlDelightStatisticsRepository(
                         categoryColor = row.category_color,
                         totalSpent = Money((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L, "USD"),
                         transactionCount = row.transaction_count?.toInt() ?: 0,
-                        percentageOfTotal = if (total > 0)
+                        percentageOfTotal = if (total > 0) {
                             (((row.total_spent_minor as? Long) ?: row.total_spent_minor?.toLong() ?: 0L) * 100f / total)
-                        else 0f
+                        } else {
+                            0f
+                        }
                     )
                 }
             }
@@ -141,14 +144,22 @@ class SqlDelightStatisticsRepository(
             getMonthlyStats(prevYear, prevMonth)
         ) { current, previous ->
             val spendingChange = if (previous.totalSpending.minorUnits != 0L) {
-                ((current.totalSpending.minorUnits - previous.totalSpending.minorUnits) * 100f /
-                        kotlin.math.abs(previous.totalSpending.minorUnits))
-            } else 0f
+                (
+                    (current.totalSpending.minorUnits - previous.totalSpending.minorUnits) * 100f /
+                        kotlin.math.abs(previous.totalSpending.minorUnits)
+                    )
+            } else {
+                0f
+            }
 
             val incomeChange = if (previous.totalIncome.minorUnits != 0L) {
-                ((current.totalIncome.minorUnits - previous.totalIncome.minorUnits) * 100f /
-                        previous.totalIncome.minorUnits)
-            } else 0f
+                (
+                    (current.totalIncome.minorUnits - previous.totalIncome.minorUnits) * 100f /
+                        previous.totalIncome.minorUnits
+                    )
+            } else {
+                0f
+            }
 
             MonthComparison(
                 currentMonth = current,
@@ -159,11 +170,7 @@ class SqlDelightStatisticsRepository(
         }
     }
 
-    override fun getTopMerchants(
-        limit: Int,
-        startDate: LocalDate?,
-        endDate: LocalDate?
-    ): Flow<List<TopMerchant>> {
+    override fun getTopMerchants(limit: Int, startDate: LocalDate?, endDate: LocalDate?): Flow<List<TopMerchant>> {
         val start = startDate ?: LocalDate(2000, 1, 1)
         val end = endDate ?: LocalDate(2099, 12, 31)
         val startMillis = TransactionMapper.localDateToEpochMillis(start)

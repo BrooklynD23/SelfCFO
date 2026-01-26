@@ -49,7 +49,12 @@ class InMemoryCategoryRepository : CategoryRepository {
         if (cat.isSystemDefault) throw CategoryException("Cannot delete system default category")
         val children = categories.values.filter { it.parentId == id }
         if (children.isNotEmpty() && !cascade) throw CategoryException("Has children; use cascade=true")
-        if (cascade) deleteRecursive(id) else { categories.remove(id); Unit }
+        if (cascade) {
+            deleteRecursive(id)
+        } else {
+            categories.remove(id)
+            Unit
+        }
     }
 
     private fun deleteRecursive(id: String) {
@@ -66,7 +71,10 @@ class InMemoryCategoryRepository : CategoryRepository {
     override suspend fun getPath(categoryId: String): List<Category> = mutex.withLock {
         val path = mutableListOf<Category>()
         var current = categories[categoryId]
-        while (current != null) { path.add(0, current); current = current.parentId?.let { categories[it] } }
+        while (current != null) {
+            path.add(0, current)
+            current = current.parentId?.let { categories[it] }
+        }
         path
     }
 
@@ -85,8 +93,12 @@ class InMemoryCategoryRepository : CategoryRepository {
     }
 
     private fun calculateDepth(id: String): Int {
-        var depth = 0; var c = categories[id]
-        while (c?.parentId != null) { depth++; c = categories[c.parentId] }
+        var depth = 0
+        var c = categories[id]
+        while (c?.parentId != null) {
+            depth++
+            c = categories[c.parentId]
+        }
         return depth
     }
 
@@ -97,7 +109,10 @@ class InMemoryCategoryRepository : CategoryRepository {
 
     private fun wouldCreateCircle(categoryId: String, newParentId: String): Boolean {
         var current: String? = newParentId
-        while (current != null) { if (current == categoryId) return true; current = categories[current]?.parentId }
+        while (current != null) {
+            if (current == categoryId) return true
+            current = categories[current]?.parentId
+        }
         return false
     }
 

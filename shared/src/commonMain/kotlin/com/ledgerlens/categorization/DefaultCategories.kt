@@ -359,7 +359,7 @@ object DefaultCategories {
 
     val roots: List<Category> = listOf(income, expenses, transfer, uncategorized)
 
-    val expenseCategories: List<Category> = all.filter { 
+    val expenseCategories: List<Category> = all.filter {
         it.parentId == "expenses" || findRoot(it.id) == "expenses"
     }
 
@@ -377,5 +377,7 @@ object DefaultCategories {
 
     fun getCategoryById(id: String): Category? = all.find { it.id == id }
 
-    fun getChildrenOf(parentId: String): List<Category> = all.filter { it.parentId == parentId }
+    fun getChildrenOf(parentId: String): List<Category> = all.filter {
+        it.parentId == parentId
+    }
 }

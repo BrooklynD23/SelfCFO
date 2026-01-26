@@ -1,8 +1,6 @@
 package com.ledgerlens.ui.screens.receipts
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,10 +19,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ledgerlens.domain.Money
 import com.ledgerlens.receipts.ExtractedReceipt
-import com.ledgerlens.receipts.Participant
 import com.ledgerlens.receipts.ReceiptItem
 import com.ledgerlens.receipts.ReceiptItemType
-import com.ledgerlens.receipts.SplitParticipant
 import com.ledgerlens.receipts.SplitResult
 import com.ledgerlens.ui.viewmodels.receipts.LinkedTransactionInfo
 import com.ledgerlens.ui.viewmodels.receipts.ReceiptDetailUiState
@@ -43,11 +39,11 @@ fun ReceiptDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.detailState.collectAsState()
-    
+
     LaunchedEffect(receiptId) {
         viewModel.loadReceiptDetail(receiptId)
     }
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -122,7 +118,7 @@ fun ReceiptDetailScreen(
                 }
             }
         }
-        
+
         // Split bottom sheet
         if (state.isSplitSheetVisible) {
             SplitReceiptSheet(
@@ -142,7 +138,7 @@ private fun ReceiptDetailContent(
     modifier: Modifier = Modifier
 ) {
     val receipt = state.receipt ?: return
-    
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -152,12 +148,12 @@ private fun ReceiptDetailContent(
         item {
             ReceiptImageSection(imagePath = state.imagePath)
         }
-        
+
         // Receipt summary
         item {
             ReceiptSummaryCard(receipt = receipt)
         }
-        
+
         // Linked transaction
         item {
             LinkedTransactionCard(
@@ -166,7 +162,7 @@ private fun ReceiptDetailContent(
                 onUnlink = onUnlinkTransaction
             )
         }
-        
+
         // Split result (if exists)
         state.splitResult?.let { splitResult ->
             item {
@@ -176,7 +172,7 @@ private fun ReceiptDetailContent(
                 )
             }
         }
-        
+
         // Items section header
         item {
             Row(
@@ -189,7 +185,7 @@ private fun ReceiptDetailContent(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                
+
                 if (state.splitResult == null && state.participants.isNotEmpty()) {
                     TextButton(onClick = onShowSplitSheet) {
                         Icon(
@@ -203,7 +199,7 @@ private fun ReceiptDetailContent(
                 }
             }
         }
-        
+
         // Items list
         itemsIndexed(receipt.items) { index, item ->
             ReceiptItemCard(
@@ -211,19 +207,19 @@ private fun ReceiptDetailContent(
                 index = index
             )
         }
-        
+
         // Totals section
         item {
             TotalsSection(receipt = receipt)
         }
-        
+
         // Confidence warning
         if (receipt.confidence < 0.8) {
             item {
                 ConfidenceWarning(confidence = receipt.confidence)
             }
         }
-        
+
         // Bottom spacer for FAB
         item {
             Spacer(modifier = Modifier.height(80.dp))
@@ -283,9 +279,9 @@ private fun ReceiptSummaryCard(receipt: ExtractedReceipt) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 receipt.date?.let { date ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -303,7 +299,7 @@ private fun ReceiptSummaryCard(receipt: ExtractedReceipt) {
                         )
                     }
                 }
-                
+
                 receipt.time?.let { time ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -321,7 +317,7 @@ private fun ReceiptSummaryCard(receipt: ExtractedReceipt) {
                     }
                 }
             }
-            
+
             receipt.paymentMethod?.let { method ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -344,21 +340,18 @@ private fun ReceiptSummaryCard(receipt: ExtractedReceipt) {
 }
 
 @Composable
-private fun LinkedTransactionCard(
-    linkedTransaction: LinkedTransactionInfo?,
-    onLink: () -> Unit,
-    onUnlink: () -> Unit
-) {
+private fun LinkedTransactionCard(linkedTransaction: LinkedTransactionInfo?, onLink: () -> Unit, onUnlink: () -> Unit) {
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (linkedTransaction != null) 
+            containerColor = if (linkedTransaction != null) {
                 // TODO: Replace with LedgerLensTheme.colors.successContainer
                 Color(0xFF4CAF50).copy(alpha = 0.1f)
-            else 
+            } else {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
         )
     ) {
         Row(
@@ -375,22 +368,23 @@ private fun LinkedTransactionCard(
                 Icon(
                     if (linkedTransaction != null) Icons.Default.Link else Icons.Default.LinkOff,
                     contentDescription = null,
-                    tint = if (linkedTransaction != null) 
+                    tint = if (linkedTransaction != null) {
                         // TODO: Replace with LedgerLensTheme.colors.success
                         Color(0xFF4CAF50)
-                    else 
+                    } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column {
                     Text(
                         text = if (linkedTransaction != null) "Linked Transaction" else "Not Linked",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium
                     )
-                    
+
                     if (linkedTransaction != null) {
                         Text(
                             text = linkedTransaction.description,
@@ -408,7 +402,7 @@ private fun LinkedTransactionCard(
                     }
                 }
             }
-            
+
             if (linkedTransaction != null) {
                 IconButton(onClick = onUnlink) {
                     Icon(
@@ -427,10 +421,7 @@ private fun LinkedTransactionCard(
 }
 
 @Composable
-private fun SplitResultCard(
-    splitResult: SplitResult,
-    onEditSplit: () -> Unit
-) {
+private fun SplitResultCard(splitResult: SplitResult, onEditSplit: () -> Unit) {
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -456,14 +447,14 @@ private fun SplitResultCard(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                
+
                 TextButton(onClick = onEditSplit) {
                     Text("Edit")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             splitResult.participants.forEach { participant ->
                 Row(
                     modifier = Modifier
@@ -490,15 +481,15 @@ private fun SplitResultCard(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         Text(
                             text = participant.displayName,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                    
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // TODO: Replace with MoneyText
                         Text(
@@ -506,9 +497,9 @@ private fun SplitResultCard(
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         // Status indicator
                         val statusIcon = when {
                             participant.isSettled -> Icons.Default.CheckCircle
@@ -519,7 +510,7 @@ private fun SplitResultCard(
                             participant.isSettled -> Color(0xFF4CAF50)
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         }
-                        
+
                         Icon(
                             statusIcon,
                             contentDescription = participant.status.name,
@@ -529,12 +520,12 @@ private fun SplitResultCard(
                     }
                 }
             }
-            
+
             if (!splitResult.isBalanced) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Divider()
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = "Remainder: ${splitResult.remainder}¢",
                     style = MaterialTheme.typography.bodySmall,
@@ -546,10 +537,7 @@ private fun SplitResultCard(
 }
 
 @Composable
-private fun ReceiptItemCard(
-    item: ReceiptItem,
-    index: Int
-) {
+private fun ReceiptItemCard(item: ReceiptItem, index: Int) {
     val backgroundColor = when (item.type) {
         ReceiptItemType.PRODUCT -> MaterialTheme.colorScheme.surface
         ReceiptItemType.TAX -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -558,7 +546,7 @@ private fun ReceiptItemCard(
         ReceiptItemType.FEE -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
         else -> MaterialTheme.colorScheme.surface
     }
-    
+
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -581,7 +569,7 @@ private fun ReceiptItemCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    
+
                     if (item.type == ReceiptItemType.DISCOUNT) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
@@ -592,7 +580,7 @@ private fun ReceiptItemCard(
                         )
                     }
                 }
-                
+
                 if (item.quantity > 1) {
                     Text(
                         text = "Qty: ${item.quantity.toInt()} × ${formatMoney(item.effectiveUnitPrice)}",
@@ -600,7 +588,7 @@ private fun ReceiptItemCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 item.category?.let { category ->
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -610,7 +598,7 @@ private fun ReceiptItemCard(
                     )
                 }
             }
-            
+
             // TODO: Replace with MoneyText
             Text(
                 text = if (item.type == ReceiptItemType.DISCOUNT) "-${formatMoney(item.totalPrice)}" else formatMoney(item.totalPrice),
@@ -632,17 +620,17 @@ private fun TotalsSection(receipt: ExtractedReceipt) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             TotalRow(label = "Subtotal", amount = receipt.subtotal ?: receipt.calculatedSubtotal)
-            
+
             if ((receipt.taxAmount?.minorUnits ?: 0) > 0 || receipt.calculatedTax.minorUnits > 0) {
                 TotalRow(label = "Tax", amount = receipt.taxAmount ?: receipt.calculatedTax)
             }
-            
+
             if ((receipt.tipAmount?.minorUnits ?: 0) > 0 || receipt.calculatedTip.minorUnits > 0) {
                 TotalRow(label = "Tip", amount = receipt.tipAmount ?: receipt.calculatedTip)
             }
-            
+
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -704,9 +692,9 @@ private fun ConfidenceWarning(confidence: Double) {
                 // TODO: Replace with LedgerLensTheme.colors.warning
                 tint = Color(0xFFFF9800)
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Column {
                 Text(
                     text = "Low Confidence (${(confidence * 100).toInt()}%)",
@@ -724,12 +712,7 @@ private fun ConfidenceWarning(confidence: Double) {
 }
 
 @Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun ErrorContent(error: String, onRetry: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -743,17 +726,17 @@ private fun ErrorContent(
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.error
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = error,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onDismiss) {
                 Text("Dismiss")
@@ -768,5 +751,5 @@ private fun ErrorContent(
 private fun formatMoney(money: Money): String {
     val dollars = money.minorUnits / 100
     val cents = (money.minorUnits % 100).toString().padStart(2, '0')
-    return "$${dollars}.${cents}"
+    return "$$dollars.$cents"
 }

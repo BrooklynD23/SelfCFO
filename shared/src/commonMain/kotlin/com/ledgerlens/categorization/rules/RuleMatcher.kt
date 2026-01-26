@@ -22,11 +22,18 @@ class RuleMatcher {
         }
     }
 
-    fun evaluate(rule: CategoryRule, features: TransactionFeatures, transactionDate: LocalDate? = null): RuleMatchResult {
+    fun evaluate(
+        rule: CategoryRule,
+        features: TransactionFeatures,
+        transactionDate: LocalDate? = null
+    ): RuleMatchResult {
         if (!rule.enabled) return RuleMatchResult.noMatch(rule)
         val matched = matches(rule.conditions, features, transactionDate)
-        return if (matched) RuleMatchResult.match(rule, "Matched: ${rule.conditions.describe()}") 
-               else RuleMatchResult.noMatch(rule)
+        return if (matched) {
+            RuleMatchResult.match(rule, "Matched: ${rule.conditions.describe()}")
+        } else {
+            RuleMatchResult.noMatch(rule)
+        }
     }
 
     private fun matchesMerchantContains(condition: MerchantContains, features: TransactionFeatures): Boolean {
@@ -36,13 +43,22 @@ class RuleMatcher {
     }
 
     private fun matchesMerchantEquals(condition: MerchantEquals, features: TransactionFeatures): Boolean {
-        return if (condition.caseSensitive) features.merchantNormalized == condition.value
-               else features.merchantNormalized.equals(condition.value, ignoreCase = true)
+        return if (condition.caseSensitive) {
+            features.merchantNormalized == condition.value
+        } else {
+            features.merchantNormalized.equals(condition.value, ignoreCase = true)
+        }
     }
 
     private fun matchesDescriptionMatches(condition: DescriptionMatches, features: TransactionFeatures): Boolean {
         val options = if (condition.caseSensitive) emptySet() else setOf(RegexOption.IGNORE_CASE)
-        return try { Regex(condition.pattern, options).containsMatchIn(features.descriptionRaw) } catch (e: Exception) { false }
+        return try {
+            Regex(condition.pattern, options).containsMatchIn(features.descriptionRaw)
+        } catch (
+            e: Exception
+        ) {
+            false
+        }
     }
 
     private fun matchesDescriptionContains(condition: DescriptionContains, features: TransactionFeatures): Boolean {
@@ -86,7 +102,11 @@ class RuleMatcher {
         return features.accountId == condition.accountId
     }
 
-    private fun matchesConditionGroup(group: ConditionGroup, features: TransactionFeatures, transactionDate: LocalDate?): Boolean {
+    private fun matchesConditionGroup(
+        group: ConditionGroup,
+        features: TransactionFeatures,
+        transactionDate: LocalDate?
+    ): Boolean {
         return when (group.operator) {
             LogicalOperator.AND -> group.conditions.all { matches(it, features, transactionDate) }
             LogicalOperator.OR -> group.conditions.any { matches(it, features, transactionDate) }

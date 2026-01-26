@@ -48,19 +48,19 @@ data class ReceiptsUiState(
     val filteredReceipts: List<ReceiptUiModel>
         get() {
             var result = receipts
-            
+
             if (searchQuery.isNotBlank()) {
                 val query = searchQuery.lowercase()
-                result = result.filter { 
+                result = result.filter {
                     it.merchant.lowercase().contains(query) ||
-                    it.date.contains(query)
+                        it.date.contains(query)
                 }
             }
-            
+
             filterLinked?.let { linked ->
                 result = result.filter { it.isLinked == linked }
             }
-            
+
             result = when (sortBy) {
                 ReceiptSortOption.DATE_DESC -> result.sortedByDescending { it.date }
                 ReceiptSortOption.DATE_ASC -> result.sortedBy { it.date }
@@ -68,16 +68,20 @@ data class ReceiptsUiState(
                 ReceiptSortOption.AMOUNT_ASC -> result.sortedBy { it.totalAmount.minorUnits }
                 ReceiptSortOption.MERCHANT -> result.sortedBy { it.merchant.lowercase() }
             }
-            
+
             return result
         }
-    
+
     val selectedCount: Int get() = selectedReceiptIds.size
     val hasSelection: Boolean get() = selectedReceiptIds.isNotEmpty()
 }
 
 enum class ReceiptSortOption {
-    DATE_DESC, DATE_ASC, AMOUNT_DESC, AMOUNT_ASC, MERCHANT
+    DATE_DESC,
+    DATE_ASC,
+    AMOUNT_DESC,
+    AMOUNT_ASC,
+    MERCHANT
 }
 
 /**
@@ -115,7 +119,7 @@ data class SplitReceiptUiState(
     val previewResult: SplitResult? = null
 ) {
     val canSplit: Boolean get() = participants.size >= 2 && receipt != null
-    
+
     fun getParticipantTotal(participantId: String): Long {
         return when (splitType) {
             SplitType.BY_ITEM -> {
@@ -123,13 +127,18 @@ data class SplitReceiptUiState(
                     if (itemAssignments[index]?.contains(participantId) == true) {
                         val assignedCount = itemAssignments[index]?.size ?: 1
                         item.totalPrice.minorUnits / assignedCount
-                    } else 0L
+                    } else {
+                        0L
+                    }
                 }?.sum() ?: 0L
             }
             SplitType.CUSTOM -> customAmounts[participantId] ?: 0L
             SplitType.EQUAL -> {
-                if (participants.isEmpty()) 0L
-                else (receipt?.totalAmount?.minorUnits ?: 0L) / participants.size
+                if (participants.isEmpty()) {
+                    0L
+                } else {
+                    (receipt?.totalAmount?.minorUnits ?: 0L) / participants.size
+                }
             }
             SplitType.PERCENTAGE -> customAmounts[participantId] ?: 0L
         }
@@ -156,7 +165,7 @@ class ReceiptsViewModel(
     init {
         loadReceipts()
     }
-    
+
     // ========== Receipts List Actions ==========
 
     fun loadReceipts() {
@@ -165,33 +174,37 @@ class ReceiptsViewModel(
             try {
                 val receipts = receiptRepository.getAllReceipts().first()
                 val uiModels = receipts.map { it.toUiModel() }
-                _receiptsState.update { it.copy(
-                    receipts = uiModels,
-                    isLoading = false
-                )}
+                _receiptsState.update {
+                    it.copy(
+                        receipts = uiModels,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
-                _receiptsState.update { it.copy(
-                    isLoading = false,
-                    error = "Failed to load receipts: ${e.message}"
-                )}
+                _receiptsState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load receipts: ${e.message}"
+                    )
+                }
             }
         }
     }
-    
+
     fun setSearchQuery(query: String) {
         _receiptsState.update { it.copy(searchQuery = query) }
     }
-    
+
     fun setFilterLinked(linked: Boolean?) {
         _receiptsState.update { it.copy(filterLinked = linked) }
     }
-    
+
     fun setSortOption(option: ReceiptSortOption) {
         _receiptsState.update { it.copy(sortBy = option) }
     }
-    
+
     fun toggleSelectionMode() {
-        _receiptsState.update { 
+        _receiptsState.update {
             if (it.isSelectionMode) {
                 it.copy(isSelectionMode = false, selectedReceiptIds = emptySet())
             } else {
@@ -199,7 +212,7 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     fun toggleReceiptSelection(receiptId: String) {
         _receiptsState.update { state ->
             val newSelection = if (receiptId in state.selectedReceiptIds) {
@@ -210,17 +223,17 @@ class ReceiptsViewModel(
             state.copy(selectedReceiptIds = newSelection)
         }
     }
-    
+
     fun selectAllReceipts() {
         _receiptsState.update { state ->
             state.copy(selectedReceiptIds = state.filteredReceipts.map { it.id }.toSet())
         }
     }
-    
+
     fun clearSelection() {
         _receiptsState.update { it.copy(selectedReceiptIds = emptySet()) }
     }
-    
+
     fun deleteSelectedReceipts() {
         viewModelScope.launch {
             val toDelete = _receiptsState.value.selectedReceiptIds
@@ -238,7 +251,7 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     // ========== Receipt Detail Actions ==========
 
     fun loadReceiptDetail(receiptId: String) {
@@ -247,23 +260,29 @@ class ReceiptsViewModel(
             try {
                 val receiptWithItems = receiptRepository.getReceiptWithItems(receiptId).first()
                 if (receiptWithItems != null) {
-                    _detailState.update { it.copy(
-                        receipt = receiptWithItems.toExtractedReceipt(),
-                        imagePath = receiptWithItems.receipt.imagePath,
-                        participants = emptyList(), // Participant management kept local for now
-                        isLoading = false
-                    )}
+                    _detailState.update {
+                        it.copy(
+                            receipt = receiptWithItems.toExtractedReceipt(),
+                            imagePath = receiptWithItems.receipt.imagePath,
+                            participants = emptyList(), // Participant management kept local for now
+                            isLoading = false
+                        )
+                    }
                 } else {
-                    _detailState.update { it.copy(
-                        isLoading = false,
-                        error = "Receipt not found"
-                    )}
+                    _detailState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Receipt not found"
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _detailState.update { it.copy(
-                    isLoading = false,
-                    error = "Failed to load receipt: ${e.message}"
-                )}
+                _detailState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load receipt: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -273,14 +292,16 @@ class ReceiptsViewModel(
             try {
                 val receiptId = _detailState.value.receiptId
                 receiptRepository.linkToTransaction(receiptId, transactionId)
-                _detailState.update { it.copy(
-                    linkedTransaction = LinkedTransactionInfo(
-                        transactionId = transactionId,
-                        description = "Linked Transaction",
-                        amount = Money.fromMinorUnits(0, "USD"),
-                        date = ""
+                _detailState.update {
+                    it.copy(
+                        linkedTransaction = LinkedTransactionInfo(
+                            transactionId = transactionId,
+                            description = "Linked Transaction",
+                            amount = Money.fromMinorUnits(0, "USD"),
+                            date = ""
+                        )
                     )
-                )}
+                }
             } catch (e: Exception) {
                 _detailState.update { it.copy(error = "Failed to link transaction: ${e.message}") }
             }
@@ -299,10 +320,10 @@ class ReceiptsViewModel(
             }
         }
     }
-    
+
     fun showSplitSheet() {
         val detail = _detailState.value
-        _splitState.update { 
+        _splitState.update {
             SplitReceiptUiState(
                 receipt = detail.receipt,
                 participants = detail.participants
@@ -310,17 +331,17 @@ class ReceiptsViewModel(
         }
         _detailState.update { it.copy(isSplitSheetVisible = true) }
     }
-    
+
     fun hideSplitSheet() {
         _detailState.update { it.copy(isSplitSheetVisible = false) }
     }
-    
+
     // ========== Split Receipt Actions ==========
-    
+
     fun addParticipant(participant: Participant) {
         _splitState.update { it.copy(participants = it.participants + participant) }
     }
-    
+
     fun removeParticipant(participantId: String) {
         _splitState.update { state ->
             state.copy(
@@ -330,12 +351,12 @@ class ReceiptsViewModel(
             )
         }
     }
-    
+
     fun setSplitType(type: SplitType) {
         _splitState.update { it.copy(splitType = type) }
         recalculateSplit()
     }
-    
+
     fun toggleItemAssignment(itemIndex: Int, participantId: String) {
         _splitState.update { state ->
             val currentAssignments = state.itemAssignments[itemIndex] ?: emptySet()
@@ -350,23 +371,23 @@ class ReceiptsViewModel(
         }
         recalculateSplit()
     }
-    
+
     fun setCustomAmount(participantId: String, amountCents: Long) {
-        _splitState.update { 
+        _splitState.update {
             it.copy(customAmounts = it.customAmounts + (participantId to amountCents))
         }
         recalculateSplit()
     }
-    
+
     fun assignAllItemsToParticipant(participantId: String) {
         val receipt = _splitState.value.receipt ?: return
-        val assignments = receipt.productItems.indices.associateWith { 
-            setOf(participantId) 
+        val assignments = receipt.productItems.indices.associateWith {
+            setOf(participantId)
         }
         _splitState.update { it.copy(itemAssignments = assignments) }
         recalculateSplit()
     }
-    
+
     fun splitEvenly() {
         _splitState.update { state ->
             val receipt = state.receipt ?: return@update state
@@ -379,7 +400,7 @@ class ReceiptsViewModel(
         }
         recalculateSplit()
     }
-    
+
     private fun recalculateSplit() {
         viewModelScope.launch {
             _splitState.update { it.copy(isCalculating = true) }

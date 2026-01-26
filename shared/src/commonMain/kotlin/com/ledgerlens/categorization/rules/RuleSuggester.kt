@@ -19,7 +19,9 @@ class RuleSuggester(private val config: SuggesterConfig = SuggesterConfig()) {
             suggestions.addAll(suggestMerchantRules(categoryId, catCorrections))
             suggestions.addAll(suggestKeywordRules(categoryId, catCorrections))
         }
-        return suggestions.filter { it.confidence >= config.minSuggestionConfidence }.sortedByDescending { it.confidence }.take(config.maxSuggestionsToReturn)
+        return suggestions.filter {
+            it.confidence >= config.minSuggestionConfidence
+        }.sortedByDescending { it.confidence }.take(config.maxSuggestionsToReturn)
     }
 
     fun clearCorrections() = corrections.clear()
@@ -39,17 +41,22 @@ class RuleSuggester(private val config: SuggesterConfig = SuggesterConfig()) {
 
     private fun suggestKeywordRules(categoryId: String, corrections: List<UserCorrection>): List<RuleSuggestion> {
         val tokenCounts = corrections.flatMap { it.features.descriptionTokens }.groupingBy { it }.eachCount()
-        val frequentTokens = tokenCounts.filter { (t, c) -> c >= config.minCorrectionsForSuggestion && t.length >= config.minPatternLength && t !in STOP_WORDS }.toList().sortedByDescending { it.second }.take(5)
+        val frequentTokens = tokenCounts.filter { (t, c) -> c >= config.minCorrectionsForSuggestion && t.length >= config.minPatternLength && t !in STOP_WORDS }.toList().sortedByDescending {
+            it.second
+        }.take(5)
         if (frequentTokens.isEmpty()) return emptyList()
         val topKeywords = frequentTokens.map { it.first }
-        val confidence = calculateConfidence(frequentTokens.sumOf { it.second }, corrections.size * topKeywords.size, 10)
+        val confidence =
+            calculateConfidence(frequentTokens.sumOf { it.second }, corrections.size * topKeywords.size, 10)
         val rule = RuleBuilder("suggested-keywords-${topKeywords.hashCode()}").name("Keywords [${topKeywords.take(3).joinToString(", ")}] → $categoryId").description("Auto-suggested keywords").whenDescriptionContains(*topKeywords.toTypedArray()).thenSetCategory(categoryId, (confidence * 0.8f).coerceAtMost(0.75f)).suggestedRule().priority(60).build()
         return listOf(RuleSuggestion(rule, confidence, corrections.size, "Keywords ${topKeywords.take(3)} frequently appear in corrections to '$categoryId'"))
     }
 
     private fun findCommonPatterns(strings: List<String>): List<Pair<String, Int>> {
         val patterns = mutableMapOf<String, Int>()
-        for (s in strings) { for (word in s.split(Regex("\\s+"))) if (word.length >= config.minPatternLength) patterns[word] = (patterns[word] ?: 0) + 1 }
+        for (s in strings) {
+            for (word in s.split(Regex("\\s+"))) if (word.length >= config.minPatternLength) patterns[word] = (patterns[word] ?: 0) + 1
+        }
         return patterns.toList().filter { it.second >= config.minCorrectionsForSuggestion }.sortedByDescending { it.second }
     }
 
@@ -58,18 +65,38 @@ class RuleSuggester(private val config: SuggesterConfig = SuggesterConfig()) {
         return ((matches.toFloat() / total) * 0.7f + ((strength.coerceIn(3, 20) - 3) / 17f) * 0.3f).coerceIn(0f, 1f)
     }
 
-    companion object { val STOP_WORDS = setOf("the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from", "pos", "debit", "credit", "card", "purchase", "payment") }
+    companion object {
+        val STOP_WORDS =
+            setOf("the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from", "pos", "debit", "credit", "card", "purchase", "payment")
+    }
 }
 
 data class SuggesterConfig(val minCorrectionsForSuggestion: Int = 3, val minPatternLength: Int = 4, val minSuggestionConfidence: Float = 0.3f, val maxSuggestionsToReturn: Int = 10, val maxCorrectionsToTrack: Int = 1000)
-data class UserCorrection(val transactionId: String, val features: TransactionFeatures, val originalCategoryId: String?, val newCategoryId: String, val timestamp: Instant = Clock.System.now())
-data class RuleSuggestion(val rule: CategoryRule, val confidence: Float, val basedOnCorrections: Int, val reason: String) {
+data class UserCorrection(
+    val transactionId: String,
+    val features: TransactionFeatures,
+    val originalCategoryId: String?,
+    val newCategoryId: String,
+    val timestamp: Instant = Clock.System.now()
+)
+data class RuleSuggestion(
+    val rule: CategoryRule,
+    val confidence: Float,
+    val basedOnCorrections: Int,
+    val reason: String
+) {
     val isHighConfidence get() = confidence >= 0.8f
     val shouldShowToUser get() = confidence >= 0.3f
 }
 
 class RuleSuggestionService(private val suggester: RuleSuggester, private val repository: RuleRepository) {
-    suspend fun recordCorrectionAndSuggest(correction: UserCorrection) = suggester.also { it.recordCorrection(correction) }.generateSuggestions()
-    suspend fun acceptSuggestion(suggestion: RuleSuggestion) { repository.upsert(suggestion.rule) }
-    suspend fun getPendingSuggestions(): List<RuleSuggestion> { val existing = repository.getBySource(RuleSource.SUGGESTED).map { it.id }.toSet(); return suggester.generateSuggestions().filter { it.rule.id !in existing } }
+    suspend fun recordCorrectionAndSuggest(correction: UserCorrection) =
+        suggester.also { it.recordCorrection(correction) }.generateSuggestions()
+    suspend fun acceptSuggestion(suggestion: RuleSuggestion) {
+        repository.upsert(suggestion.rule)
+    }
+    suspend fun getPendingSuggestions(): List<RuleSuggestion> {
+        val existing = repository.getBySource(RuleSource.SUGGESTED).map { it.id }.toSet()
+        return suggester.generateSuggestions().filter { it.rule.id !in existing }
+    }
 }

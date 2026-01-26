@@ -15,7 +15,8 @@
       "Bash(git stash drop:*)",
       "Bash(./gradlew :shared:compileKotlinDesktop:*)",
       "Bash(ls:*)",
-      "Bash(/bin/bash ./gradlew:*)"
+      "Bash(/bin/bash ./gradlew:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

@@ -35,10 +35,7 @@ class ExplanationGenerator(
     /**
      * Generate explanation from a classification result only.
      */
-    fun generateFromResult(
-        result: ClassificationResult,
-        categoryName: String? = null
-    ): CategoryExplanation {
+    fun generateFromResult(result: ClassificationResult, categoryName: String? = null): CategoryExplanation {
         val factors = extractFactorsFromResult(result)
         return generate(result, factors, categoryName)
     }
@@ -49,10 +46,12 @@ class ExplanationGenerator(
 
         // Add merchant prior if present
         explanation.merchantPrior?.let { prior ->
-            factors.add(ExplanationFactor.merchantMatch(
-                merchantName = "merchant",
-                score = prior
-            ))
+            factors.add(
+                ExplanationFactor.merchantMatch(
+                    merchantName = "merchant",
+                    score = prior
+                )
+            )
         }
 
         // Add token matches as keyword factors
@@ -72,48 +71,46 @@ class ExplanationGenerator(
 
         // If no factors extracted, add a default
         if (factors.isEmpty) {
-            factors.add(ExplanationFactor(
-                reason = ExplanationReason.fromClassifier(explanation.classifierUsed),
-                value = explanation.reason,
-                weight = 1.0f,
-                rawScore = result.confidence
-            ))
+            factors.add(
+                ExplanationFactor(
+                    reason = ExplanationReason.fromClassifier(explanation.classifierUsed),
+                    value = explanation.reason,
+                    weight = 1.0f,
+                    rawScore = result.confidence
+                )
+            )
         }
 
         return factors
     }
 
-    private fun buildSummary(
-        result: ClassificationResult,
-        factors: FactorCollection,
-        categoryName: String?
-    ): String {
+    private fun buildSummary(result: ClassificationResult, factors: FactorCollection, categoryName: String?): String {
         val name = categoryName ?: result.categoryId
         val confidence = ConfidenceLevel.fromScore(result.confidence)
         val primary = factors.primaryFactor
 
         return when {
-            primary == null -> 
+            primary == null ->
                 "Categorized as '$name' (${confidence.displayName})"
-            
+
             primary.reason == ExplanationReason.RULE_MATCH ->
                 "Matched rule '${primary.value}' → '$name'"
-            
+
             primary.reason == ExplanationReason.MERCHANT_MATCH ->
                 "Merchant '${primary.value}' is usually '$name'"
-            
+
             primary.reason == ExplanationReason.KEYWORD_MATCH ->
                 "Keyword '${primary.value}' suggests '$name'"
-            
+
             primary.reason == ExplanationReason.USER_HISTORY ->
                 "Similar transactions were '$name'"
-            
+
             factors.size > 1 -> {
                 val percentages = factors.getContributionPercentages().take(2)
                 val parts = percentages.map { (f, pct) -> "${f.describe()} ($pct%)" }
                 "${parts.joinToString(" + ")} → '$name'"
             }
-            
+
             else -> "Categorized as '$name' based on ${primary.describe()}"
         }
     }
@@ -169,8 +166,8 @@ data class CategoryExplanation(
      */
     val accessibleExplanation: String
         get() = "Category: ${categoryName ?: categoryId}. " +
-                "Confidence: ${confidenceLevel.displayName}. " +
-                summary
+            "Confidence: ${confidenceLevel.displayName}. " +
+            summary
 
     /**
      * Get compact explanation for lists.
@@ -223,8 +220,7 @@ class ExplanationFormatter(
     /**
      * Format as a summary suitable for transaction lists.
      */
-    fun formatSummary(explanation: CategoryExplanation): String =
-        explanation.summary
+    fun formatSummary(explanation: CategoryExplanation): String = explanation.summary
 
     /**
      * Format with full details for category editing screens.
@@ -236,24 +232,22 @@ class ExplanationFormatter(
         lines.add("Confidence: ${explanation.confidenceLevel.displayName} (${(explanation.confidence * 100).toInt()}%)")
         lines.add("")
         lines.add("Contributing factors:")
-        
+
         val percentages = FactorCollection(explanation.factors).getContributionPercentages()
         for ((factor, pct) in percentages) {
             lines.add("  • ${factor.describe()}: $pct%")
         }
-        
+
         return lines.joinToString("\n")
     }
 
     /**
      * Format for accessibility (screen readers).
      */
-    fun formatAccessible(explanation: CategoryExplanation): String =
-        explanation.accessibleExplanation
+    fun formatAccessible(explanation: CategoryExplanation): String = explanation.accessibleExplanation
 
     /**
      * Format compact version for tight spaces.
      */
-    fun formatCompact(explanation: CategoryExplanation): String =
-        explanation.compactExplanation
+    fun formatCompact(explanation: CategoryExplanation): String = explanation.compactExplanation
 }

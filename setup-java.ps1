@@ -1,123 +1,116 @@
-# Setup Java for Gradle - LedgerLens Project
-# This script helps find and set JAVA_HOME for this project
+Set-StrictMode -Version Latest
+
+# Setup Java for Gradle - LedgerLens Project (Windows)
+# - Finds JDK installs (prefers JDK 17)
+# - Sets JAVA_HOME for the current PowerShell session
+# - Optionally prepends %JAVA_HOME%\bin to PATH (current session)
 
 Write-Host "=== Java Setup for LedgerLens ===" -ForegroundColor Cyan
 Write-Host ""
 
-# Check if JAVA_HOME is already set
-if ($env:JAVA_HOME) {
-    Write-Host "JAVA_HOME is currently set to: $env:JAVA_HOME" -ForegroundColor Yellow
-    if (Test-Path "$env:JAVA_HOME\bin\java.exe") {
-        Write-Host "✓ Java found at JAVA_HOME" -ForegroundColor Green
-        & "$env:JAVA_HOME\bin\java.exe" -version
-        Write-Host ""
-        Write-Host "JAVA_HOME is already configured correctly!" -ForegroundColor Green
-        exit 0
-    } else {
-        Write-Host "✗ Java not found at JAVA_HOME path" -ForegroundColor Red
-    }
+function Test-JavaHome($path) {
+    if (-not $path) { return $false }
+    return (Test-Path (Join-Path $path "bin\java.exe"))
 }
 
-# Search common installation locations
+# If JAVA_HOME already set and valid, just verify.
+if (Test-JavaHome $env:JAVA_HOME) {
+    Write-Host "JAVA_HOME is already set:" -ForegroundColor Green
+    Write-Host "  $env:JAVA_HOME" -ForegroundColor White
+    & (Join-Path $env:JAVA_HOME "bin\java.exe") -version
+    Write-Host ""
+    Write-Host "You're good to run:" -ForegroundColor Cyan
+    Write-Host "  .\gradlew.bat check" -ForegroundColor White
+    exit 0
+}
+
 Write-Host "Searching for Java installations..." -ForegroundColor Cyan
 
-$searchPaths = @(
+$programFilesX86 = ${env:ProgramFiles(x86)}
+
+$roots = @(
     "C:\Program Files\Java",
     "C:\Program Files\Eclipse Adoptium",
     "C:\Program Files\Microsoft",
     "C:\Program Files\Amazon Corretto",
+    "C:\Program Files\Android\Android Studio\jbr",
     "$env:LOCALAPPDATA\Programs",
     "$env:ProgramFiles\Java",
-    "$env:ProgramFiles(x86)\Java"
-)
+    (Join-Path $programFilesX86 "Java")
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
 
-$foundJavas = @()
+$candidates = @()
 
-foreach ($path in $searchPaths) {
-    if (Test-Path $path) {
-        $jdkDirs = Get-ChildItem $path -Directory -ErrorAction SilentlyContinue | 
-            Where-Object { $_.Name -match 'jdk|java|openjdk|temurin|adoptium|corretto' }
-        
-        foreach ($jdkDir in $jdkDirs) {
-            $javaExe = Join-Path $jdkDir.FullName "bin\java.exe"
-            if (Test-Path $javaExe) {
-                $version = & $javaExe -version 2>&1 | Select-Object -First 1
-                $foundJavas += [PSCustomObject]@{
-                    Path = $jdkDir.FullName
-                    Version = $version
-                }
+foreach ($root in $roots) {
+    Get-ChildItem $root -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+        $javaExe = Join-Path $_.FullName "bin\java.exe"
+        if (Test-Path $javaExe) {
+            $verLine = (& $javaExe -version 2>&1 | Select-Object -First 1)
+            $candidates += [PSCustomObject]@{
+                Path    = $_.FullName
+                Version = $verLine
             }
         }
     }
 }
 
-if ($foundJavas.Count -eq 0) {
+if ($candidates.Count -eq 0) {
     Write-Host ""
-    Write-Host "✗ No Java installations found in common locations." -ForegroundColor Red
+    Write-Host "No Java installations found in common locations." -ForegroundColor Red
     Write-Host ""
-    Write-Host "Please install JDK 17 from one of these sources:" -ForegroundColor Yellow
-    Write-Host "  - Eclipse Temurin: https://adoptium.net/temurin/releases/?version=17" -ForegroundColor Cyan
-    Write-Host "  - Microsoft Build of OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download" -ForegroundColor Cyan
-    Write-Host "  - Amazon Corretto: https://aws.amazon.com/corretto/" -ForegroundColor Cyan
+    Write-Host "Install JDK 17, then re-run this script." -ForegroundColor Yellow
+    Write-Host "  - Eclipse Temurin: https://adoptium.net/temurin/releases/?version=17" -ForegroundColor White
+    Write-Host "  - Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download" -ForegroundColor White
     Write-Host ""
-    Write-Host "After installation, run this script again or set JAVA_HOME manually:" -ForegroundColor Yellow
-    Write-Host '  $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"' -ForegroundColor White
+    Write-Host "Manual (current session):" -ForegroundColor Yellow
+    Write-Host "  `$env:JAVA_HOME = ""C:\Program Files\Java\jdk-17""" -ForegroundColor White
     exit 1
 }
 
-# Display found Java installations
 Write-Host ""
 Write-Host "Found Java installation(s):" -ForegroundColor Green
-for ($i = 0; $i -lt $foundJavas.Count; $i++) {
-    Write-Host "  [$($i + 1)] $($foundJavas[$i].Path)" -ForegroundColor Cyan
-    Write-Host "      $($foundJavas[$i].Version)" -ForegroundColor Gray
+$i = 1
+foreach ($c in $candidates) {
+    Write-Host ("  [{0}] {1}" -f $i, $c.Path) -ForegroundColor White
+    Write-Host ("      {0}" -f $c.Version) -ForegroundColor DarkGray
+    $i++
 }
 
-# Auto-select JDK 17 if available, otherwise use first found
-$selectedJava = $null
-foreach ($java in $foundJavas) {
-    if ($java.Version -match 'version "17' -or $java.Path -match '17|jdk-17') {
-        $selectedJava = $java
-        break
-    }
+# Prefer JDK 17 if present; else first candidate.
+# Prefer JDK 17, then JDK 21, else first candidate.
+$selected = $candidates | Where-Object { $_.Version -match 'version \"17' -or $_.Path -match 'jdk-?17|\\17($|\\)' } | Select-Object -First 1
+if (-not $selected) {
+    $selected = $candidates | Where-Object { $_.Version -match 'version \"21' -or $_.Path -match 'jdk-?21|\\21($|\\)' } | Select-Object -First 1
 }
+if (-not $selected) { $selected = $candidates[0] }
 
-if (-not $selectedJava) {
-    $selectedJava = $foundJavas[0]
-    Write-Host ""
-    Write-Host "⚠ Warning: JDK 17 not found. Using: $($selectedJava.Path)" -ForegroundColor Yellow
-    Write-Host "  Gradle 8.5 requires JDK 17+. Please install JDK 17 if possible." -ForegroundColor Yellow
-}
+$env:JAVA_HOME = $selected.Path
+$env:Path = (Join-Path $env:JAVA_HOME "bin") + ";" + $env:Path
 
-# Set JAVA_HOME for current session
-$env:JAVA_HOME = $selectedJava.Path
 Write-Host ""
-Write-Host "✓ JAVA_HOME set to: $env:JAVA_HOME" -ForegroundColor Green
+Write-Host "JAVA_HOME set for this session:" -ForegroundColor Green
+Write-Host "  $env:JAVA_HOME" -ForegroundColor White
 
-# Verify
 Write-Host ""
-Write-Host "Verifying Java installation..." -ForegroundColor Cyan
-& "$env:JAVA_HOME\bin\java.exe" -version
+Write-Host "Verifying Java..." -ForegroundColor Cyan
+& (Join-Path $env:JAVA_HOME "bin\java.exe") -version
 
-# Test Gradle
 Write-Host ""
-Write-Host "Testing Gradle..." -ForegroundColor Cyan
+Write-Host "Testing Gradle wrapper..." -ForegroundColor Cyan
 if (Test-Path ".\gradlew.bat") {
     & .\gradlew.bat --version
 } else {
-    Write-Host "gradlew.bat not found. Make sure you're in the project root." -ForegroundColor Yellow
+    Write-Host "gradlew.bat not found. Run this script from the repo root." -ForegroundColor Yellow
 }
 
 Write-Host ""
-Write-Host "=== Setup Complete ===" -ForegroundColor Green
+Write-Host "Done." -ForegroundColor Green
 Write-Host ""
-Write-Host "JAVA_HOME is set for this PowerShell session." -ForegroundColor Cyan
+Write-Host "If you open a new terminal, re-run:" -ForegroundColor Cyan
+Write-Host ("  `$env:JAVA_HOME = ""{0}""" -f $env:JAVA_HOME) -ForegroundColor White
 Write-Host ""
-Write-Host "To make this permanent, set JAVA_HOME system-wide:" -ForegroundColor Yellow
-Write-Host "  1. Open 'Environment Variables' in Windows Settings" -ForegroundColor White
-Write-Host "  2. Add JAVA_HOME = $env:JAVA_HOME" -ForegroundColor White
-Write-Host "  3. Add %JAVA_HOME%\bin to PATH" -ForegroundColor White
+Write-Host "Persist for your user (new shells):" -ForegroundColor Cyan
+Write-Host ("  [System.Environment]::SetEnvironmentVariable('JAVA_HOME','{0}','User')" -f $env:JAVA_HOME) -ForegroundColor White
+Write-Host "  # then restart PowerShell" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "Or run this command in each new PowerShell session:" -ForegroundColor Yellow
-$javaHomeCmd = '$env:JAVA_HOME = "' + $env:JAVA_HOME + '"'
-Write-Host "  $javaHomeCmd" -ForegroundColor White
+Write-Host "Or set JAVA_HOME permanently via Windows Environment Variables UI." -ForegroundColor Cyan

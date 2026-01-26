@@ -2,11 +2,11 @@ package com.ledgerlens.security
 
 /**
  * Platform-specific secure key storage.
- * 
+ *
  * - Android: Uses Android Keystore with hardware backing when available
  * - Desktop: Uses OS keychain (Windows Credential Manager, macOS Keychain, etc.)
  */
-expect class PlatformKeystore {
+interface PlatformKeystore {
     /**
      * Store wrapped KEK in platform secure storage.
      */

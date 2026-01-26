@@ -86,10 +86,7 @@ class StubKeyManager : KeyManager {
         return Result.success(Unit)
     }
 
-    override suspend fun changePassphrase(
-        currentPassphrase: String,
-        newPassphrase: String
-    ): Result<Unit> {
+    override suspend fun changePassphrase(currentPassphrase: String, newPassphrase: String): Result<Unit> {
         if (!unlocked) {
             return Result.failure(IllegalStateException("Database is locked"))
         }

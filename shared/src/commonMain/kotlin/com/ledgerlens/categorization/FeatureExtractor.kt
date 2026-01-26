@@ -1,7 +1,5 @@
 package com.ledgerlens.categorization
 
-import kotlin.math.abs
-
 /**
  * Extracts features from transaction data for ML classification.
  */
@@ -142,11 +140,11 @@ class FeatureExtractor(
         const val MAX_MERCHANT_LENGTH = 100
 
         private val NOISE_PATTERN = Regex(
-            """(\d{4,})|""" +           // Long numbers (IDs, zip codes)
-            """([*#]+\d+)|""" +         // Masked card numbers
-            """(\b[A-Z]{2}\s*\d{5}\b)|""" + // State + ZIP
-            """(\bPOS\b)|(\bDEBIT\b)|(\bPURCHASE\b)|""" + // Common noise words
-            """(\d{2}/\d{2})""",         // Date patterns
+            """(\d{4,})|""" + // Long numbers (IDs, zip codes)
+                """([*#]+\d+)|""" + // Masked card numbers
+                """(\b[A-Z]{2}\s*\d{5}\b)|""" + // State + ZIP
+                """(\bPOS\b)|(\bDEBIT\b)|(\bPURCHASE\b)|""" + // Common noise words
+                """(\d{2}/\d{2})""", // Date patterns
             RegexOption.IGNORE_CASE
         )
 

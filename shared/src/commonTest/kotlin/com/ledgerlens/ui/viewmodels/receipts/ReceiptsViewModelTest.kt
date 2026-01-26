@@ -2,6 +2,7 @@ package com.ledgerlens.ui.viewmodels.receipts
 
 import com.ledgerlens.data.repositories.fake.FakeReceiptRepository
 import com.ledgerlens.data.repositories.fake.TestDataFactory
+import kotlin.test.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -9,7 +10,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReceiptsViewModelTest {
@@ -24,11 +24,13 @@ class ReceiptsViewModelTest {
         receiptRepository = FakeReceiptRepository()
 
         // Seed test data
-        receiptRepository.setReceipts(listOf(
-            TestDataFactory.createReceipt(id = "receipt-1", merchantName = "Walmart", linkedTransactionId = "tx-1"),
-            TestDataFactory.createReceipt(id = "receipt-2", merchantName = "Target", linkedTransactionId = null),
-            TestDataFactory.createReceipt(id = "receipt-3", merchantName = "Costco", linkedTransactionId = "tx-2")
-        ))
+        receiptRepository.setReceipts(
+            listOf(
+                TestDataFactory.createReceipt(id = "receipt-1", merchantName = "Walmart", linkedTransactionId = "tx-1"),
+                TestDataFactory.createReceipt(id = "receipt-2", merchantName = "Target", linkedTransactionId = null),
+                TestDataFactory.createReceipt(id = "receipt-3", merchantName = "Costco", linkedTransactionId = "tx-2")
+            )
+        )
 
         viewModel = ReceiptsViewModel(receiptRepository)
     }

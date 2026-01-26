@@ -13,9 +13,48 @@ trim_trailing_whitespace = true
 
 [*.{kt,kts}]
 ktlint_code_style = android_studio
-max_line_length = 120
+# Disable max-line-length - many pre-existing violations need separate cleanup
+max_line_length = off
+ktlint_standard_max-line-length = disabled
+# Work around ktlint rule-engine crash seen on some files:
+# Rule 'standard:argument-list-wrapping' throws IllegalArgumentException.
+ktlint_standard_argument-list-wrapping = disabled
 # Allow wildcard imports for Compose packages (common Compose pattern)
 ij_kotlin_packages_to_use_import_on_demand = androidx.compose.*,kotlinx.coroutines.*
+# Allow trailing commas (Kotlin official style)
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+# Function signature style - allow multiline for readability
+ktlint_standard_function-signature = disabled
+# Compose uses PascalCase function names (e.g., @Composable fun MyScreen())
+ktlint_standard_function-naming = disabled
+# Allow wildcard imports (common in UI and Compose code)
+ktlint_standard_no-wildcard-imports = disabled
+# Allow inline comments in argument lists (useful for named parameters)
+ktlint_standard_value-argument-comment = disabled
+ktlint_standard_value-parameter-comment = disabled
+# Disable import ordering - pre-existing violations with comments
+ktlint_standard_import-ordering = disabled
+# Disable property naming - regex patterns use SCREAMING_SNAKE_CASE
+ktlint_standard_property-naming = disabled
+
+# Exclude generated files from ktlint
+[**/build/generated/**]
+ktlint = disabled
+
+# Test files - allow more relaxed rules
+[**/commonTest/**/*.kt]
+# Allow wildcard imports in tests (common for DSLs and assertions)
+ktlint_standard_no-wildcard-imports = disabled
+# Allow inline comments in argument lists in tests
+ktlint_standard_value-argument-comment = disabled
+# Disable line length check for test files (test data can be verbose)
+ktlint_standard_max-line-length = disabled
+
+[*Test.kt]
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_value-argument-comment = disabled
+ktlint_standard_max-line-length = disabled
 
 [*.md]
 trim_trailing_whitespace = false

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -90,11 +89,7 @@ fun EmptyState(
  * Empty state for transaction lists.
  */
 @Composable
-fun EmptyTransactionsState(
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-    onImport: (() -> Unit)? = null
-) {
+fun EmptyTransactionsState(modifier: Modifier = Modifier, icon: ImageVector? = null, onImport: (() -> Unit)? = null) {
     EmptyState(
         title = "No Transactions",
         description = "Import your bank statement or add transactions manually to get started.",
@@ -129,11 +124,7 @@ fun EmptySearchState(
  * Empty state for filtered results.
  */
 @Composable
-fun EmptyFilterState(
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-    onClearFilters: (() -> Unit)? = null
-) {
+fun EmptyFilterState(modifier: Modifier = Modifier, icon: ImageVector? = null, onClearFilters: (() -> Unit)? = null) {
     EmptyState(
         title = "No Matching Transactions",
         description = "No transactions match your current filters. Try adjusting your filters.",
@@ -167,11 +158,7 @@ fun EmptyCategoriesState(
  * Compact empty state for inline use.
  */
 @Composable
-fun EmptyStateCompact(
-    message: String,
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null
-) {
+fun EmptyStateCompact(message: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Column(
         modifier = modifier
             .fillMaxWidth()

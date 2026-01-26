@@ -2,9 +2,9 @@ package com.ledgerlens.domain
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MoneyTest {
 
@@ -168,7 +168,7 @@ class MoneyAllocatorTest {
 
     @Test
     fun `split evenly with no remainder`() {
-        val total = Money(1000L, "USD")  // $10.00
+        val total = Money(1000L, "USD") // $10.00
         val splits = MoneyAllocator.splitEqual(total, 4)
 
         assertEquals(4, splits.size)
@@ -178,11 +178,11 @@ class MoneyAllocatorTest {
 
     @Test
     fun `split evenly with remainder goes to first`() {
-        val total = Money(1000L, "USD")  // $10.00
+        val total = Money(1000L, "USD") // $10.00
         val splits = MoneyAllocator.splitEqual(total, 3)
 
         assertEquals(3, splits.size)
-        assertEquals(334L, splits[0].minorUnits)  // Gets remainder
+        assertEquals(334L, splits[0].minorUnits) // Gets remainder
         assertEquals(333L, splits[1].minorUnits)
         assertEquals(333L, splits[2].minorUnits)
         assertEquals(total.minorUnits, splits.sumOf { it.minorUnits })
@@ -199,13 +199,13 @@ class MoneyAllocatorTest {
         assertEquals(3, splits.size)
         assertEquals(333L, splits[0].minorUnits)
         assertEquals(333L, splits[1].minorUnits)
-        assertEquals(334L, splits[2].minorUnits)  // Gets remainder
+        assertEquals(334L, splits[2].minorUnits) // Gets remainder
         assertEquals(total.minorUnits, splits.sumOf { it.minorUnits })
     }
 
     @Test
     fun `percentage split sums to total`() {
-        val total = Money(10000L, "USD")  // $100.00
+        val total = Money(10000L, "USD") // $100.00
         val splits = MoneyAllocator.splitByPercentBps(total, listOf(3333, 3333, 3334))
 
         assertEquals(total.minorUnits, splits.sumOf { it.minorUnits })
@@ -213,10 +213,10 @@ class MoneyAllocatorTest {
 
     @Test
     fun `ratio split works correctly`() {
-        val total = Money(100L, "USD")  // $1.00
+        val total = Money(100L, "USD") // $1.00
         val splits = MoneyAllocator.splitByRatio(total, listOf(1, 2, 1))
 
-        assertEquals(4, splits.size)
+        assertEquals(3, splits.size) // 3 ratios = 3 splits
         assertEquals(total.minorUnits, splits.sumOf { it.minorUnits })
         // 25%, 50%, 25%
         assertEquals(25L, splits[0].minorUnits)

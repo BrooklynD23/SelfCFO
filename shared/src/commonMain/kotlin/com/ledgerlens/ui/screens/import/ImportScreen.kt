@@ -216,12 +216,7 @@ fun ImportScreen(
 }
 
 @Composable
-private fun ImportSectionHeader(
-    stepNumber: Int,
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
-) {
+private fun ImportSectionHeader(stepNumber: Int, title: String, subtitle: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -315,12 +310,7 @@ private fun FileTypeCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BankChip(
-    bank: BankSource,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun BankChip(bank: BankSource, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     FilterChip(
         selected = isSelected,
         onClick = onClick,
@@ -333,7 +323,9 @@ private fun BankChip(
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
             }
-        } else null,
+        } else {
+            null
+        },
         modifier = modifier
     )
 }

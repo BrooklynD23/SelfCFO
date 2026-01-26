@@ -35,6 +35,8 @@ subprojects {
 
         filter {
             exclude("**/generated/**")
+            exclude("**/build/**")
+            exclude { element -> element.file.path.contains("/build/") }
             include("**/kotlin/**")
         }
     }

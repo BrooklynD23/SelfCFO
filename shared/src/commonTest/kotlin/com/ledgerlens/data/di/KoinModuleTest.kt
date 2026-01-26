@@ -8,14 +8,14 @@ import com.ledgerlens.data.repositories.RuleRepository
 import com.ledgerlens.data.repositories.StatisticsRepository
 import com.ledgerlens.data.repositories.TransactionRepository
 import com.ledgerlens.data.repositories.impl.TestDatabaseHelper
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.test.KoinTest
-import org.koin.test.get
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.test.KoinTest
+import org.koin.test.get
 
 /**
  * Integration tests for Koin dependency injection module.

@@ -2,7 +2,7 @@ package com.ledgerlens.security
 
 /**
  * File encryption interface using AES-256-GCM.
- * 
+ *
  * Provides authenticated encryption for attachments (receipts, statements).
  */
 interface FileEncryption {
@@ -30,10 +30,10 @@ interface FileEncryption {
 object AesGcmConstants {
     /** Initialization vector length in bytes */
     const val IV_LENGTH = 12
-    
+
     /** Authentication tag length in bytes */
     const val TAG_LENGTH = 16
-    
+
     /** Key length in bytes (AES-256) */
     const val KEY_LENGTH = 32
 }

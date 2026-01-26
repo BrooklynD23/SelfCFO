@@ -21,7 +21,16 @@ class GroupException(message: String, cause: Throwable? = null) : Exception(mess
 sealed class GroupResult<out T> {
     data class Success<T>(val value: T) : GroupResult<T>()
     data class Failure(val error: GroupException) : GroupResult<Nothing>()
-    inline fun <R> map(transform: (T) -> R): GroupResult<R> = when (this) { is Success -> Success(transform(value)); is Failure -> this }
-    fun getOrNull(): T? = when (this) { is Success -> value; is Failure -> null }
-    fun getOrThrow(): T = when (this) { is Success -> value; is Failure -> throw error }
+    inline fun <R> map(transform: (T) -> R): GroupResult<R> = when (this) {
+        is Success -> Success(transform(value))
+        is Failure -> this
+    }
+    fun getOrNull(): T? = when (this) {
+        is Success -> value
+        is Failure -> null
+    }
+    fun getOrThrow(): T = when (this) {
+        is Success -> value
+        is Failure -> throw error
+    }
 }

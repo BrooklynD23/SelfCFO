@@ -6,7 +6,6 @@ import com.ledgerlens.data.repositories.AccountWithBalance
 import com.ledgerlens.db.Account
 import com.ledgerlens.db.Account_balance
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 

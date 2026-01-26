@@ -6,13 +6,6 @@ import com.ledgerlens.data.repositories.fake.FakeTransactionRepository
 import com.ledgerlens.data.repositories.fake.TestDataFactory
 import com.ledgerlens.ui.viewmodels.dashboard.DashboardEvent
 import com.ledgerlens.ui.viewmodels.dashboard.DashboardViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,6 +14,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
@@ -38,16 +38,20 @@ class DashboardViewModelTest {
         statisticsRepository = FakeStatisticsRepository()
 
         // Seed test data
-        categoryRepository.setCategories(listOf(
-            TestDataFactory.createCategory(id = "groceries", name = "Groceries"),
-            TestDataFactory.createCategory(id = "dining", name = "Dining")
-        ))
+        categoryRepository.setCategories(
+            listOf(
+                TestDataFactory.createCategory(id = "groceries", name = "Groceries"),
+                TestDataFactory.createCategory(id = "dining", name = "Dining")
+            )
+        )
 
-        transactionRepository.setTransactions(listOf(
-            TestDataFactory.createTransaction(id = "1", merchantNormalized = "WALMART", categoryId = "groceries", amountMinorUnits = -5000),
-            TestDataFactory.createTransaction(id = "2", merchantNormalized = "STARBUCKS", categoryId = "dining", amountMinorUnits = -450),
-            TestDataFactory.createTransaction(id = "3", merchantNormalized = "SALARY", categoryId = null, amountMinorUnits = 500000)
-        ))
+        transactionRepository.setTransactions(
+            listOf(
+                TestDataFactory.createTransaction(id = "1", merchantNormalized = "WALMART", categoryId = "groceries", amountMinorUnits = -5000),
+                TestDataFactory.createTransaction(id = "2", merchantNormalized = "STARBUCKS", categoryId = "dining", amountMinorUnits = -450),
+                TestDataFactory.createTransaction(id = "3", merchantNormalized = "SALARY", categoryId = null, amountMinorUnits = 500000)
+            )
+        )
 
         statisticsRepository.setPendingReviewCount(3)
         statisticsRepository.setUncategorizedCount(2)

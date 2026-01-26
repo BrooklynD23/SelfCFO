@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -154,10 +153,7 @@ fun ReviewInboxScreen(
 }
 
 @Composable
-private fun ReviewStatsHeader(
-    stats: ReviewStats,
-    modifier: Modifier = Modifier
-) {
+private fun ReviewStatsHeader(stats: ReviewStats, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -194,7 +190,7 @@ private fun ReviewStatsHeader(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
             Row(
@@ -210,12 +206,7 @@ private fun ReviewStatsHeader(
 }
 
 @Composable
-private fun StatItem(
-    label: String,
-    value: Int,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
+private fun StatItem(label: String, value: Int, color: Color, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -322,11 +313,7 @@ private fun BulkActionsRow(
 }
 
 @Composable
-private fun EmptyReviewState(
-    filter: ReviewFilter,
-    totalItems: Int,
-    modifier: Modifier = Modifier
-) {
+private fun EmptyReviewState(filter: ReviewFilter, totalItems: Int, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

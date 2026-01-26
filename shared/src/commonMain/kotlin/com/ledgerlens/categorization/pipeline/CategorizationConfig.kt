@@ -25,13 +25,15 @@ data class CategorizationConfig(
         confidence >= reviewThreshold -> CategorizationAction.SUGGEST
         else -> CategorizationAction.QUEUE_FOR_REVIEW
     }
-    fun withStageEnabled(stage: PipelineStage, enabled: Boolean) = copy(enabledStages = if (enabled) enabledStages + stage else enabledStages - stage)
+    fun withStageEnabled(stage: PipelineStage, enabled: Boolean) =
+        copy(enabledStages = if (enabled) enabledStages + stage else enabledStages - stage)
     fun toStrict() = copy(highConfidenceThreshold = 0.95f, reviewThreshold = 0.7f)
     fun toLenient() = copy(highConfidenceThreshold = 0.75f, reviewThreshold = 0.4f)
 
     companion object {
         fun default() = CategorizationConfig()
-        fun forInitialImport() = CategorizationConfig(highConfidenceThreshold = 0.9f, reviewThreshold = 0.6f, batchSize = 100)
+        fun forInitialImport() =
+            CategorizationConfig(highConfidenceThreshold = 0.9f, reviewThreshold = 0.6f, batchSize = 100)
         fun forRealTime() = CategorizationConfig(highConfidenceThreshold = 0.8f, reviewThreshold = 0.5f, batchSize = 10)
     }
 }
@@ -42,7 +44,10 @@ enum class PipelineStage(val order: Int, val description: String) {
     ML_CLASSIFICATION(3, "Machine learning classification"),
     EXPLANATION_GENERATION(4, "Generate human-readable explanation"),
     REVIEW_QUEUE(5, "Queue low-confidence results for review");
-    companion object { fun inOrder() = entries.sortedBy { it.order } }
+
+    companion object {
+        fun inOrder() = entries.sortedBy { it.order }
+    }
 }
 
 enum class CategorizationAction { AUTO_APPLY, SUGGEST, QUEUE_FOR_REVIEW }
@@ -50,8 +55,16 @@ enum class CategorizationAction { AUTO_APPLY, SUGGEST, QUEUE_FOR_REVIEW }
 class MutableCategorizationConfig(initialConfig: CategorizationConfig = CategorizationConfig.default()) {
     @Volatile private var _config = initialConfig
     val config get() = _config
-    fun update(newConfig: CategorizationConfig) { _config = newConfig }
-    fun update(transform: (CategorizationConfig) -> CategorizationConfig) { _config = transform(_config) }
-    fun setStageEnabled(stage: PipelineStage, enabled: Boolean) { _config = _config.withStageEnabled(stage, enabled) }
-    fun reset() { _config = CategorizationConfig.default() }
+    fun update(newConfig: CategorizationConfig) {
+        _config = newConfig
+    }
+    fun update(transform: (CategorizationConfig) -> CategorizationConfig) {
+        _config = transform(_config)
+    }
+    fun setStageEnabled(stage: PipelineStage, enabled: Boolean) {
+        _config = _config.withStageEnabled(stage, enabled)
+    }
+    fun reset() {
+        _config = CategorizationConfig.default()
+    }
 }

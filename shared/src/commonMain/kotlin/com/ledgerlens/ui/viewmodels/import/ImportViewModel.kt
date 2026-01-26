@@ -184,16 +184,20 @@ class ImportViewModel(
     }
 
     fun cancelImport() {
-        viewModelScope.launch {
-            currentJobId?.let { jobId ->
+        // Immediately update UI state for responsive feedback
+        val jobIdToCancel = currentJobId
+        currentJobId = null
+        _uiState.value = ImportUiState.Idle
+
+        // Mark job as cancelled in background (fire and forget)
+        jobIdToCancel?.let { jobId ->
+            viewModelScope.launch {
                 try {
                     importRepository.markCancelled(jobId)
                 } catch (_: Exception) {
                     // Ignore errors on cancel
                 }
             }
-            currentJobId = null
-            _uiState.value = ImportUiState.Idle
         }
     }
 
@@ -306,8 +310,7 @@ enum class ImportFileType(val displayName: String, val extensions: List<String>)
     PDF("PDF Statement", listOf("pdf"));
 
     companion object {
-        fun fromExtension(ext: String): ImportFileType? =
-            values().find { ext.lowercase() in it.extensions }
+        fun fromExtension(ext: String): ImportFileType? = values().find { ext.lowercase() in it.extensions }
     }
 }
 

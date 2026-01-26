@@ -7,8 +7,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RuleSuggesterTest {
-    private fun createFeatures(merchant: String = "Test Merchant", description: String = "Test description", amountCents: Long = -1000) = TransactionFeatures(merchant, description, description.lowercase().split(" ").filter { it.length >= 2 }, amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, 0, 15, null)
-    private fun createCorrection(txId: String, features: TransactionFeatures, newCategory: String) = UserCorrection(txId, features, "uncategorized", newCategory)
+    private fun createFeatures(
+        merchant: String = "Test Merchant",
+        description: String = "Test description",
+        amountCents: Long = -1000
+    ) = TransactionFeatures(
+        merchant, description,
+        description.lowercase().split(" ").filter {
+            it.length >= 2
+        },
+        amountCents, AmountBucket.fromCents(amountCents), amountCents < 0, 0, 15, null
+    )
+    private fun createCorrection(txId: String, features: TransactionFeatures, newCategory: String) =
+        UserCorrection(txId, features, "uncategorized", newCategory)
 
     @Test fun generateSuggestions_noSuggestionsWithFewCorrections() {
         val suggester = RuleSuggester()

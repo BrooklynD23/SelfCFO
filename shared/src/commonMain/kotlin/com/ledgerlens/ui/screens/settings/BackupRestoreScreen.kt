@@ -16,17 +16,13 @@ import com.ledgerlens.ui.viewmodels.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupRestoreScreen(
-    viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun BackupRestoreScreen(viewModel: SettingsViewModel, onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.backupState.collectAsState()
     var showExportDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(Unit) { viewModel.loadBackupState() }
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -59,14 +55,14 @@ fun BackupRestoreScreen(
                             }
                             Spacer(Modifier.height(8.dp))
                             Text("Create an encrypted backup of all your data", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            
+
                             state.lastBackupDate?.let {
                                 Spacer(Modifier.height(8.dp))
                                 Text("Last backup: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            
+
                             Spacer(Modifier.height(16.dp))
-                            
+
                             if (state.isExporting) {
                                 LinearProgressIndicator(progress = state.exportProgress, modifier = Modifier.fillMaxWidth())
                                 Spacer(Modifier.height(8.dp))
@@ -81,7 +77,7 @@ fun BackupRestoreScreen(
                         }
                     }
                 }
-                
+
                 // Import section
                 item {
                     Card(Modifier.fillMaxWidth(), RoundedCornerShape(12.dp)) {
@@ -94,7 +90,7 @@ fun BackupRestoreScreen(
                             Spacer(Modifier.height(8.dp))
                             Text("Restore your data from a backup file", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(16.dp))
-                            
+
                             if (state.isImporting) {
                                 LinearProgressIndicator(progress = state.importProgress, modifier = Modifier.fillMaxWidth())
                                 Spacer(Modifier.height(8.dp))
@@ -109,7 +105,7 @@ fun BackupRestoreScreen(
                         }
                     }
                 }
-                
+
                 // Recovery key section
                 item {
                     Card(Modifier.fillMaxWidth(), RoundedCornerShape(12.dp)) {
@@ -130,7 +126,7 @@ fun BackupRestoreScreen(
                         }
                     }
                 }
-                
+
                 // Info card
                 item {
                     Card(Modifier.fillMaxWidth(), RoundedCornerShape(12.dp), CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
@@ -144,22 +140,30 @@ fun BackupRestoreScreen(
             }
         }
     }
-    
+
     // Export dialog
     if (showExportDialog) {
-        ExportBackupDialog(onExport = { pass -> viewModel.exportBackup(pass); showExportDialog = false }, onDismiss = { showExportDialog = false })
+        ExportBackupDialog(onExport = { pass ->
+            viewModel.exportBackup(pass)
+            showExportDialog = false
+        }, onDismiss = { showExportDialog = false })
     }
-    
+
     // Import dialog
     if (showImportDialog) {
-        ImportBackupDialog(onImport = { exp, newP -> viewModel.importBackup(exp, newP); showImportDialog = false }, onDismiss = { showImportDialog = false })
+        ImportBackupDialog(onImport = { exp, newP ->
+            viewModel.importBackup(exp, newP)
+            showImportDialog = false
+        }, onDismiss = { showImportDialog = false })
     }
-    
+
     // Recovery key dialog
     if (state.showRecoveryKey) {
-        RecoveryKeyDialog(recoveryKey = state.recoveryKey, onCopy = { viewModel.copyRecoveryKey() }, onDismiss = { viewModel.hideRecoveryKey() })
+        RecoveryKeyDialog(recoveryKey = state.recoveryKey, onCopy = {
+            viewModel.copyRecoveryKey()
+        }, onDismiss = { viewModel.hideRecoveryKey() })
     }
-    
+
     // Error/success snackbars would go here
 }
 
@@ -168,7 +172,7 @@ private fun ExportBackupDialog(onExport: (String) -> Unit, onDismiss: () -> Unit
     var passphrase by remember { mutableStateOf("") }
     var confirmPassphrase by remember { mutableStateOf("") }
     val canExport = passphrase.length >= 8 && passphrase == confirmPassphrase
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Create Backup") },
@@ -176,9 +180,15 @@ private fun ExportBackupDialog(onExport: (String) -> Unit, onDismiss: () -> Unit
             Column {
                 Text("Choose a passphrase to encrypt your backup:", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(16.dp))
-                OutlinedTextField(passphrase, { passphrase = it }, label = { Text("Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(passphrase, {
+                    passphrase = it
+                }, label = { Text("Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(confirmPassphrase, { confirmPassphrase = it }, label = { Text("Confirm Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth(), isError = confirmPassphrase.isNotBlank() && confirmPassphrase != passphrase)
+                OutlinedTextField(confirmPassphrase, {
+                    confirmPassphrase = it
+                }, label = {
+                    Text("Confirm Passphrase")
+                }, singleLine = true, modifier = Modifier.fillMaxWidth(), isError = confirmPassphrase.isNotBlank() && confirmPassphrase != passphrase)
                 if (passphrase.isNotBlank() && passphrase.length < 8) {
                     Text("Passphrase must be at least 8 characters", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -194,7 +204,7 @@ private fun ImportBackupDialog(onImport: (String, String) -> Unit, onDismiss: ()
     var exportPassphrase by remember { mutableStateOf("") }
     var newPassphrase by remember { mutableStateOf("") }
     val canImport = exportPassphrase.isNotBlank() && newPassphrase.length >= 8
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Restore Backup") },
@@ -202,20 +212,30 @@ private fun ImportBackupDialog(onImport: (String, String) -> Unit, onDismiss: ()
             Column {
                 Text("Enter the passphrase used when creating the backup:", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(16.dp))
-                OutlinedTextField(exportPassphrase, { exportPassphrase = it }, label = { Text("Backup Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(exportPassphrase, {
+                    exportPassphrase = it
+                }, label = { Text("Backup Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(16.dp))
                 Text("Set a new passphrase for this device:", style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(newPassphrase, { newPassphrase = it }, label = { Text("New Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(newPassphrase, {
+                    newPassphrase = it
+                }, label = { Text("New Passphrase") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             }
         },
-        confirmButton = { Button(onClick = { onImport(exportPassphrase, newPassphrase) }, enabled = canImport) { Text("Restore") } },
+        confirmButton = {
+            Button(onClick = { onImport(exportPassphrase, newPassphrase) }, enabled = canImport) { Text("Restore") }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
 
 @Composable
-private fun RecoveryKeyDialog(recoveryKey: com.ledgerlens.security.RecoveryKey?, onCopy: () -> Unit, onDismiss: () -> Unit) {
+private fun RecoveryKeyDialog(
+    recoveryKey: com.ledgerlens.security.RecoveryKey?,
+    onCopy: () -> Unit,
+    onDismiss: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Recovery Key") },

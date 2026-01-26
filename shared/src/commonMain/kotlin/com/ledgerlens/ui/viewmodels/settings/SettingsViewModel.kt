@@ -75,11 +75,11 @@ data class SecurityState(
 ) {
     val canChangePassphrase: Boolean
         get() = currentPassphrase.isNotBlank() &&
-                newPassphrase.length >= MIN_PASSPHRASE_LENGTH &&
-                confirmPassphrase == newPassphrase &&
-                currentPassphraseError == null &&
-                newPassphraseError == null &&
-                confirmPassphraseError == null
+            newPassphrase.length >= MIN_PASSPHRASE_LENGTH &&
+            confirmPassphrase == newPassphrase &&
+            currentPassphraseError == null &&
+            newPassphraseError == null &&
+            confirmPassphraseError == null
 
     val canCryptoErase: Boolean
         get() = cryptoEraseConfirmText.equals(CRYPTO_ERASE_CONFIRM_TEXT, ignoreCase = true)

@@ -24,11 +24,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -46,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ledgerlens.ui.viewmodels.review.CategoryAlternative
 import com.ledgerlens.ui.viewmodels.review.DuplicateInfo
@@ -177,10 +175,7 @@ fun ReviewDetailScreen(
 }
 
 @Composable
-private fun TransactionDetailsCard(
-    item: ReviewItemUi,
-    modifier: Modifier = Modifier
-) {
+private fun TransactionDetailsCard(item: ReviewItemUi, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -242,11 +237,7 @@ private fun TransactionDetailsCard(
 }
 
 @Composable
-private fun DetailItem(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
+private fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             text = label,
@@ -261,11 +252,7 @@ private fun DetailItem(
 }
 
 @Composable
-private fun DuplicateComparisonCard(
-    current: ReviewItemUi,
-    duplicate: DuplicateInfo,
-    modifier: Modifier = Modifier
-) {
+private fun DuplicateComparisonCard(current: ReviewItemUi, duplicate: DuplicateInfo, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -320,12 +307,7 @@ private fun DuplicateComparisonCard(
 }
 
 @Composable
-private fun ComparisonColumn(
-    title: String,
-    date: String,
-    amount: String,
-    modifier: Modifier = Modifier
-) {
+private fun ComparisonColumn(title: String, date: String, amount: String, modifier: Modifier = Modifier) {
     OutlinedCard(
         modifier = modifier,
         colors = CardDefaults.outlinedCardColors(
@@ -367,11 +349,7 @@ private fun formatAmount(amountCents: Long): String {
 }
 
 @Composable
-private fun ExplanationCard(
-    explanation: String,
-    reviewType: ReviewType,
-    modifier: Modifier = Modifier
-) {
+private fun ExplanationCard(explanation: String, reviewType: ReviewType, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(

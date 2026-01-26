@@ -1,15 +1,11 @@
 package com.ledgerlens.ui.screens.receipts
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -40,7 +36,7 @@ fun ReceiptsScreen(
     val state by viewModel.receiptsState.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -77,7 +73,7 @@ fun ReceiptsScreen(
                 showFilterMenu = showFilterMenu,
                 onShowSortMenu = { showSortMenu = it },
                 onShowFilterMenu = { showFilterMenu = it },
-                onSortOptionSelected = { 
+                onSortOptionSelected = {
                     viewModel.setSortOption(it)
                     showSortMenu = false
                 },
@@ -86,7 +82,7 @@ fun ReceiptsScreen(
                     showFilterMenu = false
                 }
             )
-            
+
             // Content
             when {
                 state.isLoading -> {
@@ -146,7 +142,7 @@ private fun ReceiptsTopBar(
     onClearSelection: () -> Unit
 ) {
     var isSearchExpanded by remember { mutableStateOf(false) }
-    
+
     TopAppBar(
         title = {
             if (state.isSelectionMode) {
@@ -227,32 +223,36 @@ private fun FilterChipsRow(
                 FilterChip(
                     selected = false,
                     onClick = { onShowSortMenu(true) },
-                    label = { 
-                        Text(when (state.sortBy) {
-                            ReceiptSortOption.DATE_DESC -> "Newest"
-                            ReceiptSortOption.DATE_ASC -> "Oldest"
-                            ReceiptSortOption.AMOUNT_DESC -> "Highest"
-                            ReceiptSortOption.AMOUNT_ASC -> "Lowest"
-                            ReceiptSortOption.MERCHANT -> "Merchant"
-                        })
+                    label = {
+                        Text(
+                            when (state.sortBy) {
+                                ReceiptSortOption.DATE_DESC -> "Newest"
+                                ReceiptSortOption.DATE_ASC -> "Oldest"
+                                ReceiptSortOption.AMOUNT_DESC -> "Highest"
+                                ReceiptSortOption.AMOUNT_ASC -> "Lowest"
+                                ReceiptSortOption.MERCHANT -> "Merchant"
+                            }
+                        )
                     },
                     leadingIcon = { Icon(Icons.Default.Sort, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
-                
+
                 DropdownMenu(
                     expanded = showSortMenu,
                     onDismissRequest = { onShowSortMenu(false) }
                 ) {
                     ReceiptSortOption.entries.forEach { option ->
                         DropdownMenuItem(
-                            text = { 
-                                Text(when (option) {
-                                    ReceiptSortOption.DATE_DESC -> "Newest first"
-                                    ReceiptSortOption.DATE_ASC -> "Oldest first"
-                                    ReceiptSortOption.AMOUNT_DESC -> "Highest amount"
-                                    ReceiptSortOption.AMOUNT_ASC -> "Lowest amount"
-                                    ReceiptSortOption.MERCHANT -> "By merchant"
-                                })
+                            text = {
+                                Text(
+                                    when (option) {
+                                        ReceiptSortOption.DATE_DESC -> "Newest first"
+                                        ReceiptSortOption.DATE_ASC -> "Oldest first"
+                                        ReceiptSortOption.AMOUNT_DESC -> "Highest amount"
+                                        ReceiptSortOption.AMOUNT_ASC -> "Lowest amount"
+                                        ReceiptSortOption.MERCHANT -> "By merchant"
+                                    }
+                                )
                             },
                             onClick = { onSortOptionSelected(option) },
                             leadingIcon = {
@@ -265,23 +265,25 @@ private fun FilterChipsRow(
                 }
             }
         }
-        
+
         // Linked filter chip
         item {
             Box {
                 FilterChip(
                     selected = state.filterLinked != null,
                     onClick = { onShowFilterMenu(true) },
-                    label = { 
-                        Text(when (state.filterLinked) {
-                            true -> "Linked"
-                            false -> "Unlinked"
-                            null -> "All"
-                        })
+                    label = {
+                        Text(
+                            when (state.filterLinked) {
+                                true -> "Linked"
+                                false -> "Unlinked"
+                                null -> "All"
+                            }
+                        )
                     },
                     leadingIcon = { Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
-                
+
                 DropdownMenu(
                     expanded = showFilterMenu,
                     onDismissRequest = { onShowFilterMenu(false) }
@@ -348,10 +350,11 @@ private fun ReceiptListItem(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
+            containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else 
+            } else {
                 MaterialTheme.colorScheme.surface
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -386,7 +389,7 @@ private fun ReceiptListItem(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
             }
-            
+
             // Receipt info
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -397,7 +400,7 @@ private fun ReceiptListItem(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
                     )
-                    
+
                     if (receipt.isLinked) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
@@ -408,7 +411,7 @@ private fun ReceiptListItem(
                             tint = Color(0xFF4CAF50)
                         )
                     }
-                    
+
                     if (receipt.hasLowConfidence) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
@@ -420,9 +423,9 @@ private fun ReceiptListItem(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -433,7 +436,7 @@ private fun ReceiptListItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Text(
                         text = "${receipt.itemCount} items",
                         style = MaterialTheme.typography.bodySmall,
@@ -441,9 +444,9 @@ private fun ReceiptListItem(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             // Amount
             // TODO: Replace with MoneyText component
             Text(
@@ -456,10 +459,7 @@ private fun ReceiptListItem(
 }
 
 @Composable
-private fun EmptyReceiptsContent(
-    hasFilters: Boolean,
-    onAddReceipt: () -> Unit
-) {
+private fun EmptyReceiptsContent(hasFilters: Boolean, onAddReceipt: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -473,29 +473,30 @@ private fun EmptyReceiptsContent(
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = if (hasFilters) "No receipts match your filters" else "No receipts yet",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
-            text = if (hasFilters) 
-                "Try adjusting your search or filters" 
-            else 
-                "Scan or import receipts to track your purchases",
+            text = if (hasFilters) {
+                "Try adjusting your search or filters"
+            } else {
+                "Scan or import receipts to track your purchases"
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
-        
+
         if (!hasFilters) {
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Button(onClick = onAddReceipt) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -506,11 +507,7 @@ private fun EmptyReceiptsContent(
 }
 
 @Composable
-private fun ErrorContent(
-    error: String,
-    onRetry: () -> Unit,
-    onDismiss: () -> Unit
-) {
+private fun ErrorContent(error: String, onRetry: () -> Unit, onDismiss: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -524,30 +521,30 @@ private fun ErrorContent(
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.error
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "Something went wrong",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = error,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onDismiss) {
                 Text("Dismiss")
             }
-            
+
             Button(onClick = onRetry) {
                 Text("Retry")
             }

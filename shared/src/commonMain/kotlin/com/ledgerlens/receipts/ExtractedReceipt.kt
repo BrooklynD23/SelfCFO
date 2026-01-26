@@ -34,15 +34,24 @@ data class ExtractedReceipt(
         }
 
     val calculatedTax: Money get() = Money.fromMinorUnits(taxItems.sumOf { it.totalPrice.minorUnits }, currency)
-    val calculatedTip: Money get() = Money.fromMinorUnits(items.filter { it.type == ReceiptItemType.TIP }.sumOf { it.totalPrice.minorUnits }, currency)
+    val calculatedTip: Money get() = Money.fromMinorUnits(
+        items.filter {
+            it.type == ReceiptItemType.TIP
+        }.sumOf { it.totalPrice.minorUnits },
+        currency
+    )
     val calculatedTotal: Money get() = Money.fromMinorUnits(calculatedSubtotal.minorUnits + calculatedTax.minorUnits + calculatedTip.minorUnits, currency)
 
     val productCount: Int get() = productItems.size
     val totalQuantity: Double get() = productItems.sumOf { it.quantity }
 
     fun isValid(toleranceCents: Long = 5): Boolean {
-        val subtotalValid = subtotal?.let { kotlin.math.abs(it.minorUnits - calculatedSubtotal.minorUnits) <= toleranceCents } ?: true
-        val totalValid = totalAmount?.let { kotlin.math.abs(it.minorUnits - calculatedTotal.minorUnits) <= toleranceCents } ?: true
+        val subtotalValid = subtotal?.let {
+            kotlin.math.abs(it.minorUnits - calculatedSubtotal.minorUnits) <= toleranceCents
+        } ?: true
+        val totalValid = totalAmount?.let {
+            kotlin.math.abs(it.minorUnits - calculatedTotal.minorUnits) <= toleranceCents
+        } ?: true
         return subtotalValid && totalValid
     }
 

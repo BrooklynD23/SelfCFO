@@ -5,7 +5,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.ledgerlens.domain.CurrencyMetadata
@@ -81,11 +80,7 @@ fun MoneyText(
  * Simplified money text for lists and compact displays.
  */
 @Composable
-fun MoneyTextCompact(
-    money: Money,
-    modifier: Modifier = Modifier,
-    colored: Boolean = true
-) {
+fun MoneyTextCompact(money: Money, modifier: Modifier = Modifier, colored: Boolean = true) {
     MoneyText(
         money = money,
         modifier = modifier,
@@ -100,12 +95,7 @@ fun MoneyTextCompact(
  * Large money display for headers and summaries.
  */
 @Composable
-fun MoneyTextLarge(
-    money: Money,
-    modifier: Modifier = Modifier,
-    colored: Boolean = true,
-    showSign: Boolean = true
-) {
+fun MoneyTextLarge(money: Money, modifier: Modifier = Modifier, colored: Boolean = true, showSign: Boolean = true) {
     MoneyText(
         money = money,
         modifier = modifier,
@@ -120,11 +110,7 @@ fun MoneyTextLarge(
  * Money text showing change/delta (always shows sign).
  */
 @Composable
-fun MoneyDeltaText(
-    money: Money,
-    modifier: Modifier = Modifier,
-    size: MoneyTextSize = MoneyTextSize.MEDIUM
-) {
+fun MoneyDeltaText(money: Money, modifier: Modifier = Modifier, size: MoneyTextSize = MoneyTextSize.MEDIUM) {
     MoneyText(
         money = money,
         modifier = modifier,
@@ -144,11 +130,7 @@ private fun getMoneyColor(money: Money): Color {
     }
 }
 
-private fun formatMoney(
-    money: Money,
-    showSign: Boolean,
-    showCurrencySymbol: Boolean
-): String {
+private fun formatMoney(money: Money, showSign: Boolean, showCurrencySymbol: Boolean): String {
     val symbol = if (showCurrencySymbol) {
         CurrencyMetadata.getSymbol(money.currencyCode)
     } else {

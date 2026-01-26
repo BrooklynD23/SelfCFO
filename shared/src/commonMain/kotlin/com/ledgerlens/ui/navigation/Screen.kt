@@ -89,36 +89,69 @@ sealed class Screen(
         title = "Reports"
     )
 
+    // Financial Resources screens (StitchUI)
+    object FinancialResources : Screen(
+        route = "resources",
+        title = "Learn",
+        showInBottomNav = true
+    )
+
+    object IndexFundDeepDive : Screen(
+        route = "resources/index-funds",
+        title = "Index Funds"
+    )
+
+    object SavingsComparison : Screen(
+        route = "resources/savings-comparison",
+        title = "Compare Options"
+    )
+
+    object ConceptExplorer : Screen(
+        route = "resources/concepts/{${NavArgs.CONCEPT_ID}}",
+        title = "Concept"
+    ) {
+        fun createRoute(conceptId: String): String = "resources/concepts/$conceptId"
+    }
+
     companion object {
         /**
          * Returns all screens that should be shown in the bottom navigation bar.
+         * Uses lazy initialization to ensure nested objects are properly initialized.
          */
-        val bottomNavScreens: List<Screen> = listOf(
-            Dashboard,
-            Transactions,
-            Import,
-            Categories,
-            Settings
-        )
+        val bottomNavScreens: List<Screen> by lazy {
+            listOf(
+                Dashboard,
+                Transactions,
+                FinancialResources,
+                Settings
+            )
+        }
 
         /**
          * Returns all screens in the app.
+         * Uses lazy initialization to ensure nested objects are properly initialized.
          */
-        val allScreens: List<Screen> = listOf(
-            Dashboard,
-            Transactions,
-            TransactionDetail,
-            Import,
-            Review,
-            Receipts,
-            ReceiptDetail,
-            Categories,
-            CategoryDetail,
-            AccountDetail,
-            Search,
-            Reports,
-            Settings
-        )
+        val allScreens: List<Screen> by lazy {
+            listOf(
+                Dashboard,
+                Transactions,
+                TransactionDetail,
+                Import,
+                Review,
+                Receipts,
+                ReceiptDetail,
+                Categories,
+                CategoryDetail,
+                AccountDetail,
+                Search,
+                Reports,
+                Settings,
+                FinancialResources,
+                IndexFundDeepDive,
+                SavingsComparison,
+                ConceptExplorer
+            )
+        }
 
         /**
          * Finds a screen by its route pattern.

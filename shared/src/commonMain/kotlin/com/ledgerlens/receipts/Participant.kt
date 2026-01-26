@@ -29,11 +29,14 @@ data class Participant(
     companion object {
         const val SELF_ID = "self"
         const val SELF_DEFAULT_NAME = "Me"
-        val DEFAULT_COLORS = listOf("#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#E91E63", "#00BCD4", "#FF5722", "#795548", "#607D8B", "#F44336")
+        val DEFAULT_COLORS =
+            listOf("#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#E91E63", "#00BCD4", "#FF5722", "#795548", "#607D8B", "#F44336")
 
-        fun createSelf(displayName: String = SELF_DEFAULT_NAME) = Participant(id = SELF_ID, name = displayName, color = DEFAULT_COLORS.first(), isSelf = true, isFavorite = true)
+        fun createSelf(displayName: String = SELF_DEFAULT_NAME) =
+            Participant(id = SELF_ID, name = displayName, color = DEFAULT_COLORS.first(), isSelf = true, isFavorite = true)
 
-        fun quickAdd(name: String, colorIndex: Int = 0) = Participant(id = generateId(), name = name.trim(), color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.size])
+        fun quickAdd(name: String, colorIndex: Int = 0) =
+            Participant(id = generateId(), name = name.trim(), color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.size])
 
         private fun generateId(): String {
             val chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -52,6 +55,8 @@ fun Participant.validate(): ParticipantValidationResult {
     if (name.isBlank()) return ParticipantValidationResult.Invalid("Participant name cannot be blank")
     if (name.length > 100) return ParticipantValidationResult.Invalid("Participant name cannot exceed 100 characters")
     if (!color.matches(Regex("^#[0-9A-Fa-f]{6}$"))) return ParticipantValidationResult.Invalid("Invalid color format")
-    email?.let { if (it.isNotBlank() && !it.contains("@")) return ParticipantValidationResult.Invalid("Invalid email format") }
+    email?.let {
+        if (it.isNotBlank() && !it.contains("@")) return ParticipantValidationResult.Invalid("Invalid email format")
+    }
     return ParticipantValidationResult.Valid
 }

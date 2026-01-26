@@ -30,22 +30,22 @@ data class LedgerLensSpacing(
 object SpacingPatterns {
     val screenPaddingHorizontal: Dp = 16.dp
     val screenPaddingVertical: Dp = 16.dp
-    
+
     val cardPadding: Dp = 16.dp
     val cardMargin: Dp = 8.dp
-    
+
     val listItemPadding: Dp = 16.dp
     val listItemSpacing: Dp = 8.dp
-    
+
     val buttonPaddingHorizontal: Dp = 24.dp
     val buttonPaddingVertical: Dp = 12.dp
-    
+
     val chipPaddingHorizontal: Dp = 12.dp
     val chipPaddingVertical: Dp = 6.dp
-    
+
     val iconTextGap: Dp = 8.dp
     val sectionGap: Dp = 24.dp
-    
+
     val dialogPadding: Dp = 24.dp
     val bottomSheetPadding: Dp = 16.dp
 }
@@ -60,7 +60,7 @@ object Elevation {
     val level3: Dp = 6.dp
     val level4: Dp = 8.dp
     val level5: Dp = 12.dp
-    
+
     val card: Dp = level1
     val cardHovered: Dp = level2
     val dialog: Dp = level3

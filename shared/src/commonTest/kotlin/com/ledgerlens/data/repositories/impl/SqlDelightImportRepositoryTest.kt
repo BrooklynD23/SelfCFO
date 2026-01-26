@@ -6,10 +6,6 @@ import com.ledgerlens.data.repositories.ImportSourceType
 import com.ledgerlens.data.repositories.ImportStatus
 import com.ledgerlens.data.repositories.SourceFileEntity
 import com.ledgerlens.db.LedgerLensDatabase
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,6 +13,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
 
 class SqlDelightImportRepositoryTest {
     private lateinit var database: LedgerLensDatabase
@@ -29,28 +28,23 @@ class SqlDelightImportRepositoryTest {
         repository = SqlDelightImportRepository(database, testDispatcher)
     }
 
-    private fun createTestImportJob(
-        id: String = "test-job-1",
-        status: ImportStatus = ImportStatus.PENDING
-    ) = ImportJobEntity(
-        id = id,
-        sourceFileName = "test-file.csv",
-        sourceType = ImportSourceType.CSV,
-        bankTemplate = null,
-        status = status,
-        totalRows = 100,
-        importedCount = 0,
-        duplicatesSkipped = 0,
-        errorsCount = 0,
-        errorDetails = null,
-        startedAt = Clock.System.now(),
-        completedAt = null
-    )
+    private fun createTestImportJob(id: String = "test-job-1", status: ImportStatus = ImportStatus.PENDING) =
+        ImportJobEntity(
+            id = id,
+            sourceFileName = "test-file.csv",
+            sourceType = ImportSourceType.CSV,
+            bankTemplate = null,
+            status = status,
+            totalRows = 100,
+            importedCount = 0,
+            duplicatesSkipped = 0,
+            errorsCount = 0,
+            errorDetails = null,
+            startedAt = Clock.System.now(),
+            completedAt = null
+        )
 
-    private fun createTestSourceFile(
-        id: String = "sf-test-1",
-        fileHash: String = "hash123"
-    ) = SourceFileEntity(
+    private fun createTestSourceFile(id: String = "sf-test-1", fileHash: String = "hash123") = SourceFileEntity(
         id = id,
         importJobId = "test-job-1",
         filePath = "/path/to/file.csv",

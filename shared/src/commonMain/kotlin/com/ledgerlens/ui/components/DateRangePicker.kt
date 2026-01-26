@@ -1,6 +1,5 @@
 package com.ledgerlens.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,8 +61,7 @@ data class DateRange(
     val start: LocalDate,
     val end: LocalDate
 ) {
-    fun contains(date: LocalDate): Boolean =
-        date >= start && date <= end
+    fun contains(date: LocalDate): Boolean = date >= start && date <= end
 
     val displayString: String
         get() = "${start.formatShort()} - ${end.formatShort()}"
@@ -162,12 +160,7 @@ fun DateRangePicker(
  * Button displaying selected date range.
  */
 @Composable
-fun DateRangeButton(
-    selectedRange: DateRange?,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun DateRangeButton(selectedRange: DateRange?, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
@@ -195,11 +188,7 @@ fun DateRangeButton(
  * Compact date range chip for filters.
  */
 @Composable
-fun DateRangeChip(
-    selectedRange: DateRange?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun DateRangeChip(selectedRange: DateRange?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .clip(ShapePatterns.chip)
@@ -305,7 +294,7 @@ private fun DateRangeDialog(
                         }
                         Spacer(modifier = Modifier.width(LedgerLensTheme.spacing.small))
                     }
-                    
+
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
                     }
@@ -320,11 +309,7 @@ private fun DateRangeDialog(
 }
 
 @Composable
-private fun PresetOption(
-    preset: DateRangePreset,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+private fun PresetOption(preset: DateRangePreset, isSelected: Boolean, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -373,10 +358,7 @@ private fun PresetOption(
 }
 
 @Composable
-private fun SimpleDateRangePicker(
-    range: DateRange,
-    onRangeChange: (DateRange) -> Unit
-) {
+private fun SimpleDateRangePicker(range: DateRange, onRangeChange: (DateRange) -> Unit) {
     var viewingMonth by remember { mutableStateOf(range.start) }
     var selectingStart by remember { mutableStateOf(true) }
 

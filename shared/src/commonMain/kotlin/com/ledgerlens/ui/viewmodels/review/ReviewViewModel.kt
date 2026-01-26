@@ -2,8 +2,8 @@ package com.ledgerlens.ui.viewmodels.review
 
 import com.ledgerlens.categorization.pipeline.ReviewDecision
 import com.ledgerlens.categorization.pipeline.ReviewQueueItem
-import com.ledgerlens.categorization.pipeline.ReviewQueueManager
 import com.ledgerlens.categorization.pipeline.ReviewStatus
+import com.ledgerlens.data.repositories.ReviewQueueRepository
 import com.ledgerlens.data.repositories.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,17 +11,18 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 /**
  * ViewModel for the Review inbox and detail screens.
  * Manages the review queue, filtering, and batch operations.
+ * Now uses persistent ReviewQueueRepository with Flow-based observation.
  */
 class ReviewViewModel(
-    private val reviewQueueManager: ReviewQueueManager,
+    private val reviewQueueRepository: ReviewQueueRepository,
     private val transactionRepository: TransactionRepository
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -33,33 +34,41 @@ class ReviewViewModel(
     val selectedItem: StateFlow<ReviewItemUi?> = _selectedItem.asStateFlow()
 
     init {
-        loadReviewItems()
-    }
-
-    fun loadReviewItems() {
+        // Observe pending items from repository Flow
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            try {
-                val queueItems = reviewQueueManager.pendingItems
-                val uiItems = queueItems.map { it.toUiModel() }
-
+            combine(
+                reviewQueueRepository.pendingItems,
+                reviewQueueRepository.getStats()
+            ) { items, stats ->
+                val uiItems = items.map { it.toUiModel() }
+                val currentFilter = _uiState.value.currentFilter
+                
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         items = uiItems,
-                        filteredItems = applyFilter(uiItems, it.currentFilter),
-                        stats = calculateStats(uiItems)
+                        filteredItems = applyFilter(uiItems, currentFilter),
+                        stats = ReviewStats(
+                            totalItems = stats.totalItems,
+                            pendingCount = stats.pendingCount,
+                            acceptedCount = stats.acceptedCount,
+                            rejectedCount = stats.rejectedCount,
+                            lowConfidenceCount = uiItems.count { it.confidence < 0.5f && it.status == ReviewItemStatus.PENDING },
+                            duplicateCount = uiItems.count { it.reviewType == ReviewType.POSSIBLE_DUPLICATE && it.status == ReviewItemStatus.PENDING },
+                            uncategorizedCount = uiItems.count { it.reviewType == ReviewType.UNCATEGORIZED && it.status == ReviewItemStatus.PENDING }
+                        ),
+                        error = null
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Failed to load review items: ${e.message}"
-                    )
-                }
-            }
+            }.collect { }
+        }
+    }
+
+    fun loadReviewItems() {
+        // Flow automatically updates, but we can trigger a refresh if needed
+        // The combine() in init will handle updates automatically
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
         }
     }
 
@@ -84,11 +93,10 @@ class ReviewViewModel(
         viewModelScope.launch {
             try {
                 // Record decision in review queue
-                reviewQueueManager.recordDecision(itemId, ReviewDecision.Accept())
+                reviewQueueRepository.recordDecision(itemId, ReviewDecision.Accept())
                 // Mark transaction as reviewed
                 transactionRepository.markAsReviewed(itemId)
-                // Reload review items
-                loadReviewItems()
+                // Flow will automatically update UI
                 // Move to next item if in detail view
                 if (_selectedItem.value?.id == itemId) {
                     selectNextPendingItem()
@@ -103,7 +111,7 @@ class ReviewViewModel(
         viewModelScope.launch {
             try {
                 // Record decision in review queue
-                reviewQueueManager.recordDecision(
+                reviewQueueRepository.recordDecision(
                     itemId,
                     ReviewDecision.Reject(newCategoryId = newCategoryId, reason = "User correction")
                 )
@@ -116,8 +124,7 @@ class ReviewViewModel(
                 )
                 // Mark as reviewed
                 transactionRepository.markAsReviewed(itemId)
-                // Reload review items
-                loadReviewItems()
+                // Flow will automatically update UI
                 // Move to next item if in detail view
                 if (_selectedItem.value?.id == itemId) {
                     selectNextPendingItem()
@@ -132,9 +139,8 @@ class ReviewViewModel(
         viewModelScope.launch {
             try {
                 // Record decision in review queue
-                reviewQueueManager.recordDecision(itemId, ReviewDecision.Defer(reason = "Deferred by user"))
-                // Reload review items
-                loadReviewItems()
+                reviewQueueRepository.recordDecision(itemId, ReviewDecision.Defer(reason = "Deferred by user"))
+                // Flow will automatically update UI
                 // Move to next item if in detail view
                 if (_selectedItem.value?.id == itemId) {
                     selectNextPendingItem()
@@ -152,10 +158,10 @@ class ReviewViewModel(
                     it.status == ReviewItemStatus.PENDING
                 }
                 pendingItems.forEach { item ->
-                    reviewQueueManager.recordDecision(item.transactionId, ReviewDecision.Accept())
+                    reviewQueueRepository.recordDecision(item.transactionId, ReviewDecision.Accept())
                     transactionRepository.markAsReviewed(item.transactionId)
                 }
-                loadReviewItems()
+                // Flow will automatically update UI
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Failed to accept all: ${e.message}") }
             }
@@ -170,12 +176,12 @@ class ReviewViewModel(
                 }
                 // Dismiss is treated as defer with "dismissed" reason
                 pendingItems.forEach { item ->
-                    reviewQueueManager.recordDecision(
+                    reviewQueueRepository.recordDecision(
                         item.transactionId,
                         ReviewDecision.Defer(reason = "Dismissed by user")
                     )
                 }
-                loadReviewItems()
+                // Flow will automatically update UI
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Failed to dismiss all: ${e.message}") }
             }

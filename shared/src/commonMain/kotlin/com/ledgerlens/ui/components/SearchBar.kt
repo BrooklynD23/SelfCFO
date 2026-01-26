@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -31,9 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.ledgerlens.ui.theme.LedgerLensTheme
 import com.ledgerlens.ui.theme.ShapePatterns
-import com.ledgerlens.ui.theme.SpacingPatterns
 import kotlinx.coroutines.delay
 
 /**
@@ -72,7 +69,7 @@ fun SearchBar(
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    
+
     var debouncedQuery by remember { mutableStateOf(query) }
 
     LaunchedEffect(query) {
@@ -221,10 +218,7 @@ fun TransactionSearchBar(
 }
 
 @Composable
-private fun ClearButton(
-    visible: Boolean,
-    onClick: () -> Unit
-) {
+private fun ClearButton(visible: Boolean, onClick: () -> Unit) {
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(),

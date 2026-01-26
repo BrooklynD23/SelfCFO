@@ -1,11 +1,9 @@
 package com.ledgerlens.ui.viewmodels.categories
 
 import com.ledgerlens.categorization.Category
-import com.ledgerlens.categorization.CategoryNode
-import com.ledgerlens.categorization.CategoryTree
 import com.ledgerlens.categorization.CategoryValidationResult
-import com.ledgerlens.categorization.validate
 import com.ledgerlens.categorization.rules.*
+import com.ledgerlens.categorization.validate
 import com.ledgerlens.data.repositories.CategoryEntity
 import com.ledgerlens.data.repositories.CategoryRepository
 import com.ledgerlens.data.repositories.CategoryWithStats
@@ -77,21 +75,21 @@ data class CategoriesUiState(
 ) {
     val flattenedCategories: List<CategoryUiModel>
         get() = categories.flatMap { flattenCategory(it) }
-    
+
     private fun flattenCategory(category: CategoryUiModel): List<CategoryUiModel> {
         val isExpanded = category.id in expandedCategoryIds
         val updatedCategory = category.copy(isExpanded = isExpanded)
-        
+
         return if (isExpanded && category.hasChildren) {
             listOf(updatedCategory) + category.children.flatMap { flattenCategory(it) }
         } else {
             listOf(updatedCategory)
         }
     }
-    
+
     val selectedCategory: CategoryUiModel?
         get() = findCategory(selectedCategoryId, categories)
-    
+
     private fun findCategory(id: String?, list: List<CategoryUiModel>): CategoryUiModel? {
         if (id == null) return null
         for (cat in list) {
@@ -119,26 +117,26 @@ data class RulesUiState(
     val filteredRules: List<RuleUiModel>
         get() {
             var result = rules
-            
+
             if (searchQuery.isNotBlank()) {
                 val query = searchQuery.lowercase()
-                result = result.filter { 
+                result = result.filter {
                     it.name.lowercase().contains(query) ||
-                    it.conditionSummary.lowercase().contains(query) ||
-                    it.categoryName?.lowercase()?.contains(query) == true
+                        it.conditionSummary.lowercase().contains(query) ||
+                        it.categoryName?.lowercase()?.contains(query) == true
                 }
             }
-            
+
             filterEnabled?.let { enabled ->
                 result = result.filter { it.enabled == enabled }
             }
-            
+
             result = if (sortByPriority) {
                 result.sortedByDescending { it.priority }
             } else {
                 result.sortedBy { it.name.lowercase() }
             }
-            
+
             return result
         }
 }
@@ -166,7 +164,10 @@ data class RuleWizardState(
 }
 
 enum class RuleWizardStep {
-    NAME, CONDITIONS, ACTION, REVIEW
+    NAME,
+    CONDITIONS,
+    ACTION,
+    REVIEW
 }
 
 /**
@@ -194,7 +195,7 @@ class CategoriesViewModel(
         loadCategories()
         loadRules()
     }
-    
+
     // ========== Categories Actions ==========
 
     fun loadCategories() {
@@ -204,19 +205,23 @@ class CategoriesViewModel(
                 val categoriesWithStats = categoryRepository.getCategoriesWithStats().first()
                 categoryCache = categoriesWithStats.associate { it.category.id to it.category }
                 val uiModels = buildCategoryTree(categoriesWithStats)
-                _categoriesState.update { it.copy(
-                    categories = uiModels,
-                    isLoading = false
-                )}
+                _categoriesState.update {
+                    it.copy(
+                        categories = uiModels,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
-                _categoriesState.update { it.copy(
-                    isLoading = false,
-                    error = "Failed to load categories: ${e.message}"
-                )}
+                _categoriesState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load categories: ${e.message}"
+                    )
+                }
             }
         }
     }
-    
+
     fun toggleCategoryExpanded(categoryId: String) {
         _categoriesState.update { state ->
             val newExpanded = if (categoryId in state.expandedCategoryIds) {
@@ -227,13 +232,13 @@ class CategoriesViewModel(
             state.copy(expandedCategoryIds = newExpanded)
         }
     }
-    
+
     fun selectCategory(categoryId: String?) {
         _categoriesState.update { it.copy(selectedCategoryId = categoryId) }
     }
-    
+
     fun showCreateCategoryDialog(parentId: String? = null) {
-        _categoriesState.update { 
+        _categoriesState.update {
             it.copy(
                 showEditDialog = true,
                 isCreatingNew = true,
@@ -246,10 +251,10 @@ class CategoriesViewModel(
             )
         }
     }
-    
+
     fun showEditCategoryDialog(categoryId: String) {
         val category = findCategoryDomain(categoryId)
-        _categoriesState.update { 
+        _categoriesState.update {
             it.copy(
                 showEditDialog = true,
                 isCreatingNew = false,
@@ -257,9 +262,9 @@ class CategoriesViewModel(
             )
         }
     }
-    
+
     fun hideEditDialog() {
-        _categoriesState.update { 
+        _categoriesState.update {
             it.copy(
                 showEditDialog = false,
                 editingCategory = null,
@@ -267,7 +272,7 @@ class CategoriesViewModel(
             )
         }
     }
-    
+
     fun updateEditingCategory(
         name: String? = null,
         icon: String? = null,
@@ -286,7 +291,7 @@ class CategoriesViewModel(
             )
         }
     }
-    
+
     fun saveCategory() {
         viewModelScope.launch {
             val state = _categoriesState.value
@@ -340,7 +345,7 @@ class CategoriesViewModel(
             }
         }
     }
-    
+
     // ========== Rules Actions ==========
 
     fun loadRules() {
@@ -349,35 +354,39 @@ class CategoriesViewModel(
             try {
                 val rules = ruleRepository.getAllRules().first()
                 val uiModels = rules.map { it.toUiModel() }
-                _rulesState.update { it.copy(
-                    rules = uiModels,
-                    isLoading = false
-                )}
+                _rulesState.update {
+                    it.copy(
+                        rules = uiModels,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
-                _rulesState.update { it.copy(
-                    isLoading = false,
-                    error = "Failed to load rules: ${e.message}"
-                )}
+                _rulesState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load rules: ${e.message}"
+                    )
+                }
             }
         }
     }
-    
+
     fun setRulesSearchQuery(query: String) {
         _rulesState.update { it.copy(searchQuery = query) }
     }
-    
+
     fun setRulesFilterEnabled(enabled: Boolean?) {
         _rulesState.update { it.copy(filterEnabled = enabled) }
     }
-    
+
     fun toggleRulesSortByPriority() {
         _rulesState.update { it.copy(sortByPriority = !it.sortByPriority) }
     }
-    
+
     fun selectRule(ruleId: String?) {
         _rulesState.update { it.copy(selectedRuleId = ruleId) }
     }
-    
+
     fun toggleRuleEnabled(ruleId: String) {
         viewModelScope.launch {
             try {
@@ -413,9 +422,9 @@ class CategoriesViewModel(
             }
         }
     }
-    
+
     // ========== Rule Wizard Actions ==========
-    
+
     fun showRuleWizard(editingRuleId: String? = null) {
         if (editingRuleId != null) {
             // TODO: Load existing rule
@@ -425,42 +434,42 @@ class CategoriesViewModel(
         }
         _rulesState.update { it.copy(showRuleWizard = true) }
     }
-    
+
     fun hideRuleWizard() {
         _rulesState.update { it.copy(showRuleWizard = false, editingRule = null) }
         _wizardState.update { RuleWizardState() }
     }
-    
+
     fun wizardSetName(name: String) {
         _wizardState.update { it.copy(name = name) }
     }
-    
+
     fun wizardSetDescription(description: String) {
         _wizardState.update { it.copy(description = description) }
     }
-    
+
     fun wizardAddCondition(condition: RuleCondition) {
         _wizardState.update { it.copy(conditions = it.conditions + condition) }
     }
-    
+
     fun wizardRemoveCondition(index: Int) {
-        _wizardState.update { 
+        _wizardState.update {
             it.copy(conditions = it.conditions.filterIndexed { i, _ -> i != index })
         }
     }
-    
+
     fun wizardSetCategory(categoryId: String) {
         _wizardState.update { it.copy(selectedCategoryId = categoryId) }
     }
-    
+
     fun wizardSetPriority(priority: Int) {
         _wizardState.update { it.copy(priority = priority.coerceIn(CategoryRule.MIN_PRIORITY, CategoryRule.MAX_PRIORITY)) }
     }
-    
+
     fun wizardSetEnabled(enabled: Boolean) {
         _wizardState.update { it.copy(enabled = enabled) }
     }
-    
+
     fun wizardNextStep() {
         _wizardState.update { state ->
             val nextStep = when (state.step) {
@@ -472,7 +481,7 @@ class CategoriesViewModel(
             state.copy(step = nextStep)
         }
     }
-    
+
     fun wizardPreviousStep() {
         _wizardState.update { state ->
             val prevStep = when (state.step) {
@@ -484,7 +493,7 @@ class CategoriesViewModel(
             state.copy(step = prevStep)
         }
     }
-    
+
     fun wizardSaveRule() {
         viewModelScope.launch {
             val state = _wizardState.value
@@ -520,7 +529,7 @@ class CategoriesViewModel(
             }
         }
     }
-    
+
     // ========== Helpers ==========
 
     fun clearError() {

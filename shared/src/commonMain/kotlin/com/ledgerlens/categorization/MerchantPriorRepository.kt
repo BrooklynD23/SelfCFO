@@ -40,19 +40,13 @@ interface MerchantPriorRepository {
      * @param categoryId Assigned category
      * @param transactionDateMs Transaction date in milliseconds since epoch
      */
-    suspend fun recordCategoryAssignment(
-        merchantId: String,
-        categoryId: String,
-        transactionDateMs: Long
-    )
+    suspend fun recordCategoryAssignment(merchantId: String, categoryId: String, transactionDateMs: Long)
 
     /**
      * Record multiple category assignments in batch.
      * @param assignments List of (merchantId, categoryId, transactionDateMs) triples
      */
-    suspend fun recordCategoryAssignments(
-        assignments: List<CategoryAssignment>
-    )
+    suspend fun recordCategoryAssignments(assignments: List<CategoryAssignment>)
 
     /**
      * Delete the prior for a specific merchant.

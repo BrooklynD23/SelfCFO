@@ -18,7 +18,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -99,7 +98,7 @@ fun ErrorState(
 
         if (onRetry != null || onDismiss != null) {
             Spacer(modifier = Modifier.height(LedgerLensTheme.spacing.large))
-            
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(LedgerLensTheme.spacing.small)
             ) {
@@ -108,7 +107,7 @@ fun ErrorState(
                         Text(text = "Dismiss")
                     }
                 }
-                
+
                 if (onRetry != null) {
                     Button(onClick = onRetry) {
                         Text(text = "Try Again")
@@ -123,11 +122,7 @@ fun ErrorState(
  * Network error state.
  */
 @Composable
-fun NetworkErrorState(
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-    onRetry: (() -> Unit)? = null
-) {
+fun NetworkErrorState(modifier: Modifier = Modifier, icon: ImageVector? = null, onRetry: (() -> Unit)? = null) {
     ErrorState(
         title = "Connection Error",
         message = "Unable to connect. Please check your internet connection and try again.",
@@ -192,11 +187,7 @@ fun ImportErrorState(
  * Inline error message for forms and inputs.
  */
 @Composable
-fun InlineError(
-    message: String,
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null
-) {
+fun InlineError(message: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Row(
         modifier = modifier.padding(vertical = LedgerLensTheme.spacing.extraSmall),
         verticalAlignment = Alignment.CenterVertically

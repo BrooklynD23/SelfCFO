@@ -15,7 +15,8 @@ data class ParticipantGroup(
     val size: Int get() = participantIds.size
     val isEmpty: Boolean get() = participantIds.isEmpty()
     fun contains(participantId: String) = participantIds.contains(participantId)
-    fun withParticipant(participantId: String) = if (participantIds.contains(participantId)) this else copy(participantIds = participantIds + participantId)
+    fun withParticipant(participantId: String) =
+        if (participantIds.contains(participantId)) this else copy(participantIds = participantIds + participantId)
     fun withoutParticipant(participantId: String) = copy(participantIds = participantIds.filter { it != participantId })
     fun markUsed() = copy(usageCount = usageCount + 1, lastUsedAt = System.currentTimeMillis())
 

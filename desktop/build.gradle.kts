@@ -14,6 +14,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.swing)
 
+    // Koin for dependency injection
+    implementation(libs.koin.core)
+
     // Testing
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -152,8 +152,8 @@ object MoneyAllocator {
     }
 
     enum class RemainderRecipient {
-        FIRST,    // First party gets remainder
-        LAST,     // Last party gets remainder
-        LARGEST   // Party with largest share gets remainder
+        FIRST, // First party gets remainder
+        LAST, // Last party gets remainder
+        LARGEST // Party with largest share gets remainder
     }
 }

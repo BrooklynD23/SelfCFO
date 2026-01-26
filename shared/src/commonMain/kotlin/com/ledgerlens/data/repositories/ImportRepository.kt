@@ -97,12 +97,7 @@ interface ImportRepository {
     /**
      * Update import job progress.
      */
-    suspend fun updateProgress(
-        id: String,
-        importedCount: Int,
-        duplicatesSkipped: Int,
-        errorsCount: Int
-    )
+    suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int)
 
     /**
      * Mark job as completed.

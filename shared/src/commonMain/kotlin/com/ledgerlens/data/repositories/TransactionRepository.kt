@@ -65,10 +65,7 @@ interface TransactionRepository {
     /**
      * Get transactions within a date range.
      */
-    fun getTransactionsByDateRange(
-        startDate: LocalDate,
-        endDate: LocalDate
-    ): Flow<List<Transaction>>
+    fun getTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Transaction>>
 
     /**
      * Get transactions for a specific category.

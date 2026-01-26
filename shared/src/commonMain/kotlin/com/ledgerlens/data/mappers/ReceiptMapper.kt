@@ -3,7 +3,6 @@ package com.ledgerlens.data.mappers
 import com.ledgerlens.data.repositories.ItemAllocationEntity
 import com.ledgerlens.data.repositories.ReceiptEntity
 import com.ledgerlens.data.repositories.ReceiptItemEntity
-import com.ledgerlens.db.Item_allocation
 import com.ledgerlens.db.Receipt
 import com.ledgerlens.db.Receipt_item
 import com.ledgerlens.domain.Money

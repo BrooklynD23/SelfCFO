@@ -2,7 +2,7 @@ package com.ledgerlens.security
 
 /**
  * Key management interface for the encryption layer.
- * 
+ *
  * Implements the key hierarchy per ADR-003:
  * - User passphrase → Master Key (via Argon2id)
  * - Master Key wraps KEK (stored in platform keystore)
@@ -56,11 +56,7 @@ interface KeyManager {
     /**
      * Import keys from backup.
      */
-    suspend fun importFromBackup(
-        backup: BackupBundle,
-        exportPassphrase: String,
-        newPassphrase: String
-    ): Result<Unit>
+    suspend fun importFromBackup(backup: BackupBundle, exportPassphrase: String, newPassphrase: String): Result<Unit>
 
     /**
      * Crypto-erase all data (delete KEK, all data becomes unrecoverable).
@@ -70,10 +66,7 @@ interface KeyManager {
     /**
      * Change passphrase (re-wrap KEK).
      */
-    suspend fun changePassphrase(
-        currentPassphrase: String,
-        newPassphrase: String
-    ): Result<Unit>
+    suspend fun changePassphrase(currentPassphrase: String, newPassphrase: String): Result<Unit>
 }
 
 /**
@@ -107,8 +100,8 @@ data class BackupBundle(
         if (other == null || this::class != other::class) return false
         other as BackupBundle
         return encryptedKek.contentEquals(other.encryptedKek) &&
-               salt.contentEquals(other.salt) &&
-               version == other.version
+            salt.contentEquals(other.salt) &&
+            version == other.version
     }
 
     override fun hashCode(): Int {
@@ -124,14 +117,14 @@ data class BackupBundle(
  */
 object PassphraseRequirements {
     const val MIN_LENGTH = 12
-    
+
     fun validate(passphrase: String): PassphraseValidationResult {
         val errors = mutableListOf<String>()
-        
+
         if (passphrase.length < MIN_LENGTH) {
             errors.add("Passphrase must be at least $MIN_LENGTH characters")
         }
-        
+
         return if (errors.isEmpty()) {
             PassphraseValidationResult.Valid
         } else {

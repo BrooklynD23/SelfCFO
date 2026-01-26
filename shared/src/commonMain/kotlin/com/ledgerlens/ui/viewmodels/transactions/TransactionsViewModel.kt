@@ -4,7 +4,6 @@ import com.ledgerlens.categorization.Category
 import com.ledgerlens.data.repositories.CategoryEntity
 import com.ledgerlens.data.repositories.CategoryRepository
 import com.ledgerlens.data.repositories.Transaction
-import com.ledgerlens.data.repositories.TransactionFilter
 import com.ledgerlens.data.repositories.TransactionRepository
 import com.ledgerlens.domain.Money
 import com.ledgerlens.ui.screens.dashboard.DateRange
@@ -35,13 +34,13 @@ data class TransactionFilters(
 ) {
     val hasActiveFilters: Boolean
         get() = searchQuery.isNotBlank() ||
-                dateRange != null ||
-                selectedCategories.isNotEmpty() ||
-                showIncomeOnly ||
-                showExpensesOnly ||
-                showNeedsReview ||
-                minAmount != null ||
-                maxAmount != null
+            dateRange != null ||
+            selectedCategories.isNotEmpty() ||
+            showIncomeOnly ||
+            showExpensesOnly ||
+            showNeedsReview ||
+            minAmount != null ||
+            maxAmount != null
 
     val activeFilterCount: Int
         get() = listOf(
@@ -444,12 +443,12 @@ class TransactionsViewModel(
         return transactions.filter { transaction ->
             // Search query filter
             val matchesSearch = filters.searchQuery.isBlank() ||
-                    transaction.displayMerchant.contains(filters.searchQuery, ignoreCase = true) ||
-                    transaction.description.contains(filters.searchQuery, ignoreCase = true)
+                transaction.displayMerchant.contains(filters.searchQuery, ignoreCase = true) ||
+                transaction.description.contains(filters.searchQuery, ignoreCase = true)
 
             // Category filter
             val matchesCategory = filters.selectedCategories.isEmpty() ||
-                    transaction.category?.id in filters.selectedCategories
+                transaction.category?.id in filters.selectedCategories
 
             // Income/Expense filter
             val matchesType = when {
@@ -475,7 +474,9 @@ class TransactionsViewModel(
                 parentId = cachedCategory?.parentId,
                 color = cachedCategory?.color
             )
-        } else null
+        } else {
+            null
+        }
 
         return TransactionUiModel(
             id = id,

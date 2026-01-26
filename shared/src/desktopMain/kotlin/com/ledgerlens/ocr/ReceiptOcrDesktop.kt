@@ -19,7 +19,8 @@ class ReceiptOcrDesktop(private val config: OcrEngineConfig = OcrEngineConfig())
 
     override val engineName = "Tesseract (Stub)"
     override val engineVersion = "not-installed"
-    override val supportedFormats = setOf(ImageFormat.JPEG, ImageFormat.PNG, ImageFormat.TIFF, ImageFormat.BMP, ImageFormat.GIF)
+    override val supportedFormats =
+        setOf(ImageFormat.JPEG, ImageFormat.PNG, ImageFormat.TIFF, ImageFormat.BMP, ImageFormat.GIF)
 
     override suspend fun isReady() = initialized
 
@@ -49,8 +50,8 @@ class ReceiptOcrDesktop(private val config: OcrEngineConfig = OcrEngineConfig())
         OcrResult.Failure(
             OcrError(
                 "Desktop OCR not yet implemented. " +
-                "Tesseract4J dependency needs to be added. " +
-                "See ReceiptOcrDesktop.kt for setup instructions."
+                    "Tesseract4J dependency needs to be added. " +
+                    "See ReceiptOcrDesktop.kt for setup instructions."
             ),
             OcrErrorCode.ENGINE_INIT_FAILED
         )

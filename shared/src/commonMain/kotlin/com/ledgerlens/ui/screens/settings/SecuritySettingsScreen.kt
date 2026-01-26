@@ -12,21 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ledgerlens.ui.viewmodels.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecuritySettingsScreen(
-    viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun SecuritySettingsScreen(viewModel: SettingsViewModel, onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.securityState.collectAsState()
-    
+
     LaunchedEffect(Unit) { viewModel.loadSecuritySettings() }
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -68,7 +63,7 @@ fun SecuritySettingsScreen(
                         }
                     }
                 }
-                
+
                 // Biometrics section
                 if (state.biometricsAvailable) {
                     item {
@@ -85,13 +80,13 @@ fun SecuritySettingsScreen(
                         }
                     }
                 }
-                
+
                 // Danger zone
                 item {
                     Spacer(Modifier.height(16.dp))
                     Text("Danger Zone", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error)
                 }
-                
+
                 item {
                     Card(Modifier.fillMaxWidth(), RoundedCornerShape(12.dp), CardDefaults.cardColors(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))) {
                         Column(Modifier.padding(16.dp)) {
@@ -118,7 +113,7 @@ fun SecuritySettingsScreen(
             }
         }
     }
-    
+
     // Change passphrase dialog
     if (state.showChangePassphrase) {
         ChangePassphraseDialog(
@@ -137,7 +132,7 @@ fun SecuritySettingsScreen(
             onDismiss = viewModel::hideChangePassphrase
         )
     }
-    
+
     // Crypto erase confirmation dialog
     if (state.showCryptoEraseConfirm) {
         CryptoEraseDialog(
@@ -169,7 +164,7 @@ private fun ChangePassphraseDialog(
 ) {
     var showCurrent by remember { mutableStateOf(false) }
     var showNew by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Change Passphrase") },
@@ -190,9 +185,9 @@ private fun ChangePassphraseDialog(
                         }
                     }
                 )
-                
+
                 Spacer(Modifier.height(12.dp))
-                
+
                 OutlinedTextField(
                     value = newPassphrase,
                     onValueChange = onNewChange,
@@ -208,9 +203,9 @@ private fun ChangePassphraseDialog(
                         }
                     }
                 )
-                
+
                 Spacer(Modifier.height(12.dp))
-                
+
                 OutlinedTextField(
                     value = confirmPassphrase,
                     onValueChange = onConfirmChange,
@@ -247,7 +242,7 @@ private fun CryptoEraseDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error)
                 Spacer(Modifier.width(8.dp))
@@ -257,13 +252,13 @@ private fun CryptoEraseDialog(
         text = {
             Column {
                 Text("This action will permanently destroy all encryption keys, making your data unrecoverable.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 Text("Type DELETE ALL DATA to confirm:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                
+
                 Spacer(Modifier.height(8.dp))
-                
+
                 OutlinedTextField(
                     value = confirmText,
                     onValueChange = onConfirmTextChange,

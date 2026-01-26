@@ -20,16 +20,20 @@ data class MerchantPrior(
     val dominantCategoryRatio: Float
         get() = if (totalTransactions > 0) {
             dominantCategoryCount.toFloat() / totalTransactions
-        } else 0f
+        } else {
+            0f
+        }
 
     val isHighConfidence: Boolean
         get() = totalTransactions >= MIN_RELIABLE_OBSERVATIONS &&
-                dominantCategoryRatio >= HIGH_CONFIDENCE_RATIO
+            dominantCategoryRatio >= HIGH_CONFIDENCE_RATIO
 
     val categoryProbabilities: Map<String, Float>
         get() = if (totalTransactions > 0) {
             categoryCounts.mapValues { it.value.toFloat() / totalTransactions }
-        } else emptyMap()
+        } else {
+            emptyMap()
+        }
 
     fun withAssignment(categoryId: String, timestampMs: Long = System.currentTimeMillis()): MerchantPrior {
         val newCounts = categoryCounts.toMutableMap()
@@ -60,7 +64,11 @@ data class MerchantPrior(
         const val MIN_RELIABLE_OBSERVATIONS = 3
         const val HIGH_CONFIDENCE_RATIO = 0.8f
 
-        fun create(merchantId: String, categoryId: String, timestampMs: Long = System.currentTimeMillis()): MerchantPrior {
+        fun create(
+            merchantId: String,
+            categoryId: String,
+            timestampMs: Long = System.currentTimeMillis()
+        ): MerchantPrior {
             return MerchantPrior(
                 merchantId = merchantId,
                 categoryCounts = mapOf(categoryId to 1),
@@ -106,8 +114,8 @@ data class MerchantCategoryDistribution(
         }
 
     val isUniform: Boolean
-        get() = probabilities.isEmpty() || 
-                (probabilities.size > 1 && entropy > kotlin.math.ln(probabilities.size.toFloat()) * 0.9f)
+        get() = probabilities.isEmpty() ||
+            (probabilities.size > 1 && entropy > kotlin.math.ln(probabilities.size.toFloat()) * 0.9f)
 
     fun getProbability(categoryId: String): Float =
         probabilities.find { it.categoryId == categoryId }?.probability ?: 0f

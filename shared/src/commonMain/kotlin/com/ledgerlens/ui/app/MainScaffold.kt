@@ -1,9 +1,7 @@
 package com.ledgerlens.ui.app
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,7 +31,10 @@ data class ScaffoldConfig(
  * Creates a ScaffoldConfig based on the current screen.
  */
 fun Screen.toScaffoldConfig(): ScaffoldConfig = ScaffoldConfig(
-    showTopBar = true,
+    // Most screens currently include their own `TopAppBar` inside their screen-level `Scaffold`.
+    // Until we refactor screens to be "content-only", keep the global top bar off to avoid
+    // double app bars.
+    showTopBar = false,
     showBottomBar = NavGraph.shouldShowBottomNav(this),
     topAppBarConfig = this.toTopAppBarConfig(
         showBackButton = NavGraph.shouldShowBackButton(this)

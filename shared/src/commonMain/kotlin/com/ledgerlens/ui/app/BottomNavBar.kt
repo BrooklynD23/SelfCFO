@@ -3,13 +3,13 @@ package com.ledgerlens.ui.app
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -90,11 +90,7 @@ object BottomNavItems {
  * @param modifier Optional modifier
  */
 @Composable
-fun BottomNavBar(
-    currentRoute: String,
-    onNavigate: (Screen) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun BottomNavBar(currentRoute: String, onNavigate: (Screen) -> Unit, modifier: Modifier = Modifier) {
     // TODO: Replace with LedgerLensTheme.colorScheme when theme integration is complete
     NavigationBar(
         modifier = modifier,
@@ -115,11 +111,7 @@ fun BottomNavBar(
  * Individual bottom navigation bar item.
  */
 @Composable
-private fun RowScope.BottomNavBarItem(
-    item: BottomNavItem,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
+private fun RowScope.BottomNavBarItem(item: BottomNavItem, selected: Boolean, onClick: () -> Unit) {
     NavigationBarItem(
         selected = selected,
         onClick = onClick,

@@ -1,10 +1,10 @@
 package com.ledgerlens.data.di
 
-import com.ledgerlens.categorization.pipeline.ReviewQueueManager
 import com.ledgerlens.data.repositories.AccountRepository
 import com.ledgerlens.data.repositories.CategoryRepository
 import com.ledgerlens.data.repositories.ImportRepository
 import com.ledgerlens.data.repositories.ReceiptRepository
+import com.ledgerlens.data.repositories.ReviewQueueRepository
 import com.ledgerlens.data.repositories.RuleRepository
 import com.ledgerlens.data.repositories.StatisticsRepository
 import com.ledgerlens.data.repositories.TransactionRepository
@@ -12,12 +12,13 @@ import com.ledgerlens.data.repositories.impl.SqlDelightAccountRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightCategoryRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightImportRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightReceiptRepository
+import com.ledgerlens.data.repositories.impl.SqlDelightReviewQueueRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightRuleRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightStatisticsRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightTransactionRepository
 import com.ledgerlens.db.LedgerLensDatabase
+import com.ledgerlens.security.KeyManagerImpl
 import com.ledgerlens.security.KeyManager
-import com.ledgerlens.security.StubKeyManager
 import com.ledgerlens.ui.viewmodels.categories.CategoriesViewModel
 import com.ledgerlens.ui.viewmodels.dashboard.DashboardViewModel
 import com.ledgerlens.ui.viewmodels.import.ImportViewModel
@@ -27,8 +28,6 @@ import com.ledgerlens.ui.viewmodels.settings.SettingsViewModel
 import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
@@ -108,11 +107,21 @@ val repositoryModule: Module = module {
  * Koin module providing services.
  */
 val servicesModule: Module = module {
-    // ReviewQueueManager - manages the review queue for transactions
-    single { ReviewQueueManager() }
+    // ReviewQueueRepository - persisted SQLDelight-backed review queue
+    single<ReviewQueueRepository> {
+        SqlDelightReviewQueueRepository(
+            database = get(),
+            dispatcher = Dispatchers.Default
+        )
+    }
 
-    // KeyManager - stub implementation until full encryption layer is ready
-    single<KeyManager> { StubKeyManager() }
+    // KeyManager - real implementation (platform keystore + AES-GCM)
+    single<KeyManager> {
+        KeyManagerImpl(
+            platformKeystore = get(),
+            fileEncryption = get()
+        )
+    }
 }
 
 /**
@@ -155,7 +164,7 @@ val viewModelModule: Module = module {
     // ReviewViewModel
     factory {
         ReviewViewModel(
-            reviewQueueManager = get(),
+            reviewQueueRepository = get(),
             transactionRepository = get()
         )
     }

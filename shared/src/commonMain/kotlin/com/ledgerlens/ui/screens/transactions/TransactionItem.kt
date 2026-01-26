@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -163,11 +162,7 @@ fun TransactionItem(
  * Compact transaction item for summary lists.
  */
 @Composable
-fun TransactionItemCompact(
-    transaction: TransactionUiModel,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun TransactionItemCompact(transaction: TransactionUiModel, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TransactionItem(
         transaction = transaction,
         onClick = onClick,
@@ -228,8 +223,11 @@ fun SelectableTransactionItem(
                 .size(24.dp)
                 .clip(CircleShape)
                 .background(
-                    if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant
+                    if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    }
                 )
                 .clickable { onSelectionChange(!selected) },
             contentAlignment = Alignment.Center

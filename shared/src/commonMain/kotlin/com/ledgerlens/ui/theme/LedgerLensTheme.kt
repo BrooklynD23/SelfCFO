@@ -25,10 +25,7 @@ val LocalLedgerLensShapes = staticCompositionLocalOf { LedgerLensShapes.Default 
  * @param content The composable content to theme.
  */
 @Composable
-fun LedgerLensTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
+fun LedgerLensTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     val materialColorScheme = if (darkTheme) {
