@@ -33,7 +33,7 @@ object MnemonicGenerator {
             "Entropy must be $ENTROPY_BYTES bytes for 24-word mnemonic"
         }
         
-        val checksum = Sha256.hash(entropy)
+        val checksum = Sha256.digest(entropy)
         val entropyBits = bytesToBits(entropy)
         val checksumBits = bytesToBits(checksum).take(CHECKSUM_BITS)
         val allBits = entropyBits + checksumBits
@@ -64,7 +64,7 @@ object MnemonicGenerator {
         val checksumBits = allBits.drop(ENTROPY_BITS)
         
         val entropy = bitsToBytes(entropyBits)
-        val expectedChecksum = bytesToBits(Sha256.hash(entropy)).take(CHECKSUM_BITS)
+        val expectedChecksum = bytesToBits(Sha256.digest(entropy)).take(CHECKSUM_BITS)
         
         return if (checksumBits == expectedChecksum) entropy else null
     }
@@ -106,11 +106,4 @@ object MnemonicGenerator {
     private fun intToBits(value: Int, numBits: Int): List<Boolean> {
         return (numBits - 1 downTo 0).map { bit -> (value shr bit) and 1 == 1 }
     }
-}
-
-/**
- * Platform-specific SHA-256 hashing.
- */
-expect object Sha256 {
-    fun hash(data: ByteArray): ByteArray
 }

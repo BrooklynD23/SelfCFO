@@ -10,7 +10,7 @@ import javax.crypto.spec.SecretKeySpec
  * Uses AES-GCM for authenticated encryption of keys.
  * This provides both confidentiality and integrity protection.
  */
-object KeyWrapper : KeyWrapperOperations {
+object KeyWrapper {
     
     private const val ALGORITHM = "AES/GCM/NoPadding"
     private const val TAG_LENGTH_BITS = 128
@@ -50,7 +50,7 @@ object KeyWrapper : KeyWrapperOperations {
         require(wrappingKey.size == AesGcmConstants.KEY_LENGTH) {
             "Wrapping key must be ${AesGcmConstants.KEY_LENGTH} bytes"
         }
-        require(wrappedKey.size > AesGcmConstants.IV_LENGTH + AesGcmConstants.TAG_LENGTH) {
+        require(wrappedKey.size >= AesGcmConstants.IV_LENGTH + AesGcmConstants.TAG_LENGTH) {
             "Wrapped key data is too short"
         }
         
