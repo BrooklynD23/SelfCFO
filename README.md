@@ -24,7 +24,7 @@
   - SQLDelight schema (transactions, categories, rules, receipts, imports, stats, etc.)
   - Encryption: Android SQLCipher + envelope encryption for files (desktop DB encryption currently deferred)
   - Money type: integer minor units (no floats)
-  - Import pipeline: PDF/CSV parsing, normalization, fingerprinting + dedupe, idempotent imports
+  - Import pipeline: CSV parsing, normalization, immutable imported records, SHA-256 file-hash idempotency, and persistent review/duplicate-candidate queues
 - **Categorization engine**
   - Category hierarchy + defaults
   - Hybrid categorization: rules + merchant priors + lightweight ML pipeline

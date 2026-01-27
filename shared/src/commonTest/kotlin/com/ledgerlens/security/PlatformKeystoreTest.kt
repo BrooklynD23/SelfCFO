@@ -7,6 +7,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+expect fun createPlatformKeystore(): PlatformKeystore
+
 /**
  * Tests for PlatformKeystore across all platforms.
  * 
@@ -19,7 +21,7 @@ import kotlin.test.assertTrue
  */
 class PlatformKeystoreTest {
 
-    private val keystore = PlatformKeystore()
+    private val keystore = createPlatformKeystore()
 
     @Test
     fun `storeKek and retrieveKek round-trip works`() = runTest {
@@ -177,7 +179,7 @@ class PlatformKeystoreTest {
         
         val retrieved = keystore.retrieveKek().getOrNull()
         assertNotNull(retrieved)
-        assertEquals(0, retrieved.size, "Should retrieve empty array")
+        assertEquals(expected = 0, actual = retrieved.size, message = "Should retrieve empty array")
         
         // Cleanup
         keystore.deleteKek()

@@ -8,8 +8,9 @@ Implement the categorization review interface for handling low-confidence predic
 
 This file is an **implementation plan**. The repository currently contains a working `ReviewInboxScreen` / `ReviewDetailScreen`, but there are important integration gaps:
 
-- The Review UI currently loads from an **in-memory** `ReviewQueueManager` and will be empty unless items are explicitly enqueued.
-- The current Import flow (`ImportViewModel`) is **simulated** and does not generate persisted “needs review” items.
+- The Review UI currently loads from an **in-memory** `ReviewQueueManager`. Core persistence exists via `ReviewQueueRepository` (`ReviewQueue.sq` + SQLDelight repo), but `ReviewViewModel` is not wired to it yet.
+- The current Import flow (`ImportViewModel`) is **simulated**. Core CSV import is implemented (`ImportService.importCsv`) and enqueues low-confidence items into the persisted `review_queue`, but UI wiring is pending.
+- Cross-file duplicates are recorded as persisted `duplicate_candidate` rows (for later review), but there is no UI yet to surface/resolve them.
 - OCR “needs review” is modeled in SQLDelight schema via `parse_status = 'needs_review'`, but there is no screen/query that surfaces these records for review yet.
 - On Desktop, the Review screen previously showed “Coming Soon” because `Screen.Review` wasn’t registered in the desktop screen registry; this has been fixed.
 

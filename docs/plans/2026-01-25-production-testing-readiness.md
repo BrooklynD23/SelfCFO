@@ -22,7 +22,8 @@ This is a **pragmatic integration checklist** (not unit-test completeness).
 ### 2) Import must stop being simulated
 
 - **Current state**: `shared/src/commonMain/kotlin/com/ledgerlens/ui/viewmodels/import/ImportViewModel.kt` uses `simulateImportProgress()` (“actual parsing not yet implemented”).
-- **Target**: Implement real CSV/PDF import services and have Import UI reflect real outcomes:
+- **Update (2026-01-27)**: Core CSV import is implemented (`ImportService.importCsv`) with SHA-256 file-hash idempotency, immutable `imported_transaction` persistence, categorization, and enqueue to the persistent review queue.
+- **Target**: Wire Import UI to call the core import service (CSV now; PDF later) and reflect real outcomes:
   - transactions imported
   - duplicates found/skipped
   - parse errors recorded
@@ -30,11 +31,9 @@ This is a **pragmatic integration checklist** (not unit-test completeness).
 
 ### 3) Review Inbox must have persisted data
 
-- **Current state**: `shared/src/commonMain/kotlin/com/ledgerlens/categorization/pipeline/ReviewQueueManager.kt` is in-memory only; nothing enqueues import/OCR review items in production flow.
-- **Target**: Add SQLDelight table + repository/service:
-  - `shared/src/commonMain/sqldelight/com/ledgerlens/db/ReviewQueue.sq` (or equivalent)
-  - enqueue from categorization/import/OCR pipelines
-  - load/resolve items via ViewModel
+- **Current state**: `ReviewViewModel` reads from in-memory `ReviewQueueManager` (so the inbox will be empty after restart unless explicitly enqueued).
+- **Update (2026-01-27)**: Persistence exists via `ReviewQueue.sq` + `SqlDelightReviewQueueRepository` and core import enqueues into `review_queue`.
+- **Target**: Wire Review UI/ViewModel to load and resolve items via `ReviewQueueRepository` (and extend to OCR/source-file `parse_status = 'needs_review'` items).
 
 ---
 
@@ -50,8 +49,7 @@ This is a **pragmatic integration checklist** (not unit-test completeness).
 
 ### 5) Encryption wiring must match documented intent
 
-- **Current state**: DI provides `StubKeyManager` (`shared/src/commonMain/kotlin/com/ledgerlens/data/di/AppModule.kt`).
-- **Target**: Replace with a real `KeyManager` implementation (or clearly mark encryption as “development mode only” and gate production testing expectations accordingly).
+- **Update (2026-01-27)**: `KeyManagerImpl` exists and is bound in DI in the core worktree. Remaining work is validating platform integration end-to-end (Android/Desktop) and aligning UI entrypoints.
 
 ---
 

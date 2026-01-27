@@ -2,107 +2,109 @@ package com.ledgerlens.import
 
 import kotlinx.datetime.LocalDate
 
-class FlexibleDateParser {
-
+/**
+ * Minimal multi-format date parser that works in commonMain (no java.time).
+ *
+ * Supported:
+ * - yyyy-MM-dd
+ * - MM/dd/yyyy, M/d/yyyy
+ * - MM/dd/yy, M/d/yy (assumes 20xx for 00-68, 19xx for 69-99)
+ * - dd/MM/yyyy
+ * - dd.MM.yyyy
+ * - dd-MMM-yyyy (English month abbreviations)
+ */
+internal class FlexibleDateParser {
     fun parse(dateString: String): LocalDate? {
-        val cleaned = dateString.trim()
+        val s = dateString.trim()
+        if (s.isEmpty()) return null
 
-        return tryParseIso(cleaned)
-            ?: tryParseSlashFormat(cleaned)
-            ?: tryParseDashFormat(cleaned)
-            ?: tryParseDotFormat(cleaned)
-    }
+        // yyyy-MM-dd
+        parseIso(s)?.let { return it }
 
-    private fun tryParseIso(text: String): LocalDate? {
-        val match = Regex("""(\d{4})-(\d{2})-(\d{2})""").matchEntire(text) ?: return null
-        return try {
-            LocalDate(
-                match.groupValues[1].toInt(),
-                match.groupValues[2].toInt(),
-                match.groupValues[3].toInt()
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun tryParseSlashFormat(text: String): LocalDate? {
-        val match = Regex("""(\d{1,2})/(\d{1,2})/(\d{2,4})""").matchEntire(text) ?: return null
-        return try {
-            val first = match.groupValues[1].toInt()
-            val second = match.groupValues[2].toInt()
-            val yearRaw = match.groupValues[3].toInt()
-            val year = normalizeYear(yearRaw)
-
-            resolveMonthDayAmbiguity(first, second, year)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun tryParseDashFormat(text: String): LocalDate? {
-        val numericMatch = Regex("""(\d{1,2})-(\d{1,2})-(\d{2,4})""").matchEntire(text)
-        if (numericMatch != null) {
-            return try {
-                val first = numericMatch.groupValues[1].toInt()
-                val second = numericMatch.groupValues[2].toInt()
-                val year = normalizeYear(numericMatch.groupValues[3].toInt())
-                resolveMonthDayAmbiguity(first, second, year)
-            } catch (e: Exception) {
-                null
+        // MM/dd/yyyy, M/d/yyyy, MM/dd/yy, dd/MM/yyyy
+        if (s.contains('/')) {
+            val parts = s.split('/')
+            if (parts.size == 3) {
+                val a = parts[0].toIntOrNull()
+                val b = parts[1].toIntOrNull()
+                val cRaw = parts[2].toIntOrNull()
+                if (a != null && b != null && cRaw != null) {
+                    // Heuristic: if first part > 12, treat as dd/MM/yyyy; else MM/dd/...
+                    val isDayFirst = a > 12
+                    val day = if (isDayFirst) a else b
+                    val month = if (isDayFirst) b else a
+                    val year = normalizeYear(cRaw)
+                    return safeLocalDate(year, month, day)
+                }
             }
         }
 
-        val monthNameMatch = Regex("""(\d{1,2})-(\w{3})-(\d{2,4})""", RegexOption.IGNORE_CASE).matchEntire(text)
-        if (monthNameMatch != null) {
-            return try {
-                val day = monthNameMatch.groupValues[1].toInt()
-                val month = parseMonthName(monthNameMatch.groupValues[2]) ?: return null
-                val year = normalizeYear(monthNameMatch.groupValues[3].toInt())
-                LocalDate(year, month, day)
-            } catch (e: Exception) {
-                null
+        // dd.MM.yyyy
+        if (s.contains('.')) {
+            val parts = s.split('.')
+            if (parts.size == 3) {
+                val a = parts[0].toIntOrNull()
+                val b = parts[1].toIntOrNull()
+                val cRaw = parts[2].toIntOrNull()
+                if (a != null && b != null && cRaw != null) {
+                    // Heuristic: dot format is usually European (dd.MM.yyyy).
+                    // If the second part is > 12, treat as MM.dd.yyyy and swap.
+                    val isMonthFirst = b > 12
+                    val day = if (isMonthFirst) b else a
+                    val month = if (isMonthFirst) a else b
+                    val year = normalizeYear(cRaw)
+                    return safeLocalDate(year, month, day)
+                }
+            }
+        }
+
+        // dd-MMM-yyyy
+        if (s.contains('-')) {
+            val parts = s.split('-')
+            if (parts.size == 3) {
+                val day = parts[0].toIntOrNull()
+                val month = monthFromAbbrev(parts[1])
+                val year = parts[2].toIntOrNull()
+                if (day != null && month != null && year != null) {
+                    return safeLocalDate(year, month, day)
+                }
             }
         }
 
         return null
     }
 
-    private fun tryParseDotFormat(text: String): LocalDate? {
-        val match = Regex("""(\d{1,2})\.(\d{1,2})\.(\d{2,4})""").matchEntire(text) ?: return null
-        return try {
-            val day = match.groupValues[1].toInt()
-            val month = match.groupValues[2].toInt()
-            val year = normalizeYear(match.groupValues[3].toInt())
-            LocalDate(year, month, day)
-        } catch (e: Exception) {
-            null
+    private fun parseIso(s: String): LocalDate? =
+        runCatching { LocalDate.parse(s) }.getOrNull()
+
+    private fun normalizeYear(y: Int): Int {
+        return if (y in 0..99) {
+            if (y <= 68) 2000 + y else 1900 + y
+        } else {
+            y
         }
     }
 
-    private fun normalizeYear(year: Int): Int {
-        return when {
-            year >= 100 -> year
-            year >= 50 -> 1900 + year
-            else -> 2000 + year
-        }
-    }
+    private fun safeLocalDate(year: Int, month: Int, day: Int): LocalDate? =
+        runCatching { LocalDate(year, month, day) }.getOrNull()
 
-    private fun resolveMonthDayAmbiguity(first: Int, second: Int, year: Int): LocalDate? {
-        return when {
-            first > 12 && second <= 12 -> LocalDate(year, second, first)
-            second > 12 && first <= 12 -> LocalDate(year, first, second)
-            first <= 12 && second <= 12 -> LocalDate(year, first, second)
+    private fun monthFromAbbrev(s: String): Int? {
+        val k = s.trim().lowercase()
+        return when (k.take(3)) {
+            "jan" -> 1
+            "feb" -> 2
+            "mar" -> 3
+            "apr" -> 4
+            "may" -> 5
+            "jun" -> 6
+            "jul" -> 7
+            "aug" -> 8
+            "sep" -> 9
+            "oct" -> 10
+            "nov" -> 11
+            "dec" -> 12
             else -> null
         }
     }
-
-    private fun parseMonthName(name: String): Int? {
-        val months = mapOf(
-            "jan" to 1, "feb" to 2, "mar" to 3, "apr" to 4,
-            "may" to 5, "jun" to 6, "jul" to 7, "aug" to 8,
-            "sep" to 9, "oct" to 10, "nov" to 11, "dec" to 12
-        )
-        return months[name.lowercase().take(3)]
-    }
 }
+

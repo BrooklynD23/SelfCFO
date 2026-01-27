@@ -3,7 +3,10 @@ package com.ledgerlens.import
 import com.ledgerlens.domain.Money
 import com.ledgerlens.domain.MoneyParser
 import com.ledgerlens.domain.RoundingMode
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Template for parsing bank statements from specific institutions.
@@ -82,7 +85,11 @@ object StatementTemplateRegistry {
      */
     fun register(template: StatementTemplate) {
         templates.removeAll { it.id == template.id }
-        templates.add(template)
+        if (template.id == "generic") {
+            templates.add(template)
+        } else {
+            templates.add(0, template)
+        }
     }
 
     /**
@@ -91,9 +98,6 @@ object StatementTemplateRegistry {
     fun getAll(): List<StatementTemplate> = templates.toList()
 
     private fun registerBuiltInTemplates() {
-        // Generic template as fallback
-        register(createGenericTemplate())
-
         // Chase Bank
         register(createChaseTemplate())
 
@@ -102,6 +106,9 @@ object StatementTemplateRegistry {
 
         // Wells Fargo
         register(createWellsFargoTemplate())
+
+        // Generic template as fallback (must be lowest priority)
+        register(createGenericTemplate())
     }
 
     private fun createGenericTemplate() = StatementTemplate(
@@ -327,14 +334,19 @@ class TemplateBasedParser(
 
             // Determine if debit based on format
             val isDebit = when (template.amountFormat) {
-                AmountFormat.SIGNED -> rawAmount.startsWith("-") || text.contains("-$rawAmount")
+                AmountFormat.SIGNED -> {
+                    // Prefer sign information from the parsed value and the matched substring.
+                    money.isNegative ||
+                        match.value.trim().startsWith("-") ||
+                        (match.range.first > 0 && text[match.range.first - 1] == '-')
+                }
                 AmountFormat.PARENTHESES -> text.contains("($rawAmount)") || text.contains("( $rawAmount )")
                 AmountFormat.CR_DR_SUFFIX -> text.contains(Regex("""$rawAmount\s*DR""", RegexOption.IGNORE_CASE))
                 else -> false  // Cannot determine from format alone
             }
 
             ExtractedAmount(
-                value = if (isDebit) -money else money,
+                value = if (isDebit) -money.abs() else money.abs(),
                 isDebit = isDebit,
                 confidence = 0.9f,
                 rawText = match.value

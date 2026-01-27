@@ -224,8 +224,8 @@ class MerchantNormalizerTest {
 
     @Test
     fun `longest alias match wins`() {
-        // AMAZON.COM should match before AMZN
-        val result = normalizer.normalize("AMAZON.COM/BILL SUBSCRIPTION")
-        assertEquals("Apple", result.canonical) // APPLE.COM/BILL is in aliases
+        // APPLE.COM/BILL should win over the more general APPLE.COM alias.
+        val result = normalizer.normalize("APPLE.COM/BILL SUBSCRIPTION")
+        assertEquals("Apple", result.canonical)
     }
 }

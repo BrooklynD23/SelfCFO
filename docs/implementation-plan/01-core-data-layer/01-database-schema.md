@@ -195,6 +195,8 @@ WHERE ? LIKE '%' || ma.alias_pattern || '%' AND ma.match_type = 'contains';
 ### Step 4: Transaction Entities
 
 **ImportedTransaction.sq:**
+
+Design note: `fingerprint` is a dedupe signal and can legitimately collide (e.g., two identical purchases). We avoid enforcing fingerprint uniqueness and instead (a) ensure per-file row idempotency with `UNIQUE(source_file_id, source_row_ref)` and (b) record cross-file fingerprint matches into `duplicate_candidate` for later review.
 ```sql
 CREATE TABLE imported_transaction (
     id TEXT NOT NULL PRIMARY KEY,
@@ -216,7 +218,7 @@ CREATE TABLE imported_transaction (
     category_reason TEXT,
     parse_warnings TEXT,
     imported_at INTEGER NOT NULL,
-    UNIQUE(source_file_id, fingerprint)
+    UNIQUE(source_file_id, source_row_ref)
 );
 
 CREATE INDEX idx_imported_txn_fingerprint ON imported_transaction(fingerprint);
@@ -227,10 +229,36 @@ CREATE INDEX idx_imported_txn_import_job ON imported_transaction(import_job_id);
 selectByFingerprint:
 SELECT * FROM imported_transaction WHERE fingerprint = ?;
 
+selectMatchRefsByFingerprint:
+SELECT id, source_file_id FROM imported_transaction WHERE fingerprint = ?;
+
 selectByDateRange:
 SELECT * FROM imported_transaction
 WHERE account_id = ? AND posted_date BETWEEN ? AND ?
 ORDER BY posted_date DESC;
+```
+
+**DuplicateCandidate.sq:**
+```sql
+CREATE TABLE duplicate_candidate (
+    transaction_id_a TEXT NOT NULL REFERENCES imported_transaction(id),
+    transaction_id_b TEXT NOT NULL REFERENCES imported_transaction(id),
+    fingerprint TEXT NOT NULL,
+    score REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    created_at INTEGER NOT NULL,
+    reviewed_at INTEGER,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    PRIMARY KEY(transaction_id_a, transaction_id_b),
+    CHECK (transaction_id_a < transaction_id_b),
+    CHECK (status IN ('PENDING', 'CONFIRMED', 'DISMISSED'))
+);
+
+selectPending:
+SELECT * FROM duplicate_candidate
+WHERE status = 'PENDING'
+ORDER BY score DESC, created_at ASC
+LIMIT ?;
 ```
 
 **TransactionOverride.sq:**

@@ -87,8 +87,9 @@ SQLite Database (SQLCipher encrypted)
 
 1. **Add ReviewQueue table to SQLDelight**
    - File: `shared/src/commonMain/sqldelight/com/ledgerlens/db/ReviewQueue.sq`
-   - Columns: `id`, `transaction_id`, `added_at`, `source` (AUTO/MANUAL), `reason`, `status`
-   - Queries: insert, selectAll, selectByStatus, updateStatus, delete, countPending
+   - Columns: `transaction_id` (PK) + stored JSON for features/metadata + suggested category/confidence/explanations + status/priority/timestamps
+   - Queries: insert/upsert, selectPending/selectAll/selectByStatus, updateStatus, delete, countPending, stats
+   - **Update (2026-01-27):** Implemented as `review_queue` + `SqlDelightReviewQueueRepository` (persistent). The remaining gap is wiring UI (`ReviewViewModel`) to the repository (it still reads in-memory `ReviewQueueManager`).
 
 2. **Add Settings table to SQLDelight**
    - File: `shared/src/commonMain/sqldelight/com/ledgerlens/db/Settings.sq`

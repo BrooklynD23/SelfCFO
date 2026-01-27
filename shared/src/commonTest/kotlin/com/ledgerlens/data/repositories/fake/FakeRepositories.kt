@@ -366,6 +366,11 @@ class FakeImportRepository : ImportRepository {
         return job.id
     }
 
+    override suspend fun createImportJobForSourceFile(job: ImportJobEntity, sourceFileId: String): String {
+        // For viewmodel tests we don't model SourceFile linkage precisely.
+        return createImportJob(job)
+    }
+
     override suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int) {
         val job = jobs.value[id] ?: return
         jobs.value = jobs.value + (
@@ -417,6 +422,11 @@ class FakeImportRepository : ImportRepository {
 
     override suspend fun isFileAlreadyImported(fileHash: String): Boolean {
         return fileHash in importedHashes
+    }
+
+    override suspend fun getSourceFileIdByHash(fileHash: String): String? {
+        // Not tracked; return null.
+        return null
     }
 
     override suspend fun deleteImportJob(id: String) {

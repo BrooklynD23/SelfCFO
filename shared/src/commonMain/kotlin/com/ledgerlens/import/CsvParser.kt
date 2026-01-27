@@ -1,8 +1,10 @@
 package com.ledgerlens.import
 
-import com.ledgerlens.domain.Money
-import kotlinx.datetime.LocalDate
-
+/**
+ * CSV parser with light auto-detection and column mapping.
+ *
+ * Note: Encoding auto-detection is intentionally minimal in commonMain (assumes UTF-8 / BOM).
+ */
 interface CsvParser {
     suspend fun parse(
         csvData: ByteArray,
@@ -11,25 +13,16 @@ interface CsvParser {
 }
 
 data class CsvParseOptions(
-    val delimiter: Char? = null,
-    val encoding: String? = null,
-    val hasHeader: Boolean? = null,
-    val dateFormat: String? = null,
-    val amountFormat: AmountFormat? = null,
+    val delimiter: Char? = null, // null = auto-detect
+    val hasHeader: Boolean? = null, // null = auto-detect
     val currencyCode: String? = null
 )
-
-enum class AmountFormat {
-    SIGNED_SINGLE,
-    SEPARATE_COLUMNS,
-    ABSOLUTE_WITH_TYPE
-}
 
 sealed class CsvParseResult {
     data class Success(
         val transactions: List<ParsedTransaction>,
         val detectedOptions: CsvParseOptions,
-        val warnings: List<ParseWarning>
+        val warnings: List<CsvParseWarning>
     ) : CsvParseResult()
 
     data class NeedsMapping(
@@ -38,7 +31,9 @@ sealed class CsvParseResult {
         val suggestedMapping: ColumnMapping
     ) : CsvParseResult()
 
-    data class Failure(val error: ParseError) : CsvParseResult()
+    data class Failure(
+        val error: CsvParseError
+    ) : CsvParseResult()
 }
 
 data class ColumnMapping(
@@ -47,31 +42,6 @@ data class ColumnMapping(
     val amountColumn: Int?,
     val debitColumn: Int?,
     val creditColumn: Int?,
-    val balanceColumn: Int?,
-    val categoryColumn: Int?
+    val balanceColumn: Int?
 )
 
-data class ParsedTransaction(
-    val rowRef: String,
-    val postedDate: LocalDate,
-    val transactionDate: LocalDate?,
-    val descriptionRaw: String,
-    val amount: Money,
-    val balance: Money?,
-    val confidence: Float
-)
-
-data class ParseWarning(
-    val rowNumber: Int,
-    val message: String,
-    val field: String?
-)
-
-sealed class ParseError {
-    object EmptyFile : ParseError()
-    data class InvalidEncoding(val encoding: String) : ParseError()
-    data class NoDateColumn(val headers: List<String>) : ParseError()
-    data class NoAmountColumn(val headers: List<String>) : ParseError()
-    data class MalformedRow(val rowNumber: Int, val reason: String) : ParseError()
-    data class Unknown(val message: String) : ParseError()
-}

@@ -272,7 +272,9 @@ class StatementTemplateTest {
                     transactionRow = Regex("""^\s*(\d{2}/\d{2})\s+(.+?)\s+(-?[\d,]+\.\d{2})\s*$"""),
                     datePattern = Regex("""(\d{2})/(\d{2})"""),
                     amountPattern = Regex("""(-?[\d,]+\.\d{2})""")
-                )
+                ),
+                dateFormats = listOf(DateFormat.MM_DD_YY),
+                amountFormat = AmountFormat.SIGNED
             )
         )
     }

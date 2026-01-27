@@ -8,12 +8,13 @@ class MerchantNormalizer {
 
     // Common noise patterns to remove
     private val noisePatterns = listOf(
+        Regex("""\*+\d+"""),  // Masked card numbers (***1234)
         Regex("""\b\d{4,}\b"""),  // Long numbers (terminal IDs)
         Regex("""\b[A-Z]{2}\s*\d{5}\b"""),  // State + ZIP
         Regex("""\b(CA|NY|TX|FL|IL|PA|OH|GA|NC|MI|NJ|VA|WA|AZ|MA|TN|IN|MO|MD|WI|CO|MN|SC|AL|LA|KY|OR|OK|CT|IA|UT|NV|AR|MS|KS|NM|NE|WV|ID|HI|NH|ME|MT|RI|DE|SD|ND|AK|DC|VT|WY|PR)\b"""),  // State codes
         Regex("""#\d+"""),  // Store numbers
-        Regex("""\*+\d+"""),  // Masked card numbers
-        Regex("""\b(POS|DEBIT|CREDIT|PURCHASE|CHECKCARD|ACH|ONLINE|MOBILE|WITHDRAWAL|TRANSFER|PAYMENT|PMT|AUTOPAY|RECURRING|MEMO|REF|TXN|TRANS)\b""", RegexOption.IGNORE_CASE),
+        Regex("""\*+"""),  // Stray mask characters
+        Regex("""\b(POS|DEBIT|CREDIT|PURCHASE|ORDER|CHECKCARD|ACH|ONLINE|MOBILE|WITHDRAWAL|TRANSFER|PAYMENT|PMT|AUTOPAY|RECURRING|MEMO|REF|TXN|TRANS)\b""", RegexOption.IGNORE_CASE),
         Regex("""\d{2}/\d{2}"""),  // MM/DD dates in description
         Regex("""\d{2}-\d{2}-\d{2,4}"""),  // Various date formats
         Regex("""\b\d{1,2}:\d{2}\b"""),  // Time patterns
@@ -91,11 +92,26 @@ class MerchantNormalizer {
 
         // Collapse whitespace
         cleaned = cleaned.replace(Regex("""\s+"""), " ").trim()
+        if (cleaned.isBlank()) {
+            return NormalizedMerchant(
+                canonical = "Unknown",
+                raw = rawDescription,
+                matchType = MatchType.HEURISTIC
+            )
+        }
 
         // Check for known aliases (longest match first)
         val sortedAliases = merchantAliases.entries.sortedByDescending { it.key.length }
         for ((alias, canonical) in sortedAliases) {
-            if (cleaned.startsWith(alias.uppercase())) {
+            val key = alias.uppercase()
+            val matches = if (key.contains("*")) {
+                val prefix = key.substringBefore("*").trimEnd()
+                cleaned.startsWith(prefix)
+            } else {
+                cleaned.startsWith(key)
+            }
+
+            if (matches) {
                 return NormalizedMerchant(
                     canonical = canonical,
                     raw = rawDescription,

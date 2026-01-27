@@ -1,44 +1,11 @@
 package com.ledgerlens.import
 
-import com.ledgerlens.domain.Money
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.*
 
 class CsvAutoDetectorTest {
     private val detector = CsvAutoDetector()
-
-    @Test
-    fun `detect UTF-8 BOM`() {
-        val data = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte(), 'a'.code.toByte())
-        assertEquals("UTF-8-BOM", detector.detectEncoding(data))
-    }
-
-    @Test
-    fun `detect UTF-16LE BOM`() {
-        val data = byteArrayOf(0xFF.toByte(), 0xFE.toByte(), 'a'.code.toByte())
-        assertEquals("UTF-16LE", detector.detectEncoding(data))
-    }
-
-    @Test
-    fun `detect UTF-16BE BOM`() {
-        val data = byteArrayOf(0xFE.toByte(), 0xFF.toByte(), 'a'.code.toByte())
-        assertEquals("UTF-16BE", detector.detectEncoding(data))
-    }
-
-    @Test
-    fun `detect default UTF-8`() {
-        val data = "hello".encodeToByteArray()
-        assertEquals("UTF-8", detector.detectEncoding(data))
-    }
-
-    @Test
-    fun `strip UTF-8 BOM`() {
-        val data = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte(), 'a'.code.toByte(), 'b'.code.toByte())
-        val stripped = detector.stripBom(data, "UTF-8-BOM")
-        assertEquals(2, stripped.size)
-        assertEquals('a'.code.toByte(), stripped[0])
-    }
 
     @Test
     fun `detect comma delimiter`() {
@@ -71,7 +38,7 @@ class CsvAutoDetectorTest {
             listOf("01/15/2024", "Coffee Shop", "12.50"),
             listOf("01/16/2024", "Grocery Store", "45.00")
         )
-        assertTrue(detector.detectHasHeader(rows))
+        assertTrue(detector.detectHeader(rows))
     }
 
     @Test
@@ -80,88 +47,19 @@ class CsvAutoDetectorTest {
             listOf("01/15/2024", "Coffee Shop", "12.50"),
             listOf("01/16/2024", "Grocery Store", "45.00")
         )
-        assertFalse(detector.detectHasHeader(rows))
+        assertFalse(detector.detectHeader(rows))
     }
-}
-
-class ColumnMapperTest {
-    private val mapper = ColumnMapper()
 
     @Test
-    fun `detect date column by header name`() {
-        val headers = listOf("Date", "Description", "Amount")
-        val rows = listOf(
-            listOf("01/15/2024", "Coffee", "12.50"),
-            listOf("01/16/2024", "Store", "45.00")
-        )
-        val mapping = mapper.detectColumnMapping(headers, rows)
+    fun `detect column mapping from headers`() {
+        val headers = listOf("Date", "Description", "Debit", "Credit", "Balance")
+        val mapping = detector.detectColumnMapping(headers)
         assertEquals(0, mapping.dateColumn)
-    }
-
-    @Test
-    fun `detect amount column by header name`() {
-        val headers = listOf("Date", "Description", "Amount")
-        val rows = listOf(
-            listOf("01/15/2024", "Coffee", "12.50"),
-            listOf("01/16/2024", "Store", "45.00")
-        )
-        val mapping = mapper.detectColumnMapping(headers, rows)
-        assertEquals(2, mapping.amountColumn)
-    }
-
-    @Test
-    fun `detect description column by header name`() {
-        val headers = listOf("Date", "Description", "Amount")
-        val rows = listOf(
-            listOf("01/15/2024", "Coffee Shop Purchase", "12.50"),
-            listOf("01/16/2024", "Grocery Store", "45.00")
-        )
-        val mapping = mapper.detectColumnMapping(headers, rows)
         assertEquals(1, mapping.descriptionColumn)
-    }
-
-    @Test
-    fun `detect separate debit credit columns`() {
-        val headers = listOf("Date", "Description", "Debit", "Credit")
-        val rows = listOf(
-            listOf("01/15/2024", "Coffee", "12.50", ""),
-            listOf("01/16/2024", "Deposit", "", "100.00")
-        )
-        val mapping = mapper.detectColumnMapping(headers, rows)
         assertEquals(2, mapping.debitColumn)
         assertEquals(3, mapping.creditColumn)
+        assertEquals(4, mapping.balanceColumn)
         assertNull(mapping.amountColumn)
-    }
-
-    @Test
-    fun `detect balance column`() {
-        val headers = listOf("Date", "Description", "Amount", "Balance")
-        val rows = listOf(
-            listOf("01/15/2024", "Coffee", "12.50", "987.50"),
-            listOf("01/16/2024", "Store", "45.00", "942.50")
-        )
-        val mapping = mapper.detectColumnMapping(headers, rows)
-        assertEquals(3, mapping.balanceColumn)
-    }
-
-    @Test
-    fun `isDateValue recognizes common formats`() {
-        assertTrue(mapper.isDateValue("01/15/2024"))
-        assertTrue(mapper.isDateValue("1/5/24"))
-        assertTrue(mapper.isDateValue("2024-01-15"))
-        assertTrue(mapper.isDateValue("15-Jan-2024"))
-        assertTrue(mapper.isDateValue("01.15.2024"))
-        assertFalse(mapper.isDateValue("hello"))
-        assertFalse(mapper.isDateValue("12.50"))
-    }
-
-    @Test
-    fun `isAmountValue recognizes currency amounts`() {
-        assertTrue(mapper.isAmountValue("12.50"))
-        assertTrue(mapper.isAmountValue("-45.00"))
-        assertTrue(mapper.isAmountValue("1,234.56"))
-        assertTrue(mapper.isAmountValue("(100.00)"))
-        assertFalse(mapper.isAmountValue("hello"))
     }
 }
 
@@ -347,7 +245,7 @@ class CsvParserImplTest {
     fun `parse empty file returns failure`() = runTest {
         val result = parser.parse(byteArrayOf())
         assertTrue(result is CsvParseResult.Failure)
-        assertEquals(ParseError.EmptyFile, (result as CsvParseResult.Failure).error)
+        assertEquals(CsvParseError.EmptyFile, (result as CsvParseResult.Failure).error)
     }
 
     @Test
@@ -384,7 +282,7 @@ class CsvParserImplTest {
     fun `parse CSV with thousands separator`() = runTest {
         val csv = """
             Date,Description,Amount
-            01/15/2024,Big Purchase,1,234.56
+            01/15/2024,Big Purchase,"1,234.56"
         """.trimIndent()
 
         val result = parser.parse(csv.encodeToByteArray())
@@ -406,7 +304,7 @@ class CsvParserImplTest {
         assertTrue(result is CsvParseResult.Success)
         val success = result as CsvParseResult.Success
         assertEquals(',', success.detectedOptions.delimiter)
-        assertEquals("UTF-8", success.detectedOptions.encoding)
         assertEquals(true, success.detectedOptions.hasHeader)
+        assertEquals("USD", success.detectedOptions.currencyCode)
     }
 }

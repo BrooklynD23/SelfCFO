@@ -7,41 +7,28 @@ import com.ledgerlens.domain.RoundingMode
 
 class CsvParserImpl : CsvParser {
     private val detector = CsvAutoDetector()
-    private val columnMapper = ColumnMapper()
     private val dateParser = FlexibleDateParser()
 
-    override suspend fun parse(
-        csvData: ByteArray,
-        options: CsvParseOptions
-    ): CsvParseResult {
-        if (csvData.isEmpty()) {
-            return CsvParseResult.Failure(ParseError.EmptyFile)
-        }
-
+    override suspend fun parse(csvData: ByteArray, options: CsvParseOptions): CsvParseResult {
         val currencyCode = options.currencyCode ?: "USD"
 
-        val encoding = options.encoding ?: detector.detectEncoding(csvData)
-        val textData = detector.stripBom(csvData, encoding)
-        val text = textData.decodeToString()
-        val lines = text.lines().filter { it.isNotBlank() }
+        val text = csvData.decodeUtf8Lenient()
+        val lines = text
+            .lineSequence()
+            .map { it.trimEnd('\r') }
+            .filter { it.isNotBlank() }
+            .toList()
 
-        if (lines.isEmpty()) {
-            return CsvParseResult.Failure(ParseError.EmptyFile)
-        }
+        if (lines.isEmpty()) return CsvParseResult.Failure(CsvParseError.EmptyFile)
 
         val delimiter = options.delimiter ?: detector.detectDelimiter(lines)
         val rows = lines.map { parseCsvLine(it, delimiter) }
 
-        val hasHeader = options.hasHeader ?: detector.detectHasHeader(rows)
+        val hasHeader = options.hasHeader ?: detector.detectHeader(rows)
         val headers = if (hasHeader) rows.first() else generateHeaders(rows.first().size)
         val dataRows = if (hasHeader) rows.drop(1) else rows
 
-        if (dataRows.isEmpty()) {
-            return CsvParseResult.Failure(ParseError.EmptyFile)
-        }
-
-        val mapping = columnMapper.detectColumnMapping(headers, dataRows.take(5))
-
+        val mapping = detector.detectColumnMapping(headers)
         if (mapping.dateColumn == null) {
             return CsvParseResult.NeedsMapping(headers, dataRows.take(5), mapping)
         }
@@ -49,130 +36,58 @@ class CsvParserImpl : CsvParser {
             return CsvParseResult.NeedsMapping(headers, dataRows.take(5), mapping)
         }
 
-        val warnings = mutableListOf<ParseWarning>()
+        val warnings = mutableListOf<CsvParseWarning>()
         val transactions = dataRows.mapIndexedNotNull { index, row ->
-            val rowNumber = if (hasHeader) index + 2 else index + 1
-            parseRow(row, mapping, rowNumber, currencyCode, warnings)
+            val rowRef = "row:${index + 1 + if (hasHeader) 1 else 0}"
+            parseRow(row, mapping, rowRef, currencyCode, warnings)
         }
 
         return CsvParseResult.Success(
             transactions = transactions,
-            detectedOptions = options.copy(
-                delimiter = delimiter,
-                encoding = encoding,
-                hasHeader = hasHeader
-            ),
+            detectedOptions = options.copy(delimiter = delimiter, hasHeader = hasHeader, currencyCode = currencyCode),
             warnings = warnings
         )
-    }
-
-    private fun parseCsvLine(line: String, delimiter: Char): List<String> {
-        val result = mutableListOf<String>()
-        var current = StringBuilder()
-        var inQuotes = false
-        var prevWasQuote = false
-
-        for (char in line) {
-            when {
-                char == '"' && !inQuotes -> {
-                    inQuotes = true
-                    prevWasQuote = false
-                }
-                char == '"' && inQuotes -> {
-                    if (prevWasQuote) {
-                        current.append('"')
-                        prevWasQuote = false
-                    } else {
-                        prevWasQuote = true
-                    }
-                }
-                char == delimiter && !inQuotes -> {
-                    result.add(current.toString().trim())
-                    current = StringBuilder()
-                    prevWasQuote = false
-                }
-                prevWasQuote -> {
-                    inQuotes = false
-                    prevWasQuote = false
-                    if (char != delimiter) {
-                        current.append(char)
-                    } else {
-                        result.add(current.toString().trim())
-                        current = StringBuilder()
-                    }
-                }
-                else -> current.append(char)
-            }
-        }
-
-        if (prevWasQuote) inQuotes = false
-        result.add(current.toString().trim())
-        return result
-    }
-
-    private fun generateHeaders(size: Int): List<String> {
-        return (1..size).map { "Column$it" }
     }
 
     private fun parseRow(
         row: List<String>,
         mapping: ColumnMapping,
-        rowNumber: Int,
+        rowRef: String,
         currencyCode: String,
-        warnings: MutableList<ParseWarning>
+        warnings: MutableList<CsvParseWarning>
     ): ParsedTransaction? {
         try {
-            val dateStr = mapping.dateColumn?.let { row.getOrNull(it) }?.takeIf { it.isNotBlank() }
-            if (dateStr == null) {
-                warnings.add(ParseWarning(rowNumber, "Missing date value", "date"))
-                return null
-            }
-
-            val date = dateParser.parse(dateStr)
-            if (date == null) {
-                warnings.add(ParseWarning(rowNumber, "Could not parse date: $dateStr", "date"))
+            val dateStr = mapping.dateColumn?.let { row.getOrNull(it) }?.trim().orEmpty()
+            val postedDate = dateParser.parse(dateStr)
+            if (postedDate == null) {
+                warnings += CsvParseWarning.SkippedRow(rowRef, "Unparseable date: '$dateStr'")
                 return null
             }
 
             val amount = when {
-                mapping.amountColumn != null -> {
-                    val amountStr = row.getOrNull(mapping.amountColumn) ?: ""
-                    if (amountStr.isBlank()) {
-                        warnings.add(ParseWarning(rowNumber, "Missing amount value", "amount"))
-                        return null
-                    }
-                    parseAmount(amountStr, currencyCode)
-                }
+                mapping.amountColumn != null -> parseAmount(row.getOrNull(mapping.amountColumn).orEmpty(), currencyCode)
                 mapping.debitColumn != null || mapping.creditColumn != null -> {
-                    val debitStr = mapping.debitColumn?.let { row.getOrNull(it) } ?: ""
-                    val creditStr = mapping.creditColumn?.let { row.getOrNull(it) } ?: ""
-
-                    val debit = if (debitStr.isNotBlank()) parseAmount(debitStr, currencyCode) else Money.zero(currencyCode)
-                    val credit = if (creditStr.isNotBlank()) parseAmount(creditStr, currencyCode) else Money.zero(currencyCode)
-                    credit - debit
+                    val debit = parseAmount(row.getOrNull(mapping.debitColumn ?: -1).orEmpty(), currencyCode)
+                    val credit = parseAmount(row.getOrNull(mapping.creditColumn ?: -1).orEmpty(), currencyCode)
+                    Money.fromMinorUnits(credit.minorUnits - debit.minorUnits, currencyCode)
                 }
                 else -> {
-                    warnings.add(ParseWarning(rowNumber, "No amount column found", "amount"))
+                    warnings += CsvParseWarning.SkippedRow(rowRef, "Missing amount columns")
                     return null
                 }
             }
 
-            val description = mapping.descriptionColumn?.let { row.getOrNull(it) }?.trim()
-                ?: row.filterIndexed { i, _ ->
-                    i != mapping.dateColumn &&
-                    i != mapping.amountColumn &&
-                    i != mapping.debitColumn &&
-                    i != mapping.creditColumn &&
-                    i != mapping.balanceColumn
-                }.joinToString(" ").trim()
+            val description = mapping.descriptionColumn?.let { idx ->
+                row.getOrNull(idx)?.trim().orEmpty()
+            }.takeIf { !it.isNullOrBlank() } ?: row.joinToString(" ") { it.trim() }.trim()
 
-            val balance = mapping.balanceColumn?.let { row.getOrNull(it) }
-                ?.takeIf { it.isNotBlank() }
-                ?.let { parseAmountOrNull(it, currencyCode) }
+            val balance = mapping.balanceColumn?.let { idx ->
+                row.getOrNull(idx)?.trim()?.takeIf { it.isNotBlank() }?.let { parseAmount(it, currencyCode) }
+            }
 
             return ParsedTransaction(
-                rowRef = "row:$rowNumber",
-                postedDate = date,
+                rowRef = rowRef,
+                postedDate = postedDate,
                 transactionDate = null,
                 descriptionRaw = description,
                 amount = amount,
@@ -180,26 +95,64 @@ class CsvParserImpl : CsvParser {
                 confidence = 0.95f
             )
         } catch (e: Exception) {
-            warnings.add(ParseWarning(rowNumber, "Parse error: ${e.message}", null))
+            warnings += CsvParseWarning.SkippedRow(rowRef, "Parse error: ${e.message ?: "unknown"}")
             return null
         }
     }
 
+    private fun parseCsvLine(line: String, delimiter: Char): List<String> {
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+
+        while (i < line.length) {
+            val c = line[i]
+            when {
+                c == '"' -> {
+                    // Handle escaped quotes ("")
+                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                        current.append('"')
+                        i += 1
+                    } else {
+                        inQuotes = !inQuotes
+                    }
+                }
+                c == delimiter && !inQuotes -> {
+                    result.add(current.toString().trim())
+                    current.clear()
+                }
+                else -> current.append(c)
+            }
+            i += 1
+        }
+
+        result.add(current.toString().trim())
+        return result
+    }
+
+    private fun generateHeaders(count: Int): List<String> = List(count) { i -> "col_${i + 1}" }
+
     private fun parseAmount(value: String, currencyCode: String): Money {
+        val cleaned = value.trim()
+        if (cleaned.isBlank()) return Money.zero(currencyCode)
+
         val scale = CurrencyMetadata.getScale(currencyCode)
         val minorUnits = MoneyParser.parseToMinorUnits(
-            amountString = value,
+            amountString = cleaned,
             scale = scale,
             roundingMode = RoundingMode.HALF_UP
         )
         return Money.fromMinorUnits(minorUnits, currencyCode)
     }
+}
 
-    private fun parseAmountOrNull(value: String, currencyCode: String): Money? {
-        return try {
-            parseAmount(value, currencyCode)
-        } catch (e: Exception) {
-            null
-        }
+private fun ByteArray.decodeUtf8Lenient(): String {
+    // Remove UTF-8 BOM if present.
+    return if (size >= 3 && this[0] == 0xEF.toByte() && this[1] == 0xBB.toByte() && this[2] == 0xBF.toByte()) {
+        copyOfRange(3, size).decodeToString()
+    } else {
+        decodeToString()
     }
 }
+

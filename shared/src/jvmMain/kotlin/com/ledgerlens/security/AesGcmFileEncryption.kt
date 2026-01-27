@@ -31,7 +31,7 @@ class AesGcmFileEncryption : FileEncryption {
         require(key.size == AesGcmConstants.KEY_LENGTH) {
             "Key must be ${AesGcmConstants.KEY_LENGTH} bytes for AES-256"
         }
-        require(encryptedData.size > AesGcmConstants.IV_LENGTH + AesGcmConstants.TAG_LENGTH) {
+        require(encryptedData.size >= AesGcmConstants.IV_LENGTH + AesGcmConstants.TAG_LENGTH) {
             "Encrypted data is too short"
         }
 

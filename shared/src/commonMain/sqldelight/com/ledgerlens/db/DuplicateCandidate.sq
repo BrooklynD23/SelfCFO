@@ -1,0 +1,57 @@
+CREATE TABLE duplicate_candidate (
+    transaction_id_a TEXT NOT NULL REFERENCES imported_transaction(id),
+    transaction_id_b TEXT NOT NULL REFERENCES imported_transaction(id),
+    fingerprint TEXT NOT NULL,
+    score REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    created_at INTEGER NOT NULL,
+    reviewed_at INTEGER,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    PRIMARY KEY(transaction_id_a, transaction_id_b),
+    CHECK (transaction_id_a < transaction_id_b),
+    CHECK (status IN ('PENDING', 'CONFIRMED', 'DISMISSED'))
+);
+
+CREATE INDEX idx_duplicate_candidate_status ON duplicate_candidate(status);
+CREATE INDEX idx_duplicate_candidate_score ON duplicate_candidate(score DESC);
+CREATE INDEX idx_duplicate_candidate_created ON duplicate_candidate(created_at);
+
+insertOrIgnore:
+INSERT OR IGNORE INTO duplicate_candidate(
+    transaction_id_a,
+    transaction_id_b,
+    fingerprint,
+    score,
+    status,
+    created_at,
+    reviewed_at,
+    metadata_json
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectPending:
+SELECT * FROM duplicate_candidate
+WHERE status = 'PENDING'
+ORDER BY score DESC, created_at ASC
+LIMIT ?;
+
+selectByTransactionId:
+SELECT * FROM duplicate_candidate
+WHERE transaction_id_a = ? OR transaction_id_b = ?
+ORDER BY created_at DESC;
+
+selectByKey:
+SELECT * FROM duplicate_candidate
+WHERE transaction_id_a = ? AND transaction_id_b = ?;
+
+updateStatus:
+UPDATE duplicate_candidate
+SET status = ?, reviewed_at = ?
+WHERE transaction_id_a = ? AND transaction_id_b = ?;
+
+countPending:
+SELECT COUNT(*) FROM duplicate_candidate WHERE status = 'PENDING';
+
+clear:
+DELETE FROM duplicate_candidate;
+
