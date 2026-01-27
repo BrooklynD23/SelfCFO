@@ -104,6 +104,28 @@ class SqlDelightImportRepository(
         job.id
     }
 
+    override suspend fun createImportJobForSourceFile(job: ImportJobEntity, sourceFileId: String): String =
+        withContext(dispatcher) {
+            val params = ImportMapper.toDbParams(job, sourceFileId)
+            importJobQueries.insert(
+                id = params.id,
+                source_file_id = params.sourceFileId,
+                status = params.status,
+                started_at = params.startedAt,
+                completed_at = params.completedAt,
+                progress_percent = params.progressPercent,
+                current_stage = params.currentStage,
+                transactions_found = params.transactionsFound,
+                transactions_new = params.transactionsNew,
+                transactions_dupe = params.transactionsDupe,
+                transactions_error = params.transactionsError,
+                error_message = params.errorMessage,
+                error_details = params.errorDetails,
+                checkpoint_data = params.checkpointData
+            )
+            job.id
+        }
+
     override suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int) =
         withContext(dispatcher) {
             val total = importedCount + duplicatesSkipped + errorsCount
@@ -161,6 +183,10 @@ class SqlDelightImportRepository(
 
     override suspend fun isFileAlreadyImported(fileHash: String): Boolean = withContext(dispatcher) {
         sourceFileQueries.selectByHash(fileHash).executeAsOneOrNull() != null
+    }
+
+    override suspend fun getSourceFileIdByHash(fileHash: String): String? = withContext(dispatcher) {
+        sourceFileQueries.selectByHash(fileHash).executeAsOneOrNull()?.id
     }
 
     override suspend fun deleteImportJob(id: String) = withContext(dispatcher) {

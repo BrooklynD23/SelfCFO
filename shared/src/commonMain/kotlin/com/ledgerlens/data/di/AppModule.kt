@@ -2,6 +2,8 @@ package com.ledgerlens.data.di
 
 import com.ledgerlens.data.repositories.AccountRepository
 import com.ledgerlens.data.repositories.CategoryRepository
+import com.ledgerlens.data.repositories.DuplicateCandidateRepository
+import com.ledgerlens.data.repositories.ImportedTransactionRepository
 import com.ledgerlens.data.repositories.ImportRepository
 import com.ledgerlens.data.repositories.ReceiptRepository
 import com.ledgerlens.data.repositories.ReviewQueueRepository
@@ -10,22 +12,22 @@ import com.ledgerlens.data.repositories.StatisticsRepository
 import com.ledgerlens.data.repositories.TransactionRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightAccountRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightCategoryRepository
+import com.ledgerlens.data.repositories.impl.SqlDelightDuplicateCandidateRepository
+import com.ledgerlens.data.repositories.impl.SqlDelightImportedTransactionRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightImportRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightReceiptRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightReviewQueueRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightRuleRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightStatisticsRepository
 import com.ledgerlens.data.repositories.impl.SqlDelightTransactionRepository
+import com.ledgerlens.import.CsvParser
+import com.ledgerlens.import.CsvParserImpl
+import com.ledgerlens.import.ImportService
+import com.ledgerlens.categorization.pipeline.CategorizationPipeline
+import com.ledgerlens.categorization.pipeline.CategorizationPipelineImpl
 import com.ledgerlens.db.LedgerLensDatabase
 import com.ledgerlens.security.KeyManagerImpl
 import com.ledgerlens.security.KeyManager
-import com.ledgerlens.ui.viewmodels.categories.CategoriesViewModel
-import com.ledgerlens.ui.viewmodels.dashboard.DashboardViewModel
-import com.ledgerlens.ui.viewmodels.import.ImportViewModel
-import com.ledgerlens.ui.viewmodels.receipts.ReceiptsViewModel
-import com.ledgerlens.ui.viewmodels.review.ReviewViewModel
-import com.ledgerlens.ui.viewmodels.settings.SettingsViewModel
-import com.ledgerlens.ui.viewmodels.transactions.TransactionsViewModel
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -78,6 +80,22 @@ val repositoryModule: Module = module {
         )
     }
 
+    // ImportedTransaction Repository (immutable imported records)
+    single<ImportedTransactionRepository> {
+        SqlDelightImportedTransactionRepository(
+            database = get(),
+            dispatcher = Dispatchers.Default
+        )
+    }
+
+    // DuplicateCandidate Repository (cross-file duplicate review)
+    single<DuplicateCandidateRepository> {
+        SqlDelightDuplicateCandidateRepository(
+            database = get(),
+            dispatcher = Dispatchers.Default
+        )
+    }
+
     // Transaction Repository
     single<TransactionRepository> {
         SqlDelightTransactionRepository(
@@ -107,6 +125,26 @@ val repositoryModule: Module = module {
  * Koin module providing services.
  */
 val servicesModule: Module = module {
+    // CategorizationPipeline (default config; rules/priors can be wired later)
+    single<CategorizationPipeline> {
+        CategorizationPipelineImpl.createDefault()
+    }
+
+    // CSV parsing
+    single<CsvParser> { CsvParserImpl() }
+
+    // ImportService (CSV end-to-end)
+    single {
+        ImportService(
+            importRepository = get(),
+            importedTransactionRepository = get(),
+            duplicateCandidateRepository = get(),
+            reviewQueueRepository = get(),
+            categorizationPipeline = get(),
+            csvParser = get()
+        )
+    }
+
     // ReviewQueueRepository - persisted SQLDelight-backed review queue
     single<ReviewQueueRepository> {
         SqlDelightReviewQueueRepository(
@@ -125,66 +163,6 @@ val servicesModule: Module = module {
 }
 
 /**
- * Koin module providing ViewModels.
- * ViewModels are created as factories so each request gets a new instance.
- */
-val viewModelModule: Module = module {
-    // DashboardViewModel
-    factory {
-        DashboardViewModel(
-            transactionRepository = get(),
-            categoryRepository = get(),
-            statisticsRepository = get()
-        )
-    }
-
-    // TransactionsViewModel
-    factory {
-        TransactionsViewModel(
-            transactionRepository = get(),
-            categoryRepository = get()
-        )
-    }
-
-    // CategoriesViewModel
-    factory {
-        CategoriesViewModel(
-            categoryRepository = get(),
-            ruleRepository = get()
-        )
-    }
-
-    // ReceiptsViewModel
-    factory {
-        ReceiptsViewModel(
-            receiptRepository = get()
-        )
-    }
-
-    // ReviewViewModel
-    factory {
-        ReviewViewModel(
-            reviewQueueRepository = get(),
-            transactionRepository = get()
-        )
-    }
-
-    // ImportViewModel
-    factory {
-        ImportViewModel(
-            importRepository = get()
-        )
-    }
-
-    // SettingsViewModel
-    factory {
-        SettingsViewModel(
-            keyManager = get()
-        )
-    }
-}
-
-/**
  * Combined app module including database, repositories, services, and ViewModels.
  *
  * This module expects a LedgerLensDatabase to be provided by a platform-specific
@@ -193,7 +171,6 @@ val viewModelModule: Module = module {
 val appModule: Module = module {
     includes(repositoryModule)
     includes(servicesModule)
-    includes(viewModelModule)
 }
 
 /**
@@ -216,6 +193,5 @@ fun createDatabaseModule(database: LedgerLensDatabase): Module = module {
 fun createAppModules(database: LedgerLensDatabase): List<Module> = listOf(
     createDatabaseModule(database),
     repositoryModule,
-    servicesModule,
-    viewModelModule
+    servicesModule
 )

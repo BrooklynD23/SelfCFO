@@ -18,7 +18,7 @@ CREATE TABLE imported_transaction (
     category_reason TEXT,
     parse_warnings TEXT,
     imported_at INTEGER NOT NULL,
-    UNIQUE(source_file_id, fingerprint)
+    UNIQUE(source_file_id, source_row_ref)
 );
 
 CREATE INDEX idx_imported_txn_fingerprint ON imported_transaction(fingerprint);
@@ -32,6 +32,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 selectByFingerprint:
 SELECT * FROM imported_transaction WHERE fingerprint = ?;
+
+selectMatchRefsByFingerprint:
+SELECT id, source_file_id FROM imported_transaction WHERE fingerprint = ?;
 
 selectById:
 SELECT * FROM imported_transaction WHERE id = ?;

@@ -95,6 +95,14 @@ interface ImportRepository {
     suspend fun createImportJob(job: ImportJobEntity): String
 
     /**
+     * Create a new import job referencing an existing source file.
+     *
+     * This supports idempotent import flows where the same file hash is re-imported
+     * and we want to attach a new job attempt to the original source file record.
+     */
+    suspend fun createImportJobForSourceFile(job: ImportJobEntity, sourceFileId: String): String
+
+    /**
      * Update import job progress.
      */
     suspend fun updateProgress(id: String, importedCount: Int, duplicatesSkipped: Int, errorsCount: Int)
@@ -123,6 +131,11 @@ interface ImportRepository {
      * Check if a file has been imported (by hash).
      */
     suspend fun isFileAlreadyImported(fileHash: String): Boolean
+
+    /**
+     * Lookup an existing source file id by hash (if any).
+     */
+    suspend fun getSourceFileIdByHash(fileHash: String): String?
 
     /**
      * Delete an import job and related data.

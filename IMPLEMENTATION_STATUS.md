@@ -419,7 +419,7 @@ All 16 functional test failures have been resolved:
 - **Symptom**: Navigating to `Screen.Review` showed “Coming Soon” instead of reviewable items.
 - **Root cause (Desktop)**: `Screen.Review` existed as a route but was **not registered** in the desktop screen registry (`LedgerLensAppWithNavHost` falls back to `PlaceholderScreen` when a screen isn’t registered).
 - **Fix (Desktop)**: `Screen.Review` has been registered to render `ReviewInboxScreen` / `ReviewDetailScreen`.
-- **Remaining gap**: Review Inbox currently loads from an **in-memory** `ReviewQueueManager` and there is no pipeline currently enqueueing import/OCR review items. Import is also simulated in `ImportViewModel`, so “needs review” counts are not backed by persisted review entities.
+- **Remaining gap**: Review Inbox currently loads from an **in-memory** `ReviewQueueManager` instead of the persisted `ReviewQueueRepository`. Core CSV import and categorization now enqueue into persistent `review_queue`, but UI integration is still pending (Import UI is still simulated in `ImportViewModel`).
 
 See: `docs/audits/2026-01-25-REVIEW-INBOX-IMPORT-REVIEW-AUDIT.md`
 
@@ -428,10 +428,10 @@ See: `docs/audits/2026-01-25-REVIEW-INBOX-IMPORT-REVIEW-AUDIT.md`
 Even with ✅ unit tests passing, the following are still missing for production-like testing:
 
 - [ ] **Android app entrypoint mounts real UI**: `android/MainActivity` currently renders a placeholder `App()` (just `Text("LedgerLens")`) and does not mount the navigation/app shell.
-- [ ] **Review queue persistence**: No SQLDelight `ReviewQueue.sq`; `ReviewQueueManager` is in-memory only (Review Inbox will be empty after restart and unless explicitly enqueued).
-- [ ] **Import pipeline implementation**: `ImportViewModel` simulates progress (“actual parsing not yet implemented”); no real CSV/PDF parsing, no parse-error capture into review.
+- [ ] **Review UI wired to persistence**: `ReviewQueue.sq` + `SqlDelightReviewQueueRepository` exist, but `ReviewViewModel` still reads `ReviewQueueManager`.
+- [ ] **Import UI wired to core pipeline**: Core CSV import is implemented (`ImportService.importCsv`), but `ImportViewModel` still simulates progress (“actual parsing not yet implemented”).
 - [ ] **Desktop OCR implementation**: `ReceiptOcrDesktop` is a stub (“Tesseract (Stub)”).
-- [ ] **Encryption wiring**: DI currently provides `StubKeyManager` (no `KeyManagerImpl` in repo), so encryption flows are not production-representative.
+- [ ] **Encryption wiring**: `KeyManagerImpl` exists and is bound in DI; remaining gaps are platform integration and validating end-to-end behavior on Android/Desktop.
 
 Tracking checklist: `docs/plans/2026-01-25-production-testing-readiness.md`
 

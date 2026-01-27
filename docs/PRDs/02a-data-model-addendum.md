@@ -518,30 +518,34 @@ fingerprint_computation:
     )
 
   collision_handling:
-    same_fingerprint_same_file: KEEP_FIRST
-    same_fingerprint_different_file: FLAG_FOR_REVIEW
+    same_fingerprint_same_file: ALLOW_IMPORT (distinct by source_row_ref)
+    same_fingerprint_different_file: IMPORT_AND_FLAG_FOR_REVIEW (duplicate_candidate)
     same_fingerprint_different_amount_sign: LIKELY_DIFFERENT (refund?)
 ```
 
 ### 4.2 Uniqueness Constraints
 
+**Design note:** Fingerprints are a *dedupe signal*, not a primary key. A bank statement can legitimately contain multiple rows that produce the same fingerprint (e.g., two identical same-day purchases). To avoid silent data loss, the system imports all rows (keyed by `source_row_ref` within a `source_file`) and records potential cross-file duplicates in `duplicate_candidate` for later user review.
+
 ```sql
--- Soft uniqueness: flag duplicates but allow insertion
--- Hard uniqueness: prevent duplicate fingerprints within same source file
-CREATE UNIQUE INDEX idx_imported_txn_file_fingerprint
-    ON imported_transaction(source_file_id, fingerprint);
+-- Enforce per-file idempotency using a stable per-row reference.
+-- Fingerprint collisions are expected and should NOT block inserts.
+CREATE UNIQUE INDEX idx_imported_txn_file_rowref
+    ON imported_transaction(source_file_id, source_row_ref);
 
 -- Cross-file duplicates tracked separately
 CREATE TABLE duplicate_candidate (
-    id UUID PRIMARY KEY,
-    transaction_id_a UUID NOT NULL,
-    transaction_id_b UUID NOT NULL,
-    similarity_score FLOAT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed_same | confirmed_different
-    resolved_at TIMESTAMP,
-    resolved_by TEXT, -- user | auto
-    FOREIGN KEY (transaction_id_a) REFERENCES imported_transaction(id),
-    FOREIGN KEY (transaction_id_b) REFERENCES imported_transaction(id)
+    transaction_id_a TEXT NOT NULL REFERENCES imported_transaction(id),
+    transaction_id_b TEXT NOT NULL REFERENCES imported_transaction(id),
+    fingerprint TEXT NOT NULL,
+    score REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING | CONFIRMED | DISMISSED
+    created_at INTEGER NOT NULL,
+    reviewed_at INTEGER,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    PRIMARY KEY(transaction_id_a, transaction_id_b),
+    CHECK (transaction_id_a < transaction_id_b),
+    CHECK (status IN ('PENDING', 'CONFIRMED', 'DISMISSED'))
 );
 ```
 
