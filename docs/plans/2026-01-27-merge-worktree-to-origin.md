@@ -8,8 +8,11 @@ Sync the current worktree branch (`sprint04/integration`) to the remote (`origin
 
 - Local branch: `sprint04/integration`
 - Remote branch: `origin/sprint04/integration`
-- New local commit created during this sync:
-  - `5bf6fd4` — `feat(receipts): enhance split sheet selection and tip`
+- Local commits created during this sync:
+  - `5bf6fd4` - `feat(receipts): enhance split sheet selection and tip`
+  - `6d51ad5` - `docs: add merge-to-origin conflict plan`
+  - `84da751` - `style: fix ktlint in fake review queue repo`
+  - `928b7a5` - `fix: remove duplicate android AES-GCM implementation`
 
 ## Merge conflict report
 
