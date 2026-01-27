@@ -31,6 +31,9 @@ mlkit-text-recognition-gms = "19.0.1"
 # Dependency Injection
 koin = "3.5.3"
 
+# PDF Processing
+pdfbox = "3.0.1"
+
 # AndroidX
 androidx-core = "1.12.0"
 androidx-activity = "1.8.2"
@@ -75,6 +78,9 @@ mlkit-text-recognition-gms = { module = "com.google.android.gms:play-services-ml
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+
+# PDF Processing
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 
 # AndroidX
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }

@@ -111,6 +111,8 @@ kotlin {
                 implementation(libs.sqldelight.sqlite.driver)
                 // Note: Desktop encryption deferred - SQLCipher JDBC not readily available
                 // TODO: Add desktop-compatible encryption in future sprint
+                // PDFBox for PDF text extraction
+                implementation(libs.pdfbox)
             }
         }
 
