@@ -15,7 +15,7 @@
 
 ### Current status
 
-**Overall:** Sprints 00–05 complete. Sprint 06 (Testing & Integration) in progress.  
+**Overall:** Sprints 00-05 complete. Sprint 06 (Testing & Integration) in progress.  
 **Active integration branch:** `sprint04/integration` (pending merge to `main` once CI is green).
 
 #### Implemented (high level)
@@ -24,7 +24,7 @@
   - SQLDelight schema (transactions, categories, rules, receipts, imports, stats, etc.)
   - Encryption: Android SQLCipher + envelope encryption for files (desktop DB encryption currently deferred)
   - Money type: integer minor units (no floats)
-  - Import pipeline: CSV parsing, normalization, immutable imported records, SHA-256 file-hash idempotency, and persistent review/duplicate-candidate queues
+  - Import pipeline: ImportService (CSV end-to-end today; PDF parser scaffolded), normalization, immutable imported records, SHA-256 file-hash idempotency, FingerprintGenerator-based dedupe, and persistent review/duplicate-candidate queues
 - **Categorization engine**
   - Category hierarchy + defaults
   - Hybrid categorization: rules + merchant priors + lightweight ML pipeline

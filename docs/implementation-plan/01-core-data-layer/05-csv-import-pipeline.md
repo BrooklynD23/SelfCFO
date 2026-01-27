@@ -4,6 +4,8 @@
 
 Implement CSV parsing with auto-detection for delimiter, encoding, and column mapping.
 
+**Current implementation:** `shared/src/commonMain/kotlin/com/ledgerlens/import/CsvParser.kt`, `CsvParserImpl.kt`, `CsvAutoDetector.kt`, and `ImportService.kt` (CSV end-to-end).
+
 ---
 
 ## Implementation Steps
@@ -184,7 +186,7 @@ class CsvParserImpl : CsvParser {
         csvData: ByteArray,
         options: CsvParseOptions
     ): CsvParseResult {
-        // Currency should be provided by the ImportOrchestrator based on the selected account.
+        // Currency should be provided by the ImportService based on the selected account.
         val currencyCode = options.currencyCode ?: "USD"
 
         // Detect encoding

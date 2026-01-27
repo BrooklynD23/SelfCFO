@@ -4,6 +4,8 @@
 
 Implement transaction and merchant normalization, fingerprint computation, and duplicate detection per [02a-data-model-addendum.md §4](../../PRDs/02a-data-model-addendum.md#4-import-idempotency-specification).
 
+**Current implementation:** `shared/src/commonMain/kotlin/com/ledgerlens/import/MerchantNormalizer.kt`, `FingerprintGenerator.kt`, and `ImportService.kt` (uses `ImportedTransactionRepository` + `DuplicateCandidateRepository`).
+
 ---
 
 ## Implementation Steps
@@ -113,267 +115,74 @@ enum class MatchType {
 // shared/src/commonMain/kotlin/com/ledgerlens/import/FingerprintGenerator.kt
 package com.ledgerlens.import
 
-import java.security.MessageDigest
+import com.ledgerlens.domain.Money
+import com.ledgerlens.security.sha256Hex
+import kotlinx.datetime.LocalDate
 
 /**
- * Generates transaction fingerprints for deduplication.
- * Per 02a-data-model-addendum.md §4.1
+ * Deterministic transaction fingerprint for idempotent import.
+ *
+ * Strategy (stable):
+ * sha256(merchantNormalized|postedDate|abs(amountMinor)|currency|accountId?)
  */
-class FingerprintGenerator {
-
-    /**
-     * Generate fingerprint for a transaction.
-     *
-     * Formula: SHA256(merchant + "|" + date + "|" + abs(amount) + "|" + currency + "|" + account?)
-     */
-    fun generate(
+object FingerprintGenerator {
+    fun fingerprint(
         merchantNormalized: String,
         postedDate: LocalDate,
         amount: Money,
-        accountId: String? = null
-    ): String {
-        val components = listOf(
-            merchantNormalized.lowercase().trim(),
-            postedDate.toString(),  // ISO 8601
-            amount.minorUnits.absoluteValue.toString(),
-            amount.currencyCode,
-            accountId ?: ""
-        )
-
-        val input = components.joinToString("|")
-        val digest = MessageDigest.getInstance("SHA-256")
-        val hash = digest.digest(input.toByteArray(Charsets.UTF_8))
-
-        return hash.joinToString("") { "%02x".format(it) }
-    }
-}
-```
-
-### Step 3: Duplicate Detector
-
-```kotlin
-// shared/src/commonMain/kotlin/com/ledgerlens/import/DuplicateDetector.kt
-package com.ledgerlens.import
-
-class DuplicateDetector(
-    private val transactionRepository: TransactionRepository,
-    private val fingerprintGenerator: FingerprintGenerator
-) {
-
-    /**
-     * Check for duplicates of a transaction.
-     * @param transaction The transaction to check
-     * @param dateWindow Days to look around the posted date (±)
-     * @return Duplicate detection result
-     */
-    suspend fun checkDuplicate(
-        transaction: ParsedTransaction,
-        accountId: String?,
-        dateWindow: Int = 2
-    ): DuplicateCheckResult {
-        val fingerprint = fingerprintGenerator.generate(
-            merchantNormalized = transaction.merchantNormalized,
-            postedDate = transaction.postedDate,
-            amount = transaction.amount,
-            accountId = accountId
-        )
-
-        // Check exact fingerprint match
-        val exactMatch = transactionRepository.findByFingerprint(fingerprint)
-        if (exactMatch != null) {
-            return DuplicateCheckResult.ExactDuplicate(
-                existingId = exactMatch.id,
-                fingerprint = fingerprint
-            )
-        }
-
-        // Check near matches (same merchant + amount, different date within window)
-        val nearMatches = transactionRepository.findSimilar(
-            merchantNormalized = transaction.merchantNormalized,
-            amount = transaction.amount,
-            dateFrom = transaction.postedDate.minusDays(dateWindow.toLong()),
-            dateTo = transaction.postedDate.plusDays(dateWindow.toLong()),
-            accountId = accountId
-        )
-
-        if (nearMatches.isNotEmpty()) {
-            return DuplicateCheckResult.PossibleDuplicate(
-                candidates = nearMatches.map { existing ->
-                    DuplicateCandidate(
-                        existingId = existing.id,
-                        similarity = calculateSimilarity(transaction, existing),
-                        dateDistance = ChronoUnit.DAYS.between(
-                            transaction.postedDate,
-                            existing.postedDate
-                        ).absoluteValue.toInt()
-                    )
-                },
-                fingerprint = fingerprint
-            )
-        }
-
-        return DuplicateCheckResult.Unique(fingerprint = fingerprint)
-    }
-
-    private fun calculateSimilarity(
-        new: ParsedTransaction,
-        existing: ImportedTransaction
-    ): Float {
-        var score = 0f
-
-        // Amount match (must be exact for high similarity)
-        if (new.amount.minorUnits == existing.amountMinorUnits) {
-            score += 0.4f
-        }
-
-        // Merchant similarity
-        val merchantSimilarity = stringSimilarity(
-            new.merchantNormalized,
-            existing.merchantNormalized
-        )
-        score += merchantSimilarity * 0.4f
-
-        // Date proximity
-        val daysDiff = ChronoUnit.DAYS.between(new.postedDate, existing.postedDate).absoluteValue
-        score += when {
-            daysDiff == 0L -> 0.2f
-            daysDiff == 1L -> 0.15f
-            daysDiff == 2L -> 0.1f
-            else -> 0f
-        }
-
-        return score
-    }
-
-    private fun stringSimilarity(a: String, b: String): Float {
-        val longer = maxOf(a.length, b.length)
-        if (longer == 0) return 1.0f
-        val distance = levenshteinDistance(a.lowercase(), b.lowercase())
-        return (longer - distance).toFloat() / longer
-    }
-}
-
-sealed class DuplicateCheckResult {
-    abstract val fingerprint: String
-
-    data class Unique(
-        override val fingerprint: String
-    ) : DuplicateCheckResult()
-
-    data class ExactDuplicate(
-        val existingId: String,
-        override val fingerprint: String
-    ) : DuplicateCheckResult()
-
-    data class PossibleDuplicate(
-        val candidates: List<DuplicateCandidate>,
-        override val fingerprint: String
-    ) : DuplicateCheckResult()
-}
-
-data class DuplicateCandidate(
-    val existingId: String,
-    val similarity: Float,
-    val dateDistance: Int
-)
-```
-
-### Step 4: Import Orchestrator
-
-```kotlin
-// shared/src/commonMain/kotlin/com/ledgerlens/import/ImportOrchestrator.kt
-package com.ledgerlens.import
-
-class ImportOrchestrator(
-    private val sourceFileRepository: SourceFileRepository,
-    private val importJobRepository: ImportJobRepository,
-    private val transactionRepository: TransactionRepository,
-    private val merchantNormalizer: MerchantNormalizer,
-    private val fingerprintGenerator: FingerprintGenerator,
-    private val duplicateDetector: DuplicateDetector,
-    private val categorizer: TransactionCategorizer  // From Sprint 02
-) {
-
-    suspend fun importFile(
-        fileData: ByteArray,
-        filename: String,
         accountId: String?
-    ): ImportResult {
-        // 1. Check for duplicate file
-        val contentHash = fileData.sha256()
-        val existingFile = sourceFileRepository.findByHash(contentHash)
-        if (existingFile != null) {
-            return ImportResult.FileAlreadyImported(existingFile.id)
+    ): String {
+        val s = buildString {
+            append(merchantNormalized.trim().lowercase())
+            append('|')
+            append(postedDate.toString())
+            append('|')
+            append(kotlin.math.abs(amount.minorUnits))
+            append('|')
+            append(amount.currencyCode.uppercase())
+            append('|')
+            append(accountId ?: "")
         }
-
-        // 2. Create source file record
-        val sourceFile = sourceFileRepository.create(
-            contentHash = contentHash,
-            filename = filename,
-            fileType = detectFileType(filename),
-            sizeBytes = fileData.size.toLong(),
-            accountId = accountId
-        )
-
-        // 3. Create import job
-        val importJob = importJobRepository.create(sourceFileId = sourceFile.id)
-
-        try {
-            // 4. Parse file
-            importJobRepository.updateProgress(importJob.id, 10, "Extracting")
-            val parseResult = parseFile(fileData, filename)
-
-            when (parseResult) {
-                is ParseResult.Success -> {
-                    // 5. Normalize and dedupe
-                    importJobRepository.updateProgress(importJob.id, 40, "Normalizing")
-                    val normalized = normalizeTransactions(parseResult.transactions)
-
-                    importJobRepository.updateProgress(importJob.id, 60, "Deduplicating")
-                    val deduped = deduplicateTransactions(normalized, accountId)
-
-                    // 6. Categorize
-                    importJobRepository.updateProgress(importJob.id, 80, "Categorizing")
-                    val categorized = categorizeTransactions(deduped.unique)
-
-                    // 7. Save
-                    importJobRepository.updateProgress(importJob.id, 90, "Saving")
-                    saveTransactions(categorized, sourceFile.id, importJob.id, accountId)
-
-                    // 8. Complete
-                    importJobRepository.complete(
-                        id = importJob.id,
-                        transactionsFound = parseResult.transactions.size,
-                        transactionsNew = deduped.unique.size,
-                        transactionsDupe = deduped.duplicates.size
-                    )
-
-                    return ImportResult.Success(
-                        importJobId = importJob.id,
-                        transactionsImported = deduped.unique.size,
-                        duplicatesSkipped = deduped.duplicates.size,
-                        needsReview = deduped.needsReview
-                    )
-                }
-                is ParseResult.NeedsReview -> {
-                    importJobRepository.updateStatus(importJob.id, "needs_review")
-                    return ImportResult.NeedsReview(
-                        importJobId = importJob.id,
-                        issues = parseResult.issues
-                    )
-                }
-                is ParseResult.Failure -> {
-                    importJobRepository.fail(importJob.id, parseResult.error.message)
-                    return ImportResult.Failure(parseResult.error)
-                }
-            }
-        } catch (e: Exception) {
-            importJobRepository.fail(importJob.id, e.message ?: "Unknown error")
-            return ImportResult.Failure(ParseError.Unknown(e.message ?: "Unknown error"))
-        }
+        return sha256Hex(s.encodeToByteArray())
     }
 }
 ```
+
+### Step 3: Duplicate Candidate Tracking (Fingerprint Matches)
+
+LedgerLens uses a stable transaction fingerprint to detect potential duplicates across imports without deleting data automatically.
+
+- Compute `FingerprintGenerator.fingerprint(...)` for each parsed transaction
+- Query `ImportedTransactionRepository.findMatchRefsByFingerprint(fingerprint)` for prior imports
+- If matches exist in a different `sourceFileId`, insert `duplicate_candidate` rows via `DuplicateCandidateRepository.insertFingerprintMatches(...)`
+- Review/resolve in the Review Inbox UI
+
+```kotlin
+// See: shared/src/commonMain/kotlin/com/ledgerlens/import/ImportService.kt
+val fingerprint = FingerprintGenerator.fingerprint(merchantNormalized, postedDate, amount, accountId)
+val matchIds = importedTransactionRepository.findMatchRefsByFingerprint(fingerprint)
+    .filter { it.sourceFileId != sourceFileId }
+    .map { it.id }
+
+if (matchIds.isNotEmpty()) {
+    duplicateCandidateRepository.insertFingerprintMatches(
+        transactionId = txnId,
+        matchedTransactionIds = matchIds,
+        fingerprint = fingerprint,
+        metadataJson = candidateMetadata
+    )
+}
+```
+
+### Step 4: Import Orchestrator (ImportService)
+
+The import entrypoint is `ImportService`, which orchestrates:
+
+1. File-hash idempotency (SHA-256 of raw bytes)
+2. Create `source_file` + `import_job`
+3. Parse CSV via `CsvParser`
+4. Persist immutable `imported_transaction` rows
+5. Run the categorization pipeline and enqueue low-confidence items to the review queue
 
 ---
 

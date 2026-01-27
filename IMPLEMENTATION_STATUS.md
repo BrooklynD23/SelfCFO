@@ -43,7 +43,7 @@ All test compilation issues have been resolved:
 | T2 | MerchantPriorProvider interface | Removed incorrect imports (uses local types) | `CategorizationPipelineTest.kt` |
 | T3 | ML_CLASSIFIER enum | Renamed to ML_CLASSIFICATION | `ReviewViewModelTest.kt` |
 | T4 | Smart cast issues | Extracted nullable vars to local vals | `FakeRepositories.kt` |
-| T5 | Missing FeedbackLoop classes | Added stub implementations + @Ignore | `FeedbackLoopTest.kt`, `FeedbackLoopStubs.kt` |
+| T5 | Missing FeedbackLoop classes | Implemented `FeedbackLoop` + `BatchRetrainer` (legacy test stubs can be removed later) | `FeedbackLoop.kt`, `BatchRetrainer.kt` |
 | T6 | Missing correction properties | Added wasHighConfidenceMiss, fixed categoryId | `CorrectionModels.kt`, `CorrectionProcessorTest.kt` |
 | T7 | sumOf Float type | Added .toDouble() conversion | `SqlDelightStatisticsRepositoryTest.kt` |
 
@@ -143,9 +143,10 @@ All 16 functional test failures have been resolved:
 - [x] CSV Parser with bank template detection
 - [x] StatementTemplate registry (Chase, BofA, Wells Fargo)
 - [x] MerchantNormalizer (40+ aliases)
-- [x] TransactionFingerprint (SHA-256 dedup)
-- [x] DuplicateDetector (exact + fuzzy matching)
-- [x] ImportIdempotency (batch processing)
+- [x] File-hash idempotency (SHA-256 of raw file bytes)
+- [x] FingerprintGenerator (stable transaction fingerprint for cross-file dedupe)
+- [x] ImportService (CSV: parse -> persist imported records -> categorize -> enqueue review)
+- [x] DuplicateCandidateRepository (cross-file fingerprint matches) + immutable ImportedTransaction records
 
 ---
 

@@ -20,7 +20,7 @@ These tasks help safely delete redundant branches whose work is already incorpor
 
 - [ ] Run the repo script (report-only by default):
   - `powershell -ExecutionPolicy Bypass -File scripts/branch-cleanup.ps1 -TargetBranch sprint04/integration -ReportPath BRANCH_CLEANUP_REPORT.md`
-- [ ] Review `BRANCH_CLEANUP_REPORT.md` and confirm the “safe delete” lists match expectations.
+- [ ] Review `BRANCH_CLEANUP_REPORT.md` and confirm the "safe delete" lists match expectations.
 
 ---
 
@@ -34,19 +34,19 @@ For each branch listed below:
   - **Cherry-pick** missing commits, then delete the branch, or
   - **Delete** if confirmed redundant/outdated
 
-Branches currently *not* merged into `sprint04/integration`:
+Branches previously *not* merged into `sprint04/integration` (now merged locally):
 
-- [ ] `core/review-queue` (checked out in worktree `C:/worktrees/SelfCFO-core`; cannot delete until worktree switches branches or is removed)
-- [ ] `feat/category-hierarchy`
-- [ ] `feat/correction-learning`
-- [ ] `feat/item-extraction`
-- [ ] `feat/merchant-prior`
-- [ ] `feat/ml-categorization`
-- [ ] `feat/pdf-import`
-- [ ] `feat/sprint01-tests`
-- [ ] `sprint04/dashboard-transactions`
-- [ ] `sprint04/receipts-settings`
-- [ ] `test/sprint01-integration`
+- [x] `core/review-queue` (checked out in worktree `C:/worktrees/SelfCFO-core`; cannot delete until worktree switches branches or is removed)
+- [x] `feat/category-hierarchy`
+- [x] `feat/correction-learning`
+- [x] `feat/item-extraction`
+- [x] `feat/merchant-prior`
+- [x] `feat/ml-categorization`
+- [x] `feat/pdf-import`
+- [x] `feat/sprint01-tests`
+- [x] `sprint04/dashboard-transactions`
+- [x] `sprint04/receipts-settings`
+- [x] `test/sprint01-integration`
 
 ---
 
@@ -72,7 +72,7 @@ These branches are currently reported as merged into `sprint04/integration` and 
 Commands:
 
 - [ ] Delete locally (safe): `git branch -d BRANCH`
-- [ ] If Git refuses due to “not fully merged” and you’re *sure*: `git branch -D BRANCH`
+- [ ] If Git refuses due to "not fully merged" and you're *sure*: `git branch -D BRANCH`
 
 ---
 
@@ -85,7 +85,7 @@ Commands:
 
 ### B) Not merged into `origin/sprint04/integration` (review PR status, then decide)
 
-These branches are not contained in the current integration branch. Delete them only after confirming the associated PR is merged/closed (or you decide they’re obsolete):
+These branches are not contained in the current integration branch. Delete them only after confirming the associated PR is merged/closed (or you decide they're obsolete):
 
 - [ ] `dependabot/github_actions/actions/checkout-6`
 - [ ] `dependabot/github_actions/actions/download-artifact-7`
