@@ -13,6 +13,7 @@ Sync the current worktree branch (`sprint04/integration`) to the remote (`origin
   - `6d51ad5` - `docs: add merge-to-origin conflict plan`
   - `84da751` - `style: fix ktlint in fake review queue repo`
   - `928b7a5` - `fix: remove duplicate android AES-GCM implementation`
+  - `27079d4` - `docs: update merge-to-origin log`
 
 ## Merge conflict report
 
@@ -51,4 +52,3 @@ If conflicts occur in a future sync, capture them here as:
 6. **Push**
    - Rebased history: `git push --force-with-lease`
    - Merge commit: `git push`
-
