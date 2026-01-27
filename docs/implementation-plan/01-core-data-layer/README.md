@@ -47,12 +47,22 @@ Implement the complete data layer with SQLCipher encryption, Money type, and imp
 
 ### Quality Gates
 
-- [ ] All SQLDelight queries compile
-- [ ] Encryption tests pass with key rotation
-- [ ] Money calculations match expected values
+- [x] All SQLDelight queries compile
+- [x] Encryption tests pass with key rotation
+- [x] Money calculations match expected values
 - [ ] Parser extracts >98% of transactions from test files
-- [ ] Duplicate detection works within tolerance
-- [ ] Import pipeline is idempotent
+- [x] Duplicate detection works within tolerance
+- [x] Import pipeline is idempotent
+
+### Test Coverage (Added 2026-01-13)
+
+| Test File | Coverage |
+|-----------|----------|
+| `PlatformKeystoreTest.kt` | KEK/Salt round-trip, delete, overwrite, hardware-backed check |
+| `FileEncryptionTest.kt` | AES-GCM round-trip, tamper detection, edge cases |
+| `MoneyEdgeCasesTest.kt` | Zero, negative, overflow, currencies (JPY/USD/KWD), rounding |
+| `MoneyAllocatorPropertyTest.kt` | Invariant: sum == total for all allocation methods |
+| `DatabaseDriverFactoryTest.kt` | Driver creation, encryption key validation, SQL operations |
 
 ---
 
@@ -91,8 +101,11 @@ Implement the complete data layer with SQLCipher encryption, Money type, and imp
 - [x] SQLCipher integrated and encrypts database
 - [x] Key hierarchy implemented (KEK → DEK)
 - [x] Platform keystore integration (Android/Desktop)
-- [ ] Backup/restore key derivation works
-- [ ] Crypto-erasure deletes all data
+- [x] KeyManagerImpl with full key hierarchy (Passphrase → MasterKey → KEK → DEKs)
+- [x] MnemonicGenerator for BIP39 recovery keys (24-word phrases)
+- [x] KeyWrapper for AES-GCM key wrapping (JVM)
+- [x] Backup/restore key derivation works
+- [x] Crypto-erasure deletes all data
 
 ### Money Type ✅ COMPLETE
 - [x] Money class with minor units + currency
