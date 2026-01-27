@@ -62,13 +62,18 @@ class FakeReviewQueueRepository : ReviewQueueRepository {
     }
 
     override fun getFiltered(filter: ReviewQueueFilter): Flow<List<ReviewQueueItem>> {
+        val status = filter.status
+        val minPriority = filter.minPriority
+        val maxPriority = filter.maxPriority
+        val categoryId = filter.categoryId
+
         return items.map { map ->
             map.values
                 .filter { item ->
-                    (filter.status == null || item.status == filter.status) &&
-                    (filter.minPriority == null || item.priority >= filter.minPriority!!) &&
-                    (filter.maxPriority == null || item.priority <= filter.maxPriority!!) &&
-                    (filter.categoryId == null || item.categoryId == filter.categoryId)
+                    (status == null || item.status == status) &&
+                        (minPriority == null || item.priority >= minPriority) &&
+                        (maxPriority == null || item.priority <= maxPriority) &&
+                        (categoryId == null || item.categoryId == categoryId)
                 }
                 .sortedByDescending { it.priority }
         }
