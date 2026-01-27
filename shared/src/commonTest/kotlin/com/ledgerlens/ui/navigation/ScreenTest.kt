@@ -49,12 +49,11 @@ class ScreenTest {
     @Test
     fun `bottomNavScreens contains only bottom nav screens`() {
         val bottomNavScreens = Screen.bottomNavScreens
-        assertEquals(5, bottomNavScreens.size)
+        assertEquals(4, bottomNavScreens.size)
         assertTrue(bottomNavScreens.all { it.showInBottomNav })
         assertTrue(bottomNavScreens.contains(Screen.Dashboard))
         assertTrue(bottomNavScreens.contains(Screen.Transactions))
-        assertTrue(bottomNavScreens.contains(Screen.Import))
-        assertTrue(bottomNavScreens.contains(Screen.Categories))
+        assertTrue(bottomNavScreens.contains(Screen.FinancialResources))
         assertTrue(bottomNavScreens.contains(Screen.Settings))
     }
 

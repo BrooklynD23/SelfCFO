@@ -116,7 +116,9 @@ data class SplitReceiptUiState(
     val splitType: SplitType = SplitType.BY_ITEM,
     val customAmounts: Map<String, Long> = emptyMap(), // participantId -> amount in cents
     val isCalculating: Boolean = false,
-    val previewResult: SplitResult? = null
+    val previewResult: SplitResult? = null,
+    val selectedParticipantIds: Set<String> = emptySet(), // Currently selected participants for assignment
+    val tipAmount: Long = 0L // Tip amount in minor units (cents)
 ) {
     val canSplit: Boolean get() = participants.size >= 2 && receipt != null
 
@@ -398,6 +400,46 @@ class ReceiptsViewModel(
                 itemAssignments = assignments
             )
         }
+        recalculateSplit()
+    }
+
+    fun toggleParticipantSelection(participantId: String) {
+        _splitState.update { state ->
+            val newSelection = if (participantId in state.selectedParticipantIds) {
+                state.selectedParticipantIds - participantId
+            } else {
+                state.selectedParticipantIds + participantId
+            }
+            state.copy(selectedParticipantIds = newSelection)
+        }
+    }
+
+    fun splitRemainingEqually() {
+        _splitState.update { state ->
+            val receipt = state.receipt ?: return@update state
+            val selectedIds = state.selectedParticipantIds.ifEmpty {
+                // If none selected, use all participants
+                state.participants.map { it.id }.toSet()
+            }
+
+            // Find unassigned items
+            val unassignedItems = receipt.productItems.indices.filter { index ->
+                state.itemAssignments[index]?.isEmpty() != false
+            }
+
+            // Assign unassigned items to all selected participants
+            val newAssignments = state.itemAssignments.toMutableMap()
+            unassignedItems.forEach { index ->
+                newAssignments[index] = selectedIds
+            }
+
+            state.copy(itemAssignments = newAssignments)
+        }
+        recalculateSplit()
+    }
+
+    fun setTipAmount(amountCents: Long) {
+        _splitState.update { it.copy(tipAmount = amountCents) }
         recalculateSplit()
     }
 

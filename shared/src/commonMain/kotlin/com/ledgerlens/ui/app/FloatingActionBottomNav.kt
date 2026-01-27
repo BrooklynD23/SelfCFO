@@ -44,43 +44,37 @@ import com.ledgerlens.ui.theme.LedgerLensTheme
 import com.ledgerlens.ui.theme.ShapePatterns
 
 /**
- * Navigation item for the bottom nav bar.
+ * Default navigation items for the app with floating FAB layout.
  */
-data class BottomNavItem(
-    val screen: Screen,
-    val label: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector
-)
-
-/**
- * Default navigation items for the app.
- */
-val defaultNavItems = listOf(
+val floatingNavItems = listOf(
     BottomNavItem(
         screen = Screen.Dashboard,
-        label = "Home",
         selectedIcon = Icons.Filled.Home,
-        unselectedIcon = Icons.Outlined.Home
+        unselectedIcon = Icons.Outlined.Home,
+        label = "Home",
+        contentDescription = "Navigate to home"
     ),
     BottomNavItem(
         screen = Screen.Transactions,
-        label = "Transactions",
         selectedIcon = Icons.Filled.Receipt,
-        unselectedIcon = Icons.Outlined.Receipt
+        unselectedIcon = Icons.Outlined.Receipt,
+        label = "Transactions",
+        contentDescription = "Navigate to transactions"
     ),
     // Spacer for FAB
     BottomNavItem(
         screen = Screen.FinancialResources,
-        label = "Learn",
         selectedIcon = Icons.Filled.School,
-        unselectedIcon = Icons.Outlined.School
+        unselectedIcon = Icons.Outlined.School,
+        label = "Learn",
+        contentDescription = "Navigate to financial resources"
     ),
     BottomNavItem(
         screen = Screen.Settings,
-        label = "Settings",
         selectedIcon = Icons.Filled.Settings,
-        unselectedIcon = Icons.Outlined.Settings
+        unselectedIcon = Icons.Outlined.Settings,
+        label = "Settings",
+        contentDescription = "Navigate to settings"
     )
 )
 
@@ -95,7 +89,7 @@ fun FloatingActionBottomNav(
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier,
     visible: Boolean = true,
-    navItems: List<BottomNavItem> = defaultNavItems
+    navItems: List<BottomNavItem> = floatingNavItems
 ) {
     val colors = LedgerLensTheme.colors
     val typography = LedgerLensTheme.typography
@@ -190,7 +184,7 @@ private fun NavItem(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = item.label,
+            contentDescription = item.contentDescription,
             tint = contentColor,
             modifier = Modifier.size(24.dp)
         )
@@ -211,7 +205,7 @@ fun SimpleBottomNav(
     currentScreen: Screen,
     onNavigate: (Screen) -> Unit,
     modifier: Modifier = Modifier,
-    navItems: List<BottomNavItem> = defaultNavItems
+    navItems: List<BottomNavItem> = floatingNavItems
 ) {
     val colors = LedgerLensTheme.colors
 

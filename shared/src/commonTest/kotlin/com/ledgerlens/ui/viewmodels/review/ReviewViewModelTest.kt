@@ -1,11 +1,13 @@
 package com.ledgerlens.ui.viewmodels.review
 
 import com.ledgerlens.categorization.pipeline.*
+import com.ledgerlens.data.repositories.fake.FakeReviewQueueRepository
 import com.ledgerlens.data.repositories.fake.FakeTransactionRepository
 import com.ledgerlens.data.repositories.fake.TestDataFactory
 import kotlin.test.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -16,14 +18,14 @@ import kotlinx.coroutines.test.setMain
 class ReviewViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var reviewQueueManager: ReviewQueueManager
+    private lateinit var reviewQueueRepository: FakeReviewQueueRepository
     private lateinit var transactionRepository: FakeTransactionRepository
     private lateinit var viewModel: ReviewViewModel
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        reviewQueueManager = ReviewQueueManager()
+        reviewQueueRepository = FakeReviewQueueRepository()
         transactionRepository = FakeTransactionRepository()
 
         // Seed test transactions
@@ -35,13 +37,10 @@ class ReviewViewModelTest {
             )
         )
 
-        // Seed review queue items
-        seedReviewQueueItems()
-
-        viewModel = ReviewViewModel(reviewQueueManager, transactionRepository)
+        viewModel = ReviewViewModel(reviewQueueRepository, transactionRepository)
     }
 
-    private fun seedReviewQueueItems() {
+    private suspend fun seedReviewQueueItems() {
         val features1 = TransactionFeatures(
             merchantNormalized = "WALMART",
             descriptionRaw = "WALMART STORE #1234",
@@ -94,8 +93,8 @@ class ReviewViewModelTest {
             usedStage = PipelineStage.ML_CLASSIFICATION
         )
 
-        reviewQueueManager.enqueue("tx-1", features1, result1)
-        reviewQueueManager.enqueue("tx-2", features2, result2)
+        reviewQueueRepository.enqueue("tx-1", features1, result1)
+        reviewQueueRepository.enqueue("tx-2", features2, result2)
     }
 
     @AfterTest
@@ -107,6 +106,7 @@ class ReviewViewModelTest {
 
     @Test
     fun `initial state is loading then loaded`() = runTest {
+        seedReviewQueueItems()
         advanceUntilIdle()
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
@@ -115,6 +115,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `loadReviewItems populates items`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val state = viewModel.uiState.value
         assertEquals(2, state.items.size)
@@ -122,6 +124,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `loadReviewItems calculates stats`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val stats = viewModel.uiState.value.stats
         assertEquals(2, stats.totalItems)
@@ -132,6 +136,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `setFilter updates current filter`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         viewModel.setFilter(ReviewFilter.LOW_CONFIDENCE)
         assertEquals(ReviewFilter.LOW_CONFIDENCE, viewModel.uiState.value.currentFilter)
@@ -139,6 +145,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `setFilter applies filtering to items`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         viewModel.setFilter(ReviewFilter.ALL)
         val filteredCount = viewModel.uiState.value.filteredItems.size
@@ -147,6 +155,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `setFilter to PENDING shows only pending items`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         viewModel.setFilter(ReviewFilter.PENDING)
         val filtered = viewModel.uiState.value.filteredItems
@@ -157,6 +167,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `selectItem sets selected item`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val item = viewModel.uiState.value.items.first()
         viewModel.selectItem(item)
@@ -165,6 +177,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `clearSelection clears selected item`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val item = viewModel.uiState.value.items.first()
         viewModel.selectItem(item)
@@ -178,38 +192,46 @@ class ReviewViewModelTest {
 
     @Test
     fun `acceptSuggestion marks item as accepted`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val transactionId = viewModel.uiState.value.items.first().transactionId
 
         viewModel.acceptSuggestion(transactionId)
         advanceUntilIdle()
 
-        // After acceptance, item should be processed (accepted status or removed from pending)
-        val item = reviewQueueManager.getItem(transactionId)
+        // After acceptance, item should be completed
+        val item = reviewQueueRepository.getItem(transactionId).first()
         assertTrue(item?.status == ReviewStatus.ACCEPTED || item == null)
     }
 
     @Test
     fun `rejectSuggestion marks item as rejected`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val transactionId = viewModel.uiState.value.items.first().transactionId
 
         viewModel.rejectSuggestion(transactionId, "dining")
         advanceUntilIdle()
 
-        val item = reviewQueueManager.getItem(transactionId)
+        val item = reviewQueueRepository.getItem(transactionId).first()
+        // After rejection, item should be removed from queue or marked as rejected
         assertTrue(item?.status == ReviewStatus.REJECTED || item == null)
     }
 
     @Test
     fun `deferItem marks item as deferred`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val transactionId = viewModel.uiState.value.items.first().transactionId
 
         viewModel.deferItem(transactionId)
         advanceUntilIdle()
 
-        val item = reviewQueueManager.getItem(transactionId)
+        val item = reviewQueueRepository.getItem(transactionId).first()
+        // After deferral, item should be marked as deferred or removed
         assertTrue(item?.status == ReviewStatus.DEFERRED || item == null)
     }
 
@@ -217,6 +239,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `acceptAll accepts all pending items`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val initialPending = viewModel.uiState.value.filteredItems.filter {
             it.status == ReviewItemStatus.PENDING
@@ -227,6 +251,8 @@ class ReviewViewModelTest {
         advanceUntilIdle()
 
         // After acceptAll, pending count should be reduced
+        viewModel.loadReviewItems()
+        advanceUntilIdle()
         val newPending = viewModel.uiState.value.filteredItems.filter {
             it.status == ReviewItemStatus.PENDING
         }.size
@@ -235,13 +261,15 @@ class ReviewViewModelTest {
 
     @Test
     fun `dismissAll defers all pending items`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
 
         viewModel.dismissAll()
         advanceUntilIdle()
 
-        // After dismissAll, pending items should be deferred
-        val pendingCount = reviewQueueManager.pendingCount
+        // After dismissAll, pending items should be completed/deferred
+        val pendingCount = reviewQueueRepository.pendingCount.first()
         assertEquals(0, pendingCount)
     }
 
@@ -249,6 +277,8 @@ class ReviewViewModelTest {
 
     @Test
     fun `stats reflect current queue state`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
 
         val stats = viewModel.uiState.value.stats
@@ -260,10 +290,15 @@ class ReviewViewModelTest {
 
     @Test
     fun `stats update after accept`() = runTest {
+        seedReviewQueueItems()
+        viewModel.loadReviewItems()
         advanceUntilIdle()
         val transactionId = viewModel.uiState.value.items.first().transactionId
 
         viewModel.acceptSuggestion(transactionId)
+        advanceUntilIdle()
+
+        viewModel.loadReviewItems()
         advanceUntilIdle()
 
         val stats = viewModel.uiState.value.stats

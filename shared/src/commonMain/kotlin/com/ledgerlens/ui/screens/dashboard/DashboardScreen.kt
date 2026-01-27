@@ -352,21 +352,3 @@ private fun PillarsSection(
     }
 }
 
-// Keep legacy models for backward compatibility
-data class TransactionUiModel(
-    val id: String,
-    val date: String,
-    val merchantName: String,
-    val normalizedMerchant: String?,
-    val description: String?,
-    val amount: com.ledgerlens.domain.Money,
-    val category: com.ledgerlens.categorization.Category?,
-    val categoryConfidence: Float
-)
-
-data class CategoryBreakdownUiModel(
-    val category: com.ledgerlens.categorization.Category,
-    val amount: com.ledgerlens.domain.Money,
-    val transactionCount: Int,
-    val percentage: Float
-)

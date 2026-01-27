@@ -56,6 +56,24 @@ data class Money(
         fun zero(currencyCode: String): Money {
             return Money(0L, currencyCode)
         }
+
+        /**
+         * Create Money from a Double amount (major units).
+         * Note: Use parseMajor for user input to avoid floating-point issues.
+         * This is provided for convenience in non-critical UI display scenarios.
+         */
+        fun of(amount: Double, currencyCode: String): Money {
+            val scale = CurrencyMetadata.getScale(currencyCode)
+            val multiplier = tenToThe(scale)
+            val minorUnits = (amount * multiplier).toLong()
+            return Money(minorUnits, currencyCode, scale)
+        }
+
+        private fun tenToThe(n: Int): Long {
+            var result = 1L
+            repeat(n) { result *= 10 }
+            return result
+        }
     }
 
     /**
@@ -63,6 +81,25 @@ data class Money(
      * Locale/currency-symbol formatting belongs in platform UI utilities.
      */
     fun toMajorString(): String = MoneyFormatter.toMajorString(this)
+
+    /**
+     * Format for display with currency symbol (e.g., "$12.34").
+     */
+    fun formatted(): String {
+        val symbol = CurrencyMetadata.getSymbol(currencyCode)
+        val majorString = toMajorString()
+        return if (isNegative) "-$symbol${majorString.removePrefix("-")}" else "$symbol$majorString"
+    }
+
+    /**
+     * Get the amount as a Double (major units).
+     * Note: Use with caution due to floating-point precision.
+     */
+    val amount: Double get() {
+        var divisor = 1.0
+        repeat(scale) { divisor *= 10 }
+        return minorUnits / divisor
+    }
 
     // Arithmetic operations
 
