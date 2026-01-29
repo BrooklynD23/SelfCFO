@@ -5,7 +5,7 @@ agp = "8.2.0"
 compose = "1.5.12"
 
 # Development Tooling
-ktlint = "12.1.0"
+ktlint = "14.0.1"
 ktlint-core = "1.1.1"
 detekt = "1.23.4"
 dokka = "1.9.10"
