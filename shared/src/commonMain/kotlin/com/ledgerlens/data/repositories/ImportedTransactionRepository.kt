@@ -49,4 +49,3 @@ interface ImportedTransactionRepository {
     fun getByImportJob(importJobId: String): Flow<List<ImportedTransactionEntity>>
     fun getRecent(limit: Int = 50): Flow<List<ImportedTransactionEntity>>
 }
-

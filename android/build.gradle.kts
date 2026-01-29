@@ -114,6 +114,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.core.ktx)
 
+    // Koin - Dependency Injection
+    implementation(libs.koin.android)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit)

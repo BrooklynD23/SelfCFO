@@ -5,12 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,17 +17,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ledgerlens.receipts.Participant
 import com.ledgerlens.receipts.ReceiptItem
-import com.ledgerlens.ui.theme.LedgerLensColors
 import com.ledgerlens.ui.theme.LedgerLensTheme
 import com.ledgerlens.ui.theme.ShapePatterns
 import com.ledgerlens.ui.viewmodels.receipts.ReceiptsViewModel
@@ -298,8 +292,11 @@ private fun ReceiptPaperCard(
                             assignedParticipants.isEmpty() -> ItemAssignmentState.Unassigned
                             assignedParticipants.size == 1 -> {
                                 val participant = state.participants.find { it.id == assignedParticipants.first() }
-                                if (participant != null) ItemAssignmentState.AssignedToOne(participant)
-                                else ItemAssignmentState.Unassigned
+                                if (participant != null) {
+                                    ItemAssignmentState.AssignedToOne(participant)
+                                } else {
+                                    ItemAssignmentState.Unassigned
+                                }
                             }
                             else -> {
                                 val participants = state.participants.filter { it.id in assignedParticipants }
@@ -425,7 +422,9 @@ private fun ReceiptItemRow(
         color = backgroundColor,
         border = if (isAssigned) {
             androidx.compose.foundation.BorderStroke(1.dp, borderColor)
-        } else null
+        } else {
+            null
+        }
     ) {
         Row(
             modifier = Modifier
@@ -722,8 +721,11 @@ private fun ParticipantAvatar(
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(
-                        if (participant.isSelf && isSelected) colors.primary
-                        else participantColor.copy(alpha = if (isSelected) 1f else 0.4f)
+                        if (participant.isSelf && isSelected) {
+                            colors.primary
+                        } else {
+                            participantColor.copy(alpha = if (isSelected) 1f else 0.4f)
+                        }
                     )
                     .then(
                         if (isSelected) {
@@ -732,7 +734,9 @@ private fun ParticipantAvatar(
                                 color = if (participant.isSelf) colors.primaryContainer else participantColor.copy(alpha = 0.3f),
                                 shape = CircleShape
                             )
-                        } else Modifier
+                        } else {
+                            Modifier
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {

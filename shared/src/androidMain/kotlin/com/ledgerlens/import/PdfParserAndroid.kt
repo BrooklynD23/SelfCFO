@@ -47,12 +47,12 @@ class PdfParserAndroid(
             )
         }
 
-        // TODO: Implement ML Kit-based text extraction
+        // FIXME: Implement ML Kit-based text extraction
         // For now, return a clear error indicating this needs implementation
         return PdfParseResult.Failure(
             ParseError.UnsupportedFormat(
                 "Android PDF parsing with ML Kit OCR is not yet implemented. " +
-                "Use desktop version for PDF import, or implement ML Kit integration."
+                    "Use desktop version for PDF import, or implement ML Kit integration."
             )
         )
     }
@@ -64,7 +64,7 @@ class PdfParserAndroid(
     }
 
     /**
-     * TODO: Implement these methods for ML Kit integration
+     * FIXME: Implement these methods for ML Kit integration
      */
     @Suppress("unused")
     private suspend fun extractTextWithMlKit(pdfData: ByteArray): TextExtractionResult {
@@ -75,7 +75,7 @@ class PdfParserAndroid(
 
         throw NotImplementedError(
             "ML Kit text extraction not implemented. " +
-            "See implementation guide in 04-pdf-import-pipeline.md"
+                "See implementation guide in 04-pdf-import-pipeline.md"
         )
     }
 }

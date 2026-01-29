@@ -23,8 +23,12 @@ class FeedbackLoop(
     private var lastAnalysisTime = clock.now()
 
     suspend fun submitCorrection(
-        transactionId: String, features: TransactionFeatures, oldCategoryId: String,
-        newCategoryId: String, originalConfidence: Float, classifierUsed: String
+        transactionId: String,
+        features: TransactionFeatures,
+        oldCategoryId: String,
+        newCategoryId: String,
+        originalConfidence: Float,
+        classifierUsed: String
     ): FeedbackResult = mutex.withLock {
         val correctionResult = correctionProcessor.processCorrection(
             transactionId, features, oldCategoryId, newCategoryId, originalConfidence, classifierUsed
@@ -57,13 +61,15 @@ class FeedbackLoop(
 
     suspend fun getStats(): FeedbackLoopStats = mutex.withLock {
         val retrainDecision = batchRetrainer.shouldRetrain()
-        FeedbackLoopStats(totalCorrectionsProcessed, retrainDecision.shouldRetrain,
+        FeedbackLoopStats(
+            totalCorrectionsProcessed, retrainDecision.shouldRetrain,
             when (retrainDecision) {
                 is RetrainDecision.NotNeeded -> null
                 is RetrainDecision.TimeThresholdExceeded -> "Time threshold exceeded"
                 is RetrainDecision.CorrectionThresholdExceeded -> "Correction count threshold exceeded"
                 is RetrainDecision.HighRecentCorrectionRate -> "High recent correction rate"
-            })
+            }
+        )
     }
 
     private suspend fun checkAndRetrain(): RetrainResult? {
@@ -73,8 +79,9 @@ class FeedbackLoop(
 
     private fun handleSuggestedRule(suggested: SuggestedRule): RuleAction {
         if (ruleManager == null) return RuleAction.Suggested(suggested)
-        if (config.enableAutoRuleCreation && suggested.confidence >= config.autoRuleConfidenceThreshold
-            && suggested.supportingCorrections >= config.autoRuleMinSupport) {
+        if (config.enableAutoRuleCreation && suggested.confidence >= config.autoRuleConfidenceThreshold &&
+            suggested.supportingCorrections >= config.autoRuleMinSupport
+        ) {
             val rule = ruleManager.createRuleFromSuggestion(suggested)
             return if (rule != null) RuleAction.Created(rule, suggested) else RuleAction.Suggested(suggested)
         }
@@ -98,13 +105,17 @@ data class FeedbackLoopConfig(
 )
 
 data class FeedbackResult(
-    val correctionResult: CorrectionResult, val retrainResult: RetrainResult?,
-    val ruleAction: RuleAction?, val analysis: CorrectionAnalysis?
+    val correctionResult: CorrectionResult,
+    val retrainResult: RetrainResult?,
+    val ruleAction: RuleAction?,
+    val analysis: CorrectionAnalysis?
 )
 
 data class BatchFeedbackResult(
-    val batchResult: BatchCorrectionResult, val retrainResult: RetrainResult?,
-    val analysis: CorrectionAnalysis, val suggestedRules: List<SuggestedRule>
+    val batchResult: BatchCorrectionResult,
+    val retrainResult: RetrainResult?,
+    val analysis: CorrectionAnalysis,
+    val suggestedRules: List<SuggestedRule>
 )
 
 data class FeedbackLoopStats(val totalCorrectionsProcessed: Long, val pendingRetrain: Boolean, val retrainReason: String?)
@@ -127,8 +138,10 @@ class DefaultRuleManager : RuleManager {
 
     override fun createRuleFromSuggestion(suggestion: SuggestedRule): ClassificationRule {
         val ruleId = "user_rule_${++ruleCounter}"
-        val rule = MerchantContainsRule(ruleId, suggestion.categoryId,
-            listOf(suggestion.merchantPattern.lowercase()), suggestion.confidence.coerceAtMost(0.95f), 95, true)
+        val rule = MerchantContainsRule(
+            ruleId, suggestion.categoryId,
+            listOf(suggestion.merchantPattern.lowercase()), suggestion.confidence.coerceAtMost(0.95f), 95, true
+        )
         userRules[ruleId] = rule
         return rule
     }

@@ -18,6 +18,7 @@ internal class CsvAutoDetector {
     fun detectHeader(rows: List<List<String>>): Boolean {
         if (rows.isEmpty()) return false
         val first = rows.first()
+
         // Heuristic: header row has more non-numeric tokens than data rows.
         fun score(row: List<String>): Int =
             row.count { cell ->
@@ -66,4 +67,3 @@ internal class CsvAutoDetector {
         )
     }
 }
-

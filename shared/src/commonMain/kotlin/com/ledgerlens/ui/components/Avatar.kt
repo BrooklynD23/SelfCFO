@@ -52,7 +52,9 @@ fun Avatar(
             .then(
                 if (showBorder) {
                     Modifier.border(2.dp, colors.surface, CircleShape)
-                } else Modifier
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -86,7 +88,9 @@ fun AvatarWithInitials(
             .then(
                 if (showBorder) {
                     Modifier.border(2.dp, colors.surface, CircleShape)
-                } else Modifier
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {

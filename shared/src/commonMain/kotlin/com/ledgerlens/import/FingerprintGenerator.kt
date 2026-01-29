@@ -34,4 +34,3 @@ object FingerprintGenerator {
         return sha256Hex(s.encodeToByteArray())
     }
 }
-

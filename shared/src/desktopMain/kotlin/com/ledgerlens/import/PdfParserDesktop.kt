@@ -7,7 +7,6 @@ import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition
-import java.io.ByteArrayInputStream
 
 /**
  * Desktop PDF parser implementation using Apache PDFBox.
@@ -79,8 +78,9 @@ class PdfParserDesktop(
             // Extract text from all pages
             val extractionResult = extractText(doc)
 
-            if (extractionResult.pages.isEmpty() || 
-                extractionResult.pages.all { it.lines.isEmpty() }) {
+            if (extractionResult.pages.isEmpty() ||
+                extractionResult.pages.all { it.lines.isEmpty() }
+            ) {
                 return@withContext PdfParseResult.Failure(
                     ParseError.NoTransactionsFound("No text content found in PDF")
                 )
@@ -99,9 +99,9 @@ class PdfParserDesktop(
 
             // Build metadata
             val metadata = StatementMetadata(
-                accountName = null,  // TODO: Extract from header
-                accountNumber = null,  // TODO: Extract last 4 digits
-                statementPeriod = null,  // TODO: Extract date range
+                accountName = null, // TODO: Extract from header
+                accountNumber = null, // TODO: Extract last 4 digits
+                statementPeriod = null, // TODO: Extract date range
                 pageCount = doc.numberOfPages,
                 extractionMethod = ExtractionMethod.TEXT_BASED,
                 bankName = parseResult.template?.bankName,
@@ -148,11 +148,13 @@ class PdfParserDesktop(
             val rawText = stripper.getText(document)
             val lines = stripper.getExtractedLines()
 
-            pages.add(PageText(
-                pageNumber = pageNum,
-                lines = lines,
-                rawText = rawText
-            ))
+            pages.add(
+                PageText(
+                    pageNumber = pageNum,
+                    lines = lines,
+                    rawText = rawText
+                )
+            )
         }
 
         val hasText = pages.any { it.lines.isNotEmpty() }
@@ -219,11 +221,13 @@ private class LineTrackingTextStripper : PDFTextStripper() {
         val text = currentLineText.toString().trim()
         if (text.isNotEmpty()) {
             currentLineNumber++
-            lines.add(TextLine(
-                text = text,
-                lineNumber = currentLineNumber,
-                confidence = 1.0f  // Text-based extraction is high confidence
-            ))
+            lines.add(
+                TextLine(
+                    text = text,
+                    lineNumber = currentLineNumber,
+                    confidence = 1.0f // Text-based extraction is high confidence
+                )
+            )
         }
         currentLineText.clear()
     }

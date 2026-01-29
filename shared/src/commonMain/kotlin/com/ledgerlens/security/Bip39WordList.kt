@@ -5,16 +5,16 @@ package com.ledgerlens.security
  * Contains 2048 words for mnemonic generation.
  */
 object Bip39WordList {
-    
+
     fun getWord(index: Int): String {
         require(index in 0 until WORDS.size) { "Word index must be 0-2047" }
         return WORDS[index]
     }
-    
+
     fun indexOf(word: String): Int = WORDS.indexOf(word.lowercase())
-    
+
     fun isValidWord(word: String): Boolean = indexOf(word) >= 0
-    
+
     val size: Int get() = WORDS.size
 }
 

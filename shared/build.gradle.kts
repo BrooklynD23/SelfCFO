@@ -23,9 +23,6 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-            // Core branch: temporarily exclude UI sources (handled on main tree).
-            kotlin.exclude("com/ledgerlens/ui/**")
-
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
@@ -61,8 +58,6 @@ kotlin {
         }
 
         val commonTest by getting {
-            // Core branch: UI tests live with the UI workstream.
-            kotlin.exclude("com/ledgerlens/ui/**")
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)

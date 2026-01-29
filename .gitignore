@@ -101,3 +101,7 @@ build/dokka/
 # Secrets and credentials
 *.env
 secrets.properties
+
+# Local-only Gradle/Android caches created by CI-like runs
+.gradle-user-home/
+.android/

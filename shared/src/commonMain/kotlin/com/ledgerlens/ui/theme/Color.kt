@@ -126,7 +126,7 @@ object LedgerLensColors {
         Color(0xFF8B5CF6), // Purple
         Color(0xFFEC4899), // Pink
         Color(0xFF14B8A6), // Teal
-        Color(0xFFF97316)  // Orange
+        Color(0xFFF97316) // Orange
     )
 }
 

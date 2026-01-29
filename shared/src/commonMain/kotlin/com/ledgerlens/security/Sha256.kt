@@ -13,4 +13,3 @@ fun sha256Hex(input: ByteArray): String = Sha256.digest(input).toHexString()
 
 fun ByteArray.toHexString(): String =
     joinToString(separator = "") { b -> b.toUByte().toString(16).padStart(2, '0') }
-

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -74,7 +73,9 @@ fun ComparisonCard(
         shadowElevation = if (isSelected) 4.dp else 1.dp,
         border = if (isSelected) {
             androidx.compose.foundation.BorderStroke(2.dp, colors.primary)
-        } else null,
+        } else {
+            null
+        },
         onClick = onClick ?: {}
     ) {
         Column(

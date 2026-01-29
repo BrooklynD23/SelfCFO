@@ -1,12 +1,10 @@
 package com.ledgerlens.ui.screens.categories
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +33,7 @@ fun RulesScreen(
 ) {
     val state by viewModel.rulesState.collectAsState()
     var showFilterMenu by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -81,7 +78,7 @@ fun RulesScreen(
                 },
                 onToggleSortByPriority = viewModel::toggleRulesSortByPriority
             )
-            
+
             when {
                 state.isLoading -> {
                     Box(
@@ -116,7 +113,7 @@ fun RulesScreen(
                 }
             }
         }
-        
+
         // Rule wizard
         if (state.showRuleWizard) {
             RuleWizardDialog(
@@ -128,6 +125,7 @@ fun RulesScreen(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun RulesFilterBar(
     state: RulesUiState,
     showFilterMenu: Boolean,
@@ -158,9 +156,9 @@ private fun RulesFilterBar(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Filter chips
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -171,14 +169,16 @@ private fun RulesFilterBar(
                     FilterChip(
                         selected = state.filterEnabled != null,
                         onClick = { onShowFilterMenu(true) },
-                        label = { 
-                            Text(when (state.filterEnabled) {
-                                true -> "Enabled"
-                                false -> "Disabled"
-                                null -> "All"
-                            })
+                        label = {
+                            Text(
+                                when (state.filterEnabled) {
+                                    true -> "Enabled"
+                                    false -> "Disabled"
+                                    null -> "All"
+                                }
+                            )
                         },
-                        leadingIcon = { 
+                        leadingIcon = {
                             Icon(
                                 Icons.Default.FilterList,
                                 contentDescription = null,
@@ -186,7 +186,7 @@ private fun RulesFilterBar(
                             )
                         }
                     )
-                    
+
                     DropdownMenu(
                         expanded = showFilterMenu,
                         onDismissRequest = { onShowFilterMenu(false) }
@@ -221,13 +221,13 @@ private fun RulesFilterBar(
                     }
                 }
             }
-            
+
             // Sort toggle
             item {
                 FilterChip(
                     selected = state.sortByPriority,
                     onClick = onToggleSortByPriority,
-                    label = { 
+                    label = {
                         Text(if (state.sortByPriority) "By Priority" else "By Name")
                     },
                     leadingIcon = {
@@ -267,7 +267,7 @@ private fun RulesList(
                 onDelete = { onDeleteRule(rule.id) }
             )
         }
-        
+
         // Bottom spacer for FAB
         item {
             Spacer(modifier = Modifier.height(80.dp))
@@ -285,7 +285,7 @@ private fun RuleListItem(
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    
+
     // TODO: Replace with LedgerLensCard
     Card(
         modifier = Modifier
@@ -322,9 +322,9 @@ private fun RuleListItem(
                         onCheckedChange = { onToggleEnabled() },
                         modifier = Modifier.height(24.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.width(12.dp))
-                    
+
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -333,14 +333,15 @@ private fun RuleListItem(
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = if (rule.enabled) 
-                                    MaterialTheme.colorScheme.onSurface 
-                                else 
+                                color = if (rule.enabled) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
+                                }
                             )
-                            
+
                             Spacer(modifier = Modifier.width(8.dp))
-                            
+
                             // Source badge
                             val (sourceText, sourceColor) = when (rule.source) {
                                 RuleSource.USER -> "Custom" to MaterialTheme.colorScheme.primary
@@ -348,7 +349,7 @@ private fun RuleListItem(
                                 RuleSource.SUGGESTED -> "Suggested" to Color(0xFFFF9800)
                                 RuleSource.IMPORTED -> "Imported" to Color(0xFF9C27B0)
                             }
-                            
+
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = sourceColor.copy(alpha = 0.15f)
@@ -361,7 +362,7 @@ private fun RuleListItem(
                                 )
                             }
                         }
-                        
+
                         // Priority indicator
                         Text(
                             text = "Priority: ${rule.priority}",
@@ -370,13 +371,13 @@ private fun RuleListItem(
                         )
                     }
                 }
-                
+
                 // Menu
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "More options")
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -389,9 +390,9 @@ private fun RuleListItem(
                             },
                             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
                         )
-                        
+
                         if (rule.isUserCreated) {
-                            HorizontalDivider()
+                            Divider()
                             DropdownMenuItem(
                                 text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
                                 onClick = {
@@ -410,9 +411,9 @@ private fun RuleListItem(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Condition summary
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -430,7 +431,7 @@ private fun RuleListItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            
+
             // Action summary (category)
             if (rule.categoryName != null) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -450,7 +451,7 @@ private fun RuleListItem(
                     )
                 }
             }
-            
+
             // Match count
             if (rule.matchCount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -482,29 +483,30 @@ private fun EmptyRulesContent(
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = if (hasFilters) "No rules match your filters" else "No rules yet",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
-            text = if (hasFilters)
+            text = if (hasFilters) {
                 "Try adjusting your search or filters"
-            else
-                "Create rules to automatically categorize transactions",
+            } else {
+                "Create rules to automatically categorize transactions"
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
-        
+
         if (!hasFilters) {
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Button(onClick = onAddRule) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -533,17 +535,17 @@ private fun ErrorContent(
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.error
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = error,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onDismiss) {
                 Text("Dismiss")
@@ -563,7 +565,7 @@ private fun RuleWizardDialog(
 ) {
     val wizardState by viewModel.wizardState.collectAsState()
     val categoriesState by viewModel.categoriesState.collectAsState()
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.95f)
@@ -582,17 +584,17 @@ private fun RuleWizardDialog(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Step indicator
                 LinearProgressIndicator(
-                    progress = { (wizardState.step.ordinal + 1) / 4f },
+                    progress = (wizardState.step.ordinal + 1) / 4f,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Step content
                 when (wizardState.step) {
                     com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.NAME -> {
@@ -621,7 +623,7 @@ private fun RuleWizardDialog(
                         ReviewStep(state = wizardState)
                     }
                 }
-                
+
                 // Validation errors
                 if (wizardState.validationErrors.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -633,9 +635,9 @@ private fun RuleWizardDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Navigation buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -651,13 +653,14 @@ private fun RuleWizardDialog(
                         }
                     ) {
                         Text(
-                            if (wizardState.step == com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.NAME) 
-                                "Cancel" 
-                            else 
+                            if (wizardState.step == com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.NAME) {
+                                "Cancel"
+                            } else {
                                 "Back"
+                            }
                         )
                     }
-                    
+
                     Button(
                         onClick = {
                             if (wizardState.step == com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.REVIEW) {
@@ -669,10 +672,11 @@ private fun RuleWizardDialog(
                         enabled = wizardState.canProceed
                     ) {
                         Text(
-                            if (wizardState.step == com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.REVIEW) 
-                                "Create Rule" 
-                            else 
+                            if (wizardState.step == com.ledgerlens.ui.viewmodels.categories.RuleWizardStep.REVIEW) {
+                                "Create Rule"
+                            } else {
                                 "Next"
+                            }
                         )
                     }
                 }
@@ -694,9 +698,9 @@ private fun NameStep(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = name,
             onValueChange = onNameChange,
@@ -705,9 +709,9 @@ private fun NameStep(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         OutlinedTextField(
             value = description,
             onValueChange = onDescriptionChange,
@@ -727,24 +731,24 @@ private fun ConditionsStep(
 ) {
     var showConditionPicker by remember { mutableStateOf(false) }
     var merchantPattern by remember { mutableStateOf("") }
-    
+
     Column {
         Text(
             text = "Step 2: Set conditions",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = "Define when this rule should apply",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Existing conditions
         conditions.forEachIndexed { index, condition ->
             // TODO: Replace with LedgerLensCard
@@ -769,7 +773,7 @@ private fun ConditionsStep(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     IconButton(
                         onClick = { onRemoveCondition(index) },
                         modifier = Modifier.size(24.dp)
@@ -783,9 +787,9 @@ private fun ConditionsStep(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         // Simple condition builder (merchant contains)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -799,9 +803,9 @@ private fun ConditionsStep(
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             IconButton(
                 onClick = {
                     if (merchantPattern.isNotBlank()) {
@@ -831,17 +835,17 @@ private fun ActionStep(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = "Select the category to assign",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Category picker
         LazyColumn(
             modifier = Modifier.heightIn(max = 300.dp),
@@ -850,17 +854,18 @@ private fun ActionStep(
             items(categories, key = { it.id }) { category ->
                 val isSelected = category.id == selectedCategoryId
                 val indentDp = (category.depth * 16).dp
-                
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = indentDp)
                         .clickable { onSelectCategory(category.id) },
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isSelected) 
-                        MaterialTheme.colorScheme.primaryContainer 
-                    else 
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    }
                 ) {
                     Row(
                         modifier = Modifier
@@ -877,7 +882,7 @@ private fun ActionStep(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        
+
                         Text(
                             text = category.name,
                             style = MaterialTheme.typography.bodyMedium,
@@ -900,9 +905,9 @@ private fun ReviewStep(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // TODO: Replace with LedgerLensCard
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -917,7 +922,7 @@ private fun ReviewStep(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 if (state.description.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -926,32 +931,32 @@ private fun ReviewStep(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider()
+                Divider()
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 Text(
                     text = "When:",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 state.conditions.forEach { condition ->
                     Text(
                         text = "• ${condition.describe()}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = "Then:",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Text(
                     text = "• Set category to: ${state.selectedCategoryId ?: "None"}",
                     style = MaterialTheme.typography.bodyMedium,

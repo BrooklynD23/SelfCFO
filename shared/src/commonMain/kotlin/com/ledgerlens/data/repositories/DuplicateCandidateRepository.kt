@@ -40,4 +40,3 @@ interface DuplicateCandidateRepository {
     val pendingCount: Flow<Int>
     suspend fun clear()
 }
-

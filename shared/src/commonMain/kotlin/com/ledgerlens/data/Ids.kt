@@ -23,16 +23,26 @@ object Ids {
         fun hex(i: Int): String = b[i].toUByte().toString(16).padStart(2, '0')
 
         return buildString(36) {
-            append(hex(0)); append(hex(1)); append(hex(2)); append(hex(3))
+            append(hex(0))
+            append(hex(1))
+            append(hex(2))
+            append(hex(3))
             append('-')
-            append(hex(4)); append(hex(5))
+            append(hex(4))
+            append(hex(5))
             append('-')
-            append(hex(6)); append(hex(7))
+            append(hex(6))
+            append(hex(7))
             append('-')
-            append(hex(8)); append(hex(9))
+            append(hex(8))
+            append(hex(9))
             append('-')
-            append(hex(10)); append(hex(11)); append(hex(12)); append(hex(13)); append(hex(14)); append(hex(15))
+            append(hex(10))
+            append(hex(11))
+            append(hex(12))
+            append(hex(13))
+            append(hex(14))
+            append(hex(15))
         }
     }
 }
-

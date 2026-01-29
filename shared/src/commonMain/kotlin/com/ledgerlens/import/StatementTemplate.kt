@@ -1,7 +1,6 @@
 package com.ledgerlens.import
 
 import com.ledgerlens.domain.Money
-import com.ledgerlens.domain.MoneyParser
 import com.ledgerlens.domain.RoundingMode
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -27,14 +26,14 @@ data class StatementTemplate(
  * Regex patterns for identifying and parsing statement content.
  */
 data class TemplatePatterns(
-    val bankIdentifier: Regex,           // Pattern to identify this bank's statements
-    val transactionRow: Regex,           // Pattern matching a transaction row
-    val datePattern: Regex,              // Pattern for extracting dates
-    val amountPattern: Regex,            // Pattern for extracting amounts
+    val bankIdentifier: Regex, // Pattern to identify this bank's statements
+    val transactionRow: Regex, // Pattern matching a transaction row
+    val datePattern: Regex, // Pattern for extracting dates
+    val amountPattern: Regex, // Pattern for extracting amounts
     val descriptionPattern: Regex? = null,
     val balancePattern: Regex? = null,
-    val headerPattern: Regex? = null,    // Pattern to identify table headers
-    val skipPatterns: List<Regex> = emptyList()  // Patterns for rows to skip
+    val headerPattern: Regex? = null, // Pattern to identify table headers
+    val skipPatterns: List<Regex> = emptyList() // Patterns for rows to skip
 )
 
 /**
@@ -45,7 +44,7 @@ data class ColumnLayout(
     val descriptionColumn: Int,
     val amountColumn: Int,
     val balanceColumn: Int? = null,
-    val debitColumn: Int? = null,   // Some banks have separate debit/credit columns
+    val debitColumn: Int? = null, // Some banks have separate debit/credit columns
     val creditColumn: Int? = null,
     val checkNumberColumn: Int? = null
 )
@@ -54,11 +53,11 @@ data class ColumnLayout(
  * Amount formatting style.
  */
 enum class AmountFormat {
-    STANDARD,           // $1,234.56 or 1,234.56
-    SIGNED,             // -1,234.56 for debits
-    PARENTHESES,        // (1,234.56) for debits
-    SEPARATE_COLUMNS,   // Debit and credit in separate columns
-    CR_DR_SUFFIX        // 1,234.56 CR or 1,234.56 DR
+    STANDARD, // $1,234.56 or 1,234.56
+    SIGNED, // -1,234.56 for debits
+    PARENTHESES, // (1,234.56) for debits
+    SEPARATE_COLUMNS, // Debit and credit in separate columns
+    CR_DR_SUFFIX // 1,234.56 CR or 1,234.56 DR
 }
 
 /**
@@ -115,7 +114,7 @@ object StatementTemplateRegistry {
         id = "generic",
         bankName = "Generic",
         patterns = TemplatePatterns(
-            bankIdentifier = Regex(".*"),  // Matches anything as fallback
+            bankIdentifier = Regex(".*"), // Matches anything as fallback
             transactionRow = Regex("""^\s*(\d{1,2}[/\-]\d{1,2}[/\-]?\d{0,4})\s+(.+?)\s+([\d,]+\.\d{2})\s*$"""),
             datePattern = Regex("""(\d{1,2})[/\-](\d{1,2})[/\-]?(\d{2,4})?"""),
             amountPattern = Regex("""\$?([\d,]+\.\d{2})""")
@@ -199,10 +198,12 @@ class TemplateBasedParser(
             ?: return TemplateParseResult(
                 transactions = emptyList(),
                 template = null,
-                warnings = listOf(ParseWarning(
-                    WarningCode.UNSUPPORTED_FORMAT,
-                    "No matching template found"
-                ))
+                warnings = listOf(
+                    ParseWarning(
+                        WarningCode.UNSUPPORTED_FORMAT,
+                        "No matching template found"
+                    )
+                )
             )
 
         val transactions = mutableListOf<ParsedTransaction>()
@@ -251,19 +252,23 @@ class TemplateBasedParser(
 
         // Extract date
         val date = extractDate(text, template)
-            ?: return LineParseResult.Warning(ParseWarning(
-                WarningCode.AMBIGUOUS_DATE,
-                "Could not parse date from: ${text.take(50)}",
-                "page:$pageNumber,line:${line.lineNumber}"
-            ))
+            ?: return LineParseResult.Warning(
+                ParseWarning(
+                    WarningCode.AMBIGUOUS_DATE,
+                    "Could not parse date from: ${text.take(50)}",
+                    "page:$pageNumber,line:${line.lineNumber}"
+                )
+            )
 
         // Extract amount
         val amount = extractAmount(text, template)
-            ?: return LineParseResult.Warning(ParseWarning(
-                WarningCode.AMBIGUOUS_AMOUNT,
-                "Could not parse amount from: ${text.take(50)}",
-                "page:$pageNumber,line:${line.lineNumber}"
-            ))
+            ?: return LineParseResult.Warning(
+                ParseWarning(
+                    WarningCode.AMBIGUOUS_AMOUNT,
+                    "Could not parse amount from: ${text.take(50)}",
+                    "page:$pageNumber,line:${line.lineNumber}"
+                )
+            )
 
         // Extract description
         val description = extractDescription(text, template, date, amount)
@@ -342,7 +347,7 @@ class TemplateBasedParser(
                 }
                 AmountFormat.PARENTHESES -> text.contains("($rawAmount)") || text.contains("( $rawAmount )")
                 AmountFormat.CR_DR_SUFFIX -> text.contains(Regex("""$rawAmount\s*DR""", RegexOption.IGNORE_CASE))
-                else -> false  // Cannot determine from format alone
+                else -> false // Cannot determine from format alone
             }
 
             ExtractedAmount(

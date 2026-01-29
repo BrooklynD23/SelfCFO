@@ -8,7 +8,7 @@ import kotlin.test.assertFalse
 
 /**
  * Edge case tests for Money type.
- * 
+ *
  * Tests focus on:
  * - Zero amounts
  * - Negative amounts
@@ -251,7 +251,7 @@ class MoneyEdgeCasesTest {
         // 1.235 -> 1.24 (round up to even)
         val up = Money.parseMajor("1.235", "USD", RoundingMode.HALF_EVEN)
         assertEquals(124L, up.minorUnits)
-        
+
         // 1.225 -> 1.22 (round down to even)
         val down = Money.parseMajor("1.225", "USD", RoundingMode.HALF_EVEN)
         assertEquals(122L, down.minorUnits)

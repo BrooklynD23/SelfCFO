@@ -217,7 +217,7 @@ class MerchantNormalizerTest {
         val result1 = normalizer.normalize("Amazon Purchase")
         val result2 = normalizer.normalize("AMAZON PURCHASE")
         val result3 = normalizer.normalize("amazon purchase")
-        
+
         assertEquals(result1.canonical, result2.canonical)
         assertEquals(result2.canonical, result3.canonical)
     }

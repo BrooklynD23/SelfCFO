@@ -1,8 +1,5 @@
 package com.ledgerlens.ui.adaptive
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -53,9 +50,9 @@ fun calculateWindowSizeClass(widthDp: Dp): WindowSizeClass {
  * Navigation mode based on window size class.
  */
 enum class NavigationMode {
-    BOTTOM_NAV,      // Compact: Bottom navigation bar
+    BOTTOM_NAV, // Compact: Bottom navigation bar
     NAVIGATION_RAIL, // Medium: Vertical rail on left
-    SIDE_NAV         // Expanded: Full side navigation
+    SIDE_NAV // Expanded: Full side navigation
 }
 
 /**

@@ -47,7 +47,9 @@ class BatchRetrainer(
 
         val relevantCorrections = if (config.useTimeWeighting) {
             corrections.filter { it.timestamp >= clock.now() - config.maxCorrectionAge }
-        } else corrections
+        } else {
+            corrections
+        }
 
         val trainingData = mutableListOf<Pair<TransactionFeatures, String>>()
         for (correction in relevantCorrections) {
@@ -62,7 +64,9 @@ class BatchRetrainer(
 
         val finalModel = if (config.mergeWithExisting && !classifier.getModel().isEmpty()) {
             mergeModels(classifier.getModel(), newModel, config.existingModelWeight)
-        } else newModel
+        } else {
+            newModel
+        }
 
         classifier.loadModel(finalModel)
         lastRetrainTime = clock.now()
@@ -75,7 +79,9 @@ class BatchRetrainer(
         )
     }
 
-    fun recordCorrection() { correctionsSinceLastRetrain++ }
+    fun recordCorrection() {
+        correctionsSinceLastRetrain++
+    }
 
     private fun calculateCorrectionWeight(correction: CategoryCorrection): Int {
         var weight = 1
@@ -93,8 +99,10 @@ class BatchRetrainer(
 
         val mergedCategoryCounts = mutableMapOf<String, Int>()
         for (cat in mergedCategories) {
-            mergedCategoryCounts[cat] = ((existing.categoryCounts[cat] ?: 0) * existingWeight +
-                (newModel.categoryCounts[cat] ?: 0) * newWeight).toInt()
+            mergedCategoryCounts[cat] = (
+                (existing.categoryCounts[cat] ?: 0) * existingWeight +
+                    (newModel.categoryCounts[cat] ?: 0) * newWeight
+                ).toInt()
         }
 
         val mergedMerchantPriors = mutableMapOf<String, Map<String, Float>>()
@@ -145,7 +153,12 @@ sealed class RetrainDecision {
 
 sealed class RetrainResult {
     data object NoData : RetrainResult()
-    data class Success(val correctionsUsed: Int, val trainingExamples: Int, val durationMs: Long,
-                       val modelCategories: Int, val vocabularySize: Int) : RetrainResult()
+    data class Success(
+        val correctionsUsed: Int,
+        val trainingExamples: Int,
+        val durationMs: Long,
+        val modelCategories: Int,
+        val vocabularySize: Int
+    ) : RetrainResult()
     data class Failed(val reason: String) : RetrainResult()
 }

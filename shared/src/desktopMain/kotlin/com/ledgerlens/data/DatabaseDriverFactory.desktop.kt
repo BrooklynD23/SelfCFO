@@ -83,6 +83,9 @@ actual class DatabaseDriverFactory {
     }
 
     private fun getAppDataDirectory(): String {
+        System.getProperty("ledgerlens.appDataDir")?.takeIf { it.isNotBlank() }?.let { return it }
+        System.getenv("LEDGERLENS_APPDATA_DIR")?.takeIf { it.isNotBlank() }?.let { return it }
+
         val os = System.getProperty("os.name").lowercase()
         return when {
             os.contains("win") -> System.getenv("APPDATA") ?: System.getProperty("user.home")

@@ -45,4 +45,3 @@ object ImportedTransactionMapper {
 
     fun now(): Instant = Clock.System.now()
 }
-

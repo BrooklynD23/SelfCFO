@@ -8,17 +8,17 @@ class MerchantNormalizer {
 
     // Common noise patterns to remove
     private val noisePatterns = listOf(
-        Regex("""\*+\d+"""),  // Masked card numbers (***1234)
-        Regex("""\b\d{4,}\b"""),  // Long numbers (terminal IDs)
-        Regex("""\b[A-Z]{2}\s*\d{5}\b"""),  // State + ZIP
-        Regex("""\b(CA|NY|TX|FL|IL|PA|OH|GA|NC|MI|NJ|VA|WA|AZ|MA|TN|IN|MO|MD|WI|CO|MN|SC|AL|LA|KY|OR|OK|CT|IA|UT|NV|AR|MS|KS|NM|NE|WV|ID|HI|NH|ME|MT|RI|DE|SD|ND|AK|DC|VT|WY|PR)\b"""),  // State codes
-        Regex("""#\d+"""),  // Store numbers
-        Regex("""\*+"""),  // Stray mask characters
+        Regex("""\*+\d+"""), // Masked card numbers (***1234)
+        Regex("""\b\d{4,}\b"""), // Long numbers (terminal IDs)
+        Regex("""\b[A-Z]{2}\s*\d{5}\b"""), // State + ZIP
+        Regex("""\b(CA|NY|TX|FL|IL|PA|OH|GA|NC|MI|NJ|VA|WA|AZ|MA|TN|IN|MO|MD|WI|CO|MN|SC|AL|LA|KY|OR|OK|CT|IA|UT|NV|AR|MS|KS|NM|NE|WV|ID|HI|NH|ME|MT|RI|DE|SD|ND|AK|DC|VT|WY|PR)\b"""), // State codes
+        Regex("""#\d+"""), // Store numbers
+        Regex("""\*+"""), // Stray mask characters
         Regex("""\b(POS|DEBIT|CREDIT|PURCHASE|ORDER|CHECKCARD|ACH|ONLINE|MOBILE|WITHDRAWAL|TRANSFER|PAYMENT|PMT|AUTOPAY|RECURRING|MEMO|REF|TXN|TRANS)\b""", RegexOption.IGNORE_CASE),
-        Regex("""\d{2}/\d{2}"""),  // MM/DD dates in description
-        Regex("""\d{2}-\d{2}-\d{2,4}"""),  // Various date formats
-        Regex("""\b\d{1,2}:\d{2}\b"""),  // Time patterns
-        Regex("""XX+\d{4}"""),  // Masked account numbers (XX1234)
+        Regex("""\d{2}/\d{2}"""), // MM/DD dates in description
+        Regex("""\d{2}-\d{2}-\d{2,4}"""), // Various date formats
+        Regex("""\b\d{1,2}:\d{2}\b"""), // Time patterns
+        Regex("""XX+\d{4}"""), // Masked account numbers (XX1234)
     )
 
     // Known merchant aliases mapping to canonical names
@@ -140,7 +140,7 @@ class MerchantNormalizer {
 
         for (delimiter in delimiters) {
             val idx = result.indexOf(delimiter)
-            if (idx > 3) {  // Minimum merchant name length
+            if (idx > 3) { // Minimum merchant name length
                 result = result.substring(0, idx)
                 break
             }
@@ -192,8 +192,10 @@ data class NormalizedMerchant(
 enum class MatchType {
     /** Exact match from user-defined merchant rules */
     EXACT,
+
     /** Matched via known alias table */
     ALIAS,
+
     /** Derived through heuristic extraction */
     HEURISTIC
 }

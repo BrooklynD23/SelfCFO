@@ -34,9 +34,9 @@ interface PdfParser {
  */
 data class PdfParseOptions(
     val maxPages: Int = 500,
-    val maxSizeBytes: Long = 50 * 1024 * 1024,  // 50 MB
-    val timeoutMs: Long = 60_000,  // 60 seconds
-    val memoryLimitBytes: Long = 512 * 1024 * 1024,  // 512 MB
+    val maxSizeBytes: Long = 50 * 1024 * 1024, // 50 MB
+    val timeoutMs: Long = 60_000, // 60 seconds
+    val memoryLimitBytes: Long = 512 * 1024 * 1024, // 512 MB
     val ocrEnabled: Boolean = true,
     val ocrLanguage: String = "eng",
     val defaultCurrencyCode: String = "USD"
@@ -77,7 +77,7 @@ sealed class PdfParseResult {
  */
 data class StatementMetadata(
     val accountName: String?,
-    val accountNumber: String?,  // Last 4 digits only for security
+    val accountNumber: String?, // Last 4 digits only for security
     val statementPeriod: DateRange?,
     val pageCount: Int,
     val extractionMethod: ExtractionMethod,
@@ -97,9 +97,9 @@ data class DateRange(
  * Method used to extract text from PDF.
  */
 enum class ExtractionMethod {
-    TEXT_BASED,  // Embedded text extracted directly
-    OCR,         // Optical character recognition for scanned PDFs
-    HYBRID       // Combination of text and OCR
+    TEXT_BASED, // Embedded text extracted directly
+    OCR, // Optical character recognition for scanned PDFs
+    HYBRID // Combination of text and OCR
 }
 
 /**
@@ -108,7 +108,7 @@ enum class ExtractionMethod {
 data class ParseWarning(
     val code: WarningCode,
     val message: String,
-    val location: String? = null  // e.g., "page:2,line:15"
+    val location: String? = null // e.g., "page:2,line:15"
 )
 
 enum class WarningCode {

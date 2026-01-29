@@ -5,7 +5,6 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class StatementTemplateTest {
@@ -137,9 +136,9 @@ class StatementTemplateTest {
                 pageNumber = 1,
                 lines = listOf(
                     TextLine("CHASE Bank Statement", 1),
-                    TextLine("Beginning Balance 1,000.00", 2),  // Should be skipped
+                    TextLine("Beginning Balance 1,000.00", 2), // Should be skipped
                     TextLine("01/15 PURCHASE -45.67", 3),
-                    TextLine("Ending Balance 954.33", 4)  // Should be skipped
+                    TextLine("Ending Balance 954.33", 4) // Should be skipped
                 )
             )
         )

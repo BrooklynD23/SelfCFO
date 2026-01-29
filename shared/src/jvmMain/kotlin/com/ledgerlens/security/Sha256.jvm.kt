@@ -7,4 +7,3 @@ actual object Sha256 {
         return MessageDigest.getInstance("SHA-256").digest(input)
     }
 }
-

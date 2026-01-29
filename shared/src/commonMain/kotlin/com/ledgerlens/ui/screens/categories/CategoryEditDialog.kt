@@ -38,10 +38,10 @@ fun CategoryEditDialog(
     onDismiss: () -> Unit
 ) {
     if (category == null) return
-    
+
     var showIconPicker by remember { mutableStateOf(false) }
     var showParentPicker by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -66,7 +66,7 @@ fun CategoryEditDialog(
                     modifier = Modifier.fillMaxWidth(),
                     isError = category.name.isBlank()
                 )
-                
+
                 // Icon selection
                 Column {
                     Text(
@@ -74,9 +74,9 @@ fun CategoryEditDialog(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -109,20 +109,21 @@ fun CategoryEditDialog(
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.width(12.dp))
-                        
+
                         Text(
                             text = category.icon ?: "Choose icon",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (category.icon != null) 
-                                MaterialTheme.colorScheme.onSurface 
-                            else 
+                            color = if (category.icon != null) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
+                            }
                         )
-                        
+
                         Spacer(modifier = Modifier.weight(1f))
-                        
+
                         Icon(
                             Icons.Default.ChevronRight,
                             contentDescription = null,
@@ -130,7 +131,7 @@ fun CategoryEditDialog(
                         )
                     }
                 }
-                
+
                 // Color selection
                 Column {
                     Text(
@@ -138,15 +139,15 @@ fun CategoryEditDialog(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     ColorPicker(
                         selectedColor = category.color,
                         onColorSelected = onColorChange
                     )
                 }
-                
+
                 // Parent selection (for subcategories)
                 if (availableParents.isNotEmpty() || category.parentId != null) {
                     Column {
@@ -155,9 +156,9 @@ fun CategoryEditDialog(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -168,18 +169,19 @@ fun CategoryEditDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             val parentName = availableParents.find { it.id == category.parentId }?.name
-                            
+
                             Text(
                                 text = parentName ?: "None (top-level)",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = if (parentName != null) 
-                                    MaterialTheme.colorScheme.onSurface 
-                                else 
+                                color = if (parentName != null) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
+                                }
                             )
-                            
+
                             Spacer(modifier = Modifier.weight(1f))
-                            
+
                             Icon(
                                 Icons.Default.ChevronRight,
                                 contentDescription = null,
@@ -204,7 +206,7 @@ fun CategoryEditDialog(
             }
         }
     )
-    
+
     // Icon picker dialog
     if (showIconPicker) {
         IconPickerDialog(
@@ -216,7 +218,7 @@ fun CategoryEditDialog(
             onDismiss = { showIconPicker = false }
         )
     }
-    
+
     // Parent picker dialog
     if (showParentPicker) {
         ParentPickerDialog(
@@ -246,16 +248,16 @@ private fun ColorPicker(
         "#FF5722", // Deep Orange
         "#795548", // Brown
         "#607D8B", // Blue Grey
-        "#F44336"  // Red
+        "#F44336" // Red
     )
-    
+
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(colors) { colorHex ->
             val color = parseColor(colorHex)
             val isSelected = selectedColor == colorHex
-            
+
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -306,7 +308,7 @@ private fun IconPickerDialog(
         // Other
         "📱", "💻", "📧", "🎓", "✂️", "🐾", "👶", "❤️"
     )
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Choose Icon") },
@@ -319,16 +321,17 @@ private fun IconPickerDialog(
                     ) {
                         row.forEach { icon ->
                             val isSelected = icon == selectedIcon
-                            
+
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(
-                                        if (isSelected) 
-                                            MaterialTheme.colorScheme.primaryContainer 
-                                        else 
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        } else {
                                             Color.Transparent
+                                        }
                                     )
                                     .clickable { onIconSelected(icon) },
                                 contentAlignment = Alignment.Center
@@ -340,7 +343,7 @@ private fun IconPickerDialog(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
@@ -371,10 +374,11 @@ private fun ParentPickerDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (selectedParentId == null) 
-                                MaterialTheme.colorScheme.primaryContainer 
-                            else 
+                            if (selectedParentId == null) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
                                 Color.Transparent
+                            }
                         )
                         .clickable { onParentSelected(null) }
                         .padding(12.dp),
@@ -389,31 +393,32 @@ private fun ParentPickerDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    
+
                     Text(
                         text = "None (top-level)",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (selectedParentId == null) FontWeight.Medium else FontWeight.Normal
                     )
                 }
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
                 // Available parents
                 availableParents.forEach { parent ->
                     val isSelected = parent.id == selectedParentId
                     val indentDp = (parent.depth * 16).dp
-                    
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = indentDp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                if (isSelected) 
-                                    MaterialTheme.colorScheme.primaryContainer 
-                                else 
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
                                     Color.Transparent
+                                }
                             )
                             .clickable { onParentSelected(parent.id) }
                             .padding(12.dp),
@@ -428,7 +433,7 @@ private fun ParentPickerDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        
+
                         // Category color indicator
                         Box(
                             modifier = Modifier
@@ -439,9 +444,9 @@ private fun ParentPickerDialog(
                                         ?: MaterialTheme.colorScheme.surfaceVariant
                                 )
                         )
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         Text(
                             text = parent.name,
                             style = MaterialTheme.typography.bodyMedium,

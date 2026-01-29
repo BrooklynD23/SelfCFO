@@ -25,13 +25,13 @@ data class ParsedTransaction(
 }
 
 enum class TransactionType {
-    DEBIT,       // Money going out
-    CREDIT,      // Money coming in
-    TRANSFER,    // Internal transfer
-    FEE,         // Bank fee
-    INTEREST,    // Interest earned/charged
-    ADJUSTMENT,  // Account adjustment
-    UNKNOWN      // Could not determine
+    DEBIT, // Money going out
+    CREDIT, // Money coming in
+    TRANSFER, // Internal transfer
+    FEE, // Bank fee
+    INTEREST, // Interest earned/charged
+    ADJUSTMENT, // Account adjustment
+    UNKNOWN // Could not determine
 }
 
 data class ExtractedAmount(
@@ -49,11 +49,11 @@ data class ExtractedDate(
 )
 
 enum class DateFormat {
-    MM_DD_YYYY,      // 01/15/2024
-    MM_DD_YY,        // 01/15/24
-    DD_MM_YYYY,      // 15/01/2024
-    YYYY_MM_DD,      // 2024-01-15
-    MMM_DD_YYYY,     // Jan 15, 2024
-    DD_MMM_YYYY,     // 15 Jan 2024
+    MM_DD_YYYY, // 01/15/2024
+    MM_DD_YY, // 01/15/24
+    DD_MM_YYYY, // 15/01/2024
+    YYYY_MM_DD, // 2024-01-15
+    MMM_DD_YYYY, // Jan 15, 2024
+    DD_MMM_YYYY, // 15 Jan 2024
     UNKNOWN
 }

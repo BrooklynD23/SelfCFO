@@ -42,7 +42,7 @@ class ReviewViewModel(
             ) { items, stats ->
                 val uiItems = items.map { it.toUiModel() }
                 val currentFilter = _uiState.value.currentFilter
-                
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,

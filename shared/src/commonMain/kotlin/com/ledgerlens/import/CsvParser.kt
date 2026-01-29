@@ -44,4 +44,3 @@ data class ColumnMapping(
     val creditColumn: Int?,
     val balanceColumn: Int?
 )
-
