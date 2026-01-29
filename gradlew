@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright © 2015-2021 the original authors.
+# Copyright © 2015 the original authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 
 ##############################################################################
@@ -29,12 +31,36 @@
 #
 #           ksh Gradle
 #
-#       Busybox and similar://www.gnu.org/software/bash/ for ash://www.gnu.org/software/bash/
-#       work, but /bin/sh works better.
+#       Busybox and similar reduced shells will NOT work, because this script
+#       requires all of these POSIX shell features:
+#         * functions;
+#         * expansions «$var», «${var}», «${var:-default}», «${var+SET}»,
+#           «${var#prefix}», «${var%suffix}», and «$( cmd )»;
+#         * compound commands having a testable exit status, especially «case»;
+#         * various built-in commands including «command», «set», and «ulimit».
 #
-#   (2) If your shell is not compatible with POSIX, consider installing a
-#       compatible shell. You may find suggestions in the Gradle documentation:
-#       https://docs.gradle.org/current/userguide/compatibility.html
+#   Important for patching:
+#
+#   (2) This script targets any POSIX shell, so it avoids extensions provided
+#       by Bash, Ksh, etc; in particular arrays are avoided.
+#
+#       The "traditional" practice of packing multiple parameters into a
+#       space-separated string is a well documented source of bugs and security
+#       problems, so this is (mostly) avoided, by progressively accumulating
+#       options in "$@", and eventually passing that to Java.
+#
+#       Where the inherited environment variables (DEFAULT_JVM_OPTS, JAVA_OPTS,
+#       and GRADLE_OPTS) rely on word-splitting, this is performed explicitly;
+#       see the in-line comments for details.
+#
+#       There are tweaks for specific operating systems such as AIX, CygWin,
+#       Darwin, MinGW, and NonStop.
+#
+#   (3) This script is generated from the Groovy template
+#       https://github.com/gradle/gradle/blob/HEAD/platforms/jvm/plugins-application/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       within the Gradle project.
+#
+#       You can find Gradle at https://github.com/gradle/gradle/.
 #
 ##############################################################################
 
@@ -60,7 +86,7 @@ done
 # shellcheck disable=SC2034
 APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
-APP_HOME=$( cd "${APP_HOME:-./}" > /dev/null && pwd -P ) || exit
+APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
@@ -88,7 +114,6 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 
 # Determine the Java command to use to start the JVM.
@@ -139,37 +164,37 @@ fi
 #   * args from the command line
 #   * the main class name
 #   * -classpath
-#   * -D...://diffoscope.readthedocs.io/en/latest/#!/diffoscope.readthedocs.io/en/latest/-specific options
+#   * -D...appname settings
+#   * --module-path (only if needed)
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
 
 # For Cygwin or MSYS, switch paths to Windows format before running java
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
-    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
 
     JAVACMD=$( cygpath --unix "$JAVACMD" )
 
-    # Now convert the arguments - kludge to limit://www.gnu.org/software/bash/ourself from recursing://www.gnu.org/software/bash/
-    # Also, determine if we're running on Windows because (some?) Cygwin shells
-    # don't correctly handle Java options that start with a hyphen.
+    # Now convert the arguments - kludge to limit ourselves to /bin/sh
     for arg do
         if
             case $arg in                                #(
-              -*)   false ;;                            # don't pass-through anything starting with a dash
-              /?*)  t=${arg#;}
-                    t=/${t%%/*}
-                    # C:/dir format for Windows paths?
-                    [ -d "$t" ]
-                    ;;                                  #(
+              -*)   false ;;                            # don't mess with options #(
+              /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
+                    [ -e "$t" ] ;;                      #(
               *)    false ;;
             esac
         then
             arg=$( cygpath --path --ignore --mixed "$arg" )
         fi
-        # Roll://www.gnu.org/software/bash/the args list around exactly as many times as the number of
-        # temporary variables. This://www.gnu.org/software/bash/allows us to pass them in the same order.
-        shift                   # remove://www.gnu.org/software/bash/old arg
-        set -- "$@" "$arg"      # push replacement://www.gnu.org/software/bash/arg
+        # Roll the args list around exactly as many times as the number of
+        # args, so each arg winds up back in the position where it started, but
+        # possibly modified.
+        #
+        # NB: a `for` loop captures its iteration list before it begins, so
+        # changing the positional parameters here affects neither the number of
+        # iterations, nor the values presented in `arg`.
+        shift                   # remove old arg
+        set -- "$@" "$arg"      # push replacement arg
     done
 fi
 
@@ -177,15 +202,15 @@ fi
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
-# Collect all arguments for the java command://www.gnu.org/software/bash/;
-#   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
-#     temporary variables that will be reassembled by eval set in the next line.
-#   * Additionally, note that DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS
-#     are://www.gnu.org/software/bash/defined as arrays and this script is read as a function (see https://github.com/gradle/gradle/issues/19696).
+# Collect all arguments for the java command:
+#   * DEFAULT_JVM_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,
+#     and any embedded shellness will be escaped.
+#   * For example: A user cannot expect ${Hostname} to be expanded, as it is an environment variable and will be
+#     treated as '${Hostname}' itself on the command line.
+
 set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
-        -classpath "$CLASSPATH" \
-        org.gradle.wrapper.GradleWrapperMain \
+        -jar "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" \
         "$@"
 
 # Stop when "xargs" is not available.
@@ -196,17 +221,27 @@ fi
 
 # Use "xargs" to parse quoted args.
 #
-# With -n://www.gnu.org/software/bash/1 it outputs one arg per line, with the quotes and backslashes removed.
+# With -n1 it outputs one arg per line, with the quotes and backslashes removed.
 #
-# In Bash we could simply go://www.gnu.org/software/bash/:
+# In Bash we could simply go:
 #
-#   readarray://www.gnu.org/software/bash/ -t://www.gnu.org/software/bash/ EXTRA_JVM_ARGUMENTS < <( xargs -n1 ://www.gnu.org/software/bash/<<<"$GRADLE_OPTS $JAVA_OPTS" )
+#   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
+#   set -- "${ARGS[@]}" "$@"
 #
-# but://www.gnu.org/software/bash/ POSIX://www.gnu.org/software/bash/://www.gnu.org/software/bash/does not have://www.gnu.org/software/bash/readarray://www.gnu.org/software/bash/, so we use a workaround.://www.gnu.org/software/bash/
+# but POSIX shell has neither arrays nor command substitution, so instead we
+# post-process each arg (as a line of input to sed) to backslash-escape any
+# character that might be a shell metacharacter, then use eval to reverse
+# that process (while maintaining the separation between arguments), and wrap
+# the whole thing up as a single "set" statement.
+#
+# This will of course break if any of these variables contains a newline or
+# an unmatched quote.
+#
+
 eval "set -- $(
         printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
         xargs -n1 |
-        sed ' s~.*~"&"~' |
+        sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
         tr '\n' ' '
     )" '"$@"'
 
