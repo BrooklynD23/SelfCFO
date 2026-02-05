@@ -12,7 +12,7 @@ dokka = "1.9.10"
 
 # Kotlin Libraries
 coroutines = "1.7.3"
-serialization = "1.6.2"
+serialization = "1.10.0"
 datetime = "0.5.0"
 
 # Database
