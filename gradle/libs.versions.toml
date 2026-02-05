@@ -1,7 +1,7 @@
 [versions]
 # Core
 kotlin = "1.9.22"
-agp = "8.2.0"
+agp = "9.0.0"
 compose = "1.5.12"
 
 # Development Tooling
