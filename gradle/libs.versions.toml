@@ -35,7 +35,7 @@ koin = "3.5.3"
 pdfbox = "3.0.1"
 
 # AndroidX
-androidx-core = "1.12.0"
+androidx-core = "1.17.0"
 androidx-activity = "1.8.2"
 androidx-lifecycle = "2.7.0"
 androidx-appcompat = "1.6.1"
