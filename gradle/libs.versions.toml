@@ -29,7 +29,7 @@ mlkit-vision-common = "17.3.0"
 mlkit-text-recognition-gms = "19.0.1"
 
 # Dependency Injection
-koin = "3.5.3"
+koin = "4.1.1"
 
 # PDF Processing
 pdfbox = "3.0.1"
