@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}
           path: '**/build/reports/tests/'
@@ -85,7 +85,7 @@ jobs:
         run: ./gradlew :android:testDevDebugUnitTest
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-dev-debug-apk
           path: android/build/outputs/apk/dev/debug/*.apk
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload detekt report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: detekt-report
           path: '**/build/reports/detekt/'
