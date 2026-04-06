@@ -105,3 +105,27 @@ secrets.properties
 # Local-only Gradle/Android caches created by CI-like runs
 .gradle-user-home/
 .android/
+
+# ── GSD baseline (auto-generated) ──
+.gsd
+.gsd-id
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+dist/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+.cache/
+tmp/
